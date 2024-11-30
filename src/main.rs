@@ -1,3 +1,5 @@
+use tracing::log;
+
 #[cfg(feature = "ssr")]
 #[tokio::main]
 async fn main() {
@@ -6,7 +8,9 @@ async fn main() {
     use leptos_axum::{generate_route_list, LeptosRoutes};
     use shoebox::app::*;
     use shoebox::fileserv::file_and_error_handler;
-
+    use console_log::init_with_level;
+    use log::Level;
+    init_with_level(Level::Info).expect("Failed to initialize logger");
     // Setting get_configuration(None) means we'll be using cargo-leptos's env values
     // For deployment these variables are:
     // <https://github.com/leptos-rs/start-axum#executing-a-server-on-a-remote-machine-without-the-toolchain>
