@@ -27,4 +27,8 @@ pub fn insert_media_file(name: &str, path: &str) -> usize {
 
 
 }
+pub fn get_all_media_files() -> Vec<MediaFile> {
+    let conn = &mut establish_connection();
+    media_files.load::<MediaFile>(conn).expect("Error loading media files")
+}
 

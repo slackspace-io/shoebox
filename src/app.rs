@@ -31,6 +31,7 @@ pub fn App() -> impl IntoView {
                 <Routes>
                     <Route path="" view=HomePage/>
                     <Route path="files" view=ShowFiles/>
+                    <Route path="db_files" view=ShowDBFiles/>
                 </Routes>
             </main>
         </Router>
@@ -75,6 +76,30 @@ fn ShowFiles() -> impl IntoView {
 }
 
 
+#[cfg(feature = "ssr")]
+use crate::db::db_calls::get_all_media_files;
+
+#[component]
+fn ShowDBFiles() -> impl IntoView {
+    #[cfg(feature = "ssr")]
+    let results = get_all_media_files();
+
+    #[cfg(feature = "ssr")]
+    view! {
+        <ul>
+            {results.iter().map(|result| {
+                view! {
+                    <li>"File: " {&result.name} " Path: " {&result.path}</li>
+                }
+            }).collect::<Vec<_>>()}
+        </ul>
+    }
+
+    #[cfg(not(feature = "ssr"))]
+    view! {
+        <p>"Database access is not available."</p>
+    }
+}
 
 /// Renders the home page of your application.
 #[component]
@@ -88,5 +113,6 @@ fn HomePage() -> impl IntoView {
         <button on:click=on_click>"Click Me: " {count}</button>
         <p>"This is a simple example of a Leptos application."</p>
         <p>"Link to files page: " <a href="/files">"Files"</a></p>
+        <p>"Link to db files page: " <a href="/db_files">"DB Files"</a></p>
     }
 }
