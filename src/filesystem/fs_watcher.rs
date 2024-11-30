@@ -1,6 +1,4 @@
-// filesystem/mod.rs
 use std::fs;
-use crate::db::db_calls::insert_media_file;
 
 #[derive(Debug)]
 pub enum FileType {
@@ -11,6 +9,8 @@ pub enum FileType {
 
 
 pub fn scan_files(dir: &str) -> Vec<FileType> {
+    #[cfg(feature = "ssr")]
+    use crate::db::db_calls::insert_media_file;
     let mut files = Vec::new();
 
     // Iterate over entries in the specified directory
@@ -20,9 +20,11 @@ pub fn scan_files(dir: &str) -> Vec<FileType> {
             if let Some(extension) = path.extension() {
                 let ext = extension.to_string_lossy().to_lowercase();
                 if matches!(ext.as_str(), "jpg" | "jpeg" | "png" | "gif") {
+                    #[cfg(feature = "ssr")]
                     insert_media_file(path.file_name().unwrap().to_str().unwrap(), path.display().to_string().as_str());
                     files.push(FileType::Photo(path.display().to_string()));
                 } else if matches!(ext.as_str(), "mp4" | "mkv" | "avi" | "mov") {
+                    #[cfg(feature = "ssr")]
                     insert_media_file(path.file_name().unwrap().to_str().unwrap(), path.display().to_string().as_str());
                     files.push(FileType::Video(path.display().to_string()));
                 } else {
