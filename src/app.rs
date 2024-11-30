@@ -1,3 +1,4 @@
+use std::path::PathBuf;
 use crate::error_template::{AppError, ErrorTemplate};
 use leptos::*;
 use leptos_meta::*;
@@ -10,8 +11,6 @@ pub fn App() -> impl IntoView {
     provide_meta_context();
 
     view! {
-
-
         // injects a stylesheet into the document <head>
         // id=leptos means cargo-leptos will hot-reload this stylesheet
         <Stylesheet id="leptos" href="/pkg/shoebox.css"/>
@@ -53,8 +52,15 @@ fn ShowFiles() -> impl IntoView {
                         }
                     }
                     FileType::Video(path) => {
+                        let file_name = path.split('/').last().unwrap();
+                        let video_url = format!("/videos/{}", file_name);
                         view! {
-                            <li>"Video: " {path}</li>
+                            <li>
+                                <video controls width="600">
+                                    <source src={video_url} type="video/mp4"/>
+                                    "Your browser does not support the video tag."
+                                </video>
+                            </li>
                         }
                     }
                     FileType::Other(path) => {
@@ -67,6 +73,7 @@ fn ShowFiles() -> impl IntoView {
         </ul>
     }
 }
+
 /// Renders the home page of your application.
 #[component]
 fn HomePage() -> impl IntoView {
