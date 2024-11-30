@@ -22,6 +22,9 @@ tracing = { version = "0.1", optional = true }
 http = "1"
 log = "0.4"
 console_log = "1.0.0"
+diesel = { version = "2.2.5", features = ["sqlite"] }
+dotenvy = "0.15.0"
+chrono = "0.4.38"
 
 [features]
 hydrate = ["leptos/hydrate", "leptos_meta/hydrate", "leptos_router/hydrate"]
@@ -35,6 +38,7 @@ ssr = [
     "leptos_meta/ssr",
     "leptos_router/ssr",
     "dep:tracing",
+    "diesel/sqlite",
 ]
 
 # Defines a size-optimized profile for the WASM bundle in release mode
