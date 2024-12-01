@@ -1,10 +1,8 @@
-use diesel::{Connection, RunQueryDsl, SelectableHelper, SqliteConnection};
+use diesel::{Connection, RunQueryDsl, SqliteConnection};
 use diesel::associations::HasTable;
-use leptos::server_fn::serde::de::Unexpected::Str;
 use crate::db::models::NewMediaFile;
 use crate::db::models::MediaFile;
 use crate::schema::media_files::dsl::media_files;
-use diesel::prelude::*;
 use dotenvy::dotenv;
 
 pub fn establish_connection() -> SqliteConnection {

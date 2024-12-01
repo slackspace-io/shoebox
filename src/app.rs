@@ -1,4 +1,3 @@
-use std::path::PathBuf;
 use crate::error_template::{AppError, ErrorTemplate};
 use leptos::*;
 use leptos::ev::MouseEvent;
