@@ -75,6 +75,27 @@ fn HomePage() -> impl IntoView {
                     <div>
                     {format!("{:?}", file)}
                     </div>
+                    {let file_clone = file.clone();
+                        if file_clone.asset_type == "video" {
+                            let file_name = file_clone.path.split('/').last().unwrap();
+                            let video_url = format!("/videos/{}", file_name);
+                            view! {
+                                <video controls width="600">
+                                    <source src={video_url} type="video/mp4"/>
+                                    "Your browser does not support the video tag."
+                                </video>
+                            }
+                        } else {
+                            view! {
+                                <video controls width="600">
+                                    <source src={file_clone.path} type="video/mp4"/>
+                                    "Your browser does not support the video tag."
+                                </video>
+                            }
+                        }
+                    }
+
+
 
 
                 }).unwrap()}

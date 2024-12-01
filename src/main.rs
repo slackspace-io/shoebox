@@ -1,4 +1,6 @@
-
+use axum::routing::get_service;
+use tower_http::services::ServeDir;
+use http::StatusCode;
 use shoebox::database::create_table_if_not_exist;
 
 #[cfg(feature = "ssr")]
@@ -21,6 +23,8 @@ async fn main() {
             move || shell(leptos_options.clone())
         })
         .fallback(leptos_axum::file_and_error_handler(shell))
+        .nest_service("/videos", get_service(ServeDir::new("/home/dopey/videos")).handle_error(|_| async { (StatusCode::INTERNAL_SERVER_ERROR, "Internal Server Error") }))
+
         .with_state(leptos_options);
 
     // run our app with hyper
