@@ -5,8 +5,7 @@ use leptos_router::{
     components::{Route, Router, Routes},
     StaticSegment,
 };
-use crate::filesystem::fs_watcher;
-use crate::filesystem::fs_watcher::{scan_files, FileType};
+use crate::lib_models::FileType;
 
 pub fn shell(options: LeptosOptions) -> impl IntoView {
     view! {
@@ -104,6 +103,8 @@ fn HomePage() -> impl IntoView {
 #[server]
 pub async fn get_files() -> Result<Vec<FileType>, ServerFnError> {
     // If scan_files returns a Vec<FileType> directly:
+    use crate::filesystem::fs_watcher;
+    use crate::filesystem::fs_watcher::scan_files;
     let files = scan_files("/home/dopey/videos").await; // Adjust based on actual API
     println!("{:?}", files);
     Ok(files)

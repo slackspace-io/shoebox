@@ -1,5 +1,14 @@
 pub mod app;
+#[cfg(feature = "ssr")]
+pub mod db;
+
+#[cfg(feature = "ssr")]
+mod models;
+#[cfg(feature = "ssr")]
+mod schema;
+#[cfg(feature = "ssr")]
 pub mod filesystem;
+mod lib_models;
 
 #[cfg(feature = "hydrate")]
 #[wasm_bindgen::prelude::wasm_bindgen]
