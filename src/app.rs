@@ -6,6 +6,7 @@ use leptos_router::{
     StaticSegment,
 };
 use crate::lib_models::FileType;
+use crate::models::MediaFile;
 
 pub fn shell(options: LeptosOptions) -> impl IntoView {
     view! {
@@ -60,7 +61,7 @@ fn HomePage() -> impl IntoView {
     let on_click = move |_| *count.write() += 1;
     let res = Resource::new_blocking(
         || (),
-        |_| async move { get_files().await.unwrap() },
+        |_| async move { get_all_rows().await.unwrap() },
     );
 
 
@@ -86,7 +87,7 @@ fn HomePage() -> impl IntoView {
         <button on:click=on_click>"Click Me: " {count}</button>
         <button on:click=move |_| {
             spawn_local(async {
-                get_files().await;
+                get_all_rows().await;
             });
         }>
             "Get Files"
@@ -108,4 +109,12 @@ pub async fn get_files() -> Result<Vec<FileType>, ServerFnError> {
     let files = scan_files("/home/dopey/videos").await; // Adjust based on actual API
     println!("{:?}", files);
     Ok(files)
+}
+
+#[server]
+pub async fn get_all_rows() -> Result<Vec<MediaFile>, ServerFnError> {
+    use crate::database::return_all_media_assets;
+    let assets = return_all_media_assets().unwrap();
+    println!("{:?}", assets);
+    Ok(assets)
 }
