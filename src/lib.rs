@@ -2,9 +2,9 @@ pub mod app;
 pub mod error_template;
 #[cfg(feature = "ssr")]
 pub mod fileserv;
-mod filesystem;
+pub mod filesystem;
 #[cfg(feature = "ssr")]
-mod db;
+pub mod db;
 #[cfg(feature = "ssr")]
 pub mod schema;
 

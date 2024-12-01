@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 use crate::error_template::{AppError, ErrorTemplate};
 use leptos::*;
+use leptos::ev::MouseEvent;
 use leptos_meta::*;
 use leptos_router::*;
 use crate::filesystem::fs_watcher::{scan_files, FileType};
@@ -24,8 +25,7 @@ pub fn App() -> impl IntoView {
             outside_errors.insert_with_default_key(AppError::NotFound);
             view! {
                 <ErrorTemplate outside_errors/>
-            }
-            .into_view()
+            }.into_view()
         }>
             <main>
                 <Routes>
@@ -78,22 +78,39 @@ fn ShowFiles() -> impl IntoView {
 
 #[cfg(feature = "ssr")]
 use crate::db::db_calls::get_all_media_files;
+#[cfg(feature = "ssr")]
+use crate::db::models::MediaFile;
+
+//#[server]
+//pub async fn get_all_db_files() -> Result<Vec<MediaFile>, ServerFnError> {
+//    let files = get_all_media_files();
+//    Ok(files)
+//}
+
 
 #[component]
 fn ShowDBFiles() -> impl IntoView {
     #[cfg(feature = "ssr")]
     let results = get_all_media_files();
-
+    let (index, set_index) = create_signal(1);
+    //let next_index = move |_| set_index.update(|index| *index += 1);
     #[cfg(feature = "ssr")]
-    view! {
-        <ul>
-            {results.iter().map(|result| {
-                view! {
-                    <li>"File: " {&result.name} " Path: " {&result.path}</li>
-                }
-            }).collect::<Vec<_>>()}
-        </ul>
-    }
+    {results.get(index.get()).map(|result: &MediaFile| {
+        view! {
+//            <button on:click=next_index>"Next: " {index}</button>
+            <li>"Id: " {&result.id.to_string()} "File: " {&result.name} " Path: " {&result.path}</li>
+        }
+    })}
+    //view! {
+    //    <button on:click=next_index>"Next: " {index}</button>
+
+    //        //{results.get(index.get()).map(|result: MediaFile| {
+    //        //    view! {
+    //        //        <li>"Id: " {&result.id.to_string()} "File: " {&result.name} " Path: " {&result.path}</li>
+    //        //    }
+
+    //        //})}
+    //}
 
     #[cfg(not(feature = "ssr"))]
     view! {
@@ -116,3 +133,4 @@ fn HomePage() -> impl IntoView {
         <p>"Link to db files page: " <a href="/db_files">"DB Files"</a></p>
     }
 }
+

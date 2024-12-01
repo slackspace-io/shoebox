@@ -10,6 +10,7 @@ pub struct MediaFile {
 }
 
 
+#[cfg(feature = "ssr")]
 #[derive(Insertable)]
 #[diesel(table_name = crate::schema::media_files)]
 pub struct NewMediaFile<'a> {
