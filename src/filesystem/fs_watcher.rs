@@ -1,8 +1,9 @@
 
 use std::fs;
 use serde::{Deserialize, Serialize};
+use leptos::prelude::Render;
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq )]
 pub enum FileType {
     Video(String),
     Photo(String),
