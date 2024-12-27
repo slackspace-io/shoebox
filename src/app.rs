@@ -7,7 +7,9 @@ use leptos_router::{
     components::{Route, Router, Routes},
     StaticSegment,
 };
-use crate::lib_models::FileType;
+use leptos_router::components::Form;
+use leptos_router::hooks::use_query_map;
+use crate::lib_models::{FileType, Metadata};
 use crate::models::MediaFile;
 
 pub fn shell(options: LeptosOptions) -> impl IntoView {
@@ -50,6 +52,7 @@ pub fn App() -> impl IntoView {
             <main>
                 <Routes fallback=|| "Page not found.".into_view()>
                     <Route path=StaticSegment("") view=HomePage/>
+                    <Route path=StaticSegment("form") view=FormExample/>
                 </Routes>
             </main>
         </Router>
@@ -122,7 +125,7 @@ fn HomePage() -> impl IntoView {
         </button>
         <button on:click=move |_| {
             spawn_local(async {
-                get_all_rows().await;
+                get_files().await;
             });
         }>
             "Get Files"
@@ -135,7 +138,57 @@ fn HomePage() -> impl IntoView {
         </div>
     }
 }
+#[component]
+pub fn FormExample() -> impl IntoView {
+    // reactive access to URL query
+    let query = use_query_map();
+    let name = move || query.read().get("name").unwrap_or_default();
+    let number = move || query.read().get("number").unwrap_or_default();
+    let select = move || query.read().get("select").unwrap_or_default();
 
+    view! {
+        // read out the URL query strings
+        <table>
+            <tr>
+                <td><code>"name"</code></td>
+                <td>{name}</td>
+            </tr>
+            <tr>
+                <td><code>"number"</code></td>
+                <td>{number}</td>
+            </tr>
+            <tr>
+                <td><code>"select"</code></td>
+                <td>{select}</td>
+            </tr>
+        </table>
+        // <Form/> will navigate whenever submitted
+        <h2>"Manual Submission"</h2>
+        <Form method="GET" action="">
+            // input names determine query string key
+            <input type="text" name="name" value=name/>
+            <input type="number" name="number" value=number/>
+            <select name="select">
+                // `selected` will set which starts as selected
+                <option selected=move || select() == "A">
+                    "A"
+                </option>
+                <option selected=move || select() == "B">
+                    "B"
+                </option>
+                <option selected=move || select() == "C">
+                    "C"
+                </option>
+            </select>
+            // submitting should cause a client-side
+            // navigation, not a full reload
+            <input type="submit"/>
+        </Form>
+        // This <Form/> uses some JavaScript to submit
+        // on every input
+
+    }
+}
 
 
 
@@ -162,9 +215,7 @@ pub async fn get_all_rows() -> Result<Vec<MediaFile>, ServerFnError> {
     let assets = return_all_media_assets()?;
     log!("Media assets gotten");
     //log first asset
-    log!("First asset: {:?}", assets[0]);
     //log second asset
-    log!("Second asset: {:?}", assets[1]);
    // println!("{:?}", assets);
     Ok(assets)
 }
