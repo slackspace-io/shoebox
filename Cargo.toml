@@ -21,6 +21,7 @@ tracing = { version = "0.1.41", optional = true }
 http = "1"
 serde = { version = "1.0.216", features = ["derive"] }
 rusqlite = {version = "0.32.1", features = ["bundled"], optional = true}
+gloo-timers = { version = "0.3.0", features = ["futures"] }
 
 
 [features]
