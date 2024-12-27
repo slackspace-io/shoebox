@@ -1,4 +1,5 @@
 use std::fs;
+use leptos::logging::log;
 use serde::{Deserialize, Serialize};
 use leptos::prelude::Render;
 use crate::database::insert_media_asset;
@@ -7,10 +8,13 @@ use crate::models::MediaFile;
 
 pub async fn scan_files(dir: &str) -> Vec<FileType> {
     let mut files = Vec::new();
-
+    log!("initiating scan_files");
+    println!("initiating scan_files");
     // Iterate over entries in the specified directory
     if let Ok(entries) = fs::read_dir(dir) {
+        log!("Inside read_dir");
         for entry in entries.filter_map(Result::ok) {
+            log!("Entry: {:?}", entry);
             let path = entry.path();
             let mut media_asset = MediaFile {
                 asset_type: "".to_string(),

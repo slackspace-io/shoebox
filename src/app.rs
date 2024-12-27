@@ -1,3 +1,4 @@
+use leptos::logging::log;
 use leptos::prelude::*;
 use leptos::task::spawn_local;
 use leptos_meta::{provide_meta_context, MetaTags, Stylesheet, Title};
@@ -33,6 +34,7 @@ pub fn shell(options: LeptosOptions) -> impl IntoView {
 pub fn App() -> impl IntoView {
     // Provides context that manages stylesheets, titles, meta tags, etc.
     provide_meta_context();
+    //load files
 
     view! {
         // injects a stylesheet into the document <head>
@@ -53,59 +55,68 @@ pub fn App() -> impl IntoView {
     }
 }
 
-/// Renders the home page of your application.
+
 #[component]
 fn HomePage() -> impl IntoView {
-    // Creates a reactive value to update the button
+    // Reactive signal for the counter
     let count = RwSignal::new(0);
     let on_click = move |_| *count.write() += 1;
+
+    // Resource to fetch data asynchronously
     let res = Resource::new_blocking(
         || (),
         |_| async move { get_all_rows().await.unwrap() },
     );
 
-
     let contents = move || {
         Suspend::new(async move {
             let data = res.await;
+            //placeholder video name for fallback
+            let fallback_video = "test.mp4";
             view! {
-            <div>
-                {count}
-                {data.get(count.get()).map(|file| view! {
-                    <div>
-                    {format!("{:?}", file)}
-                    </div>
-                    {let file_clone = file.clone();
-                        if file_clone.asset_type == "video" {
-                            let file_name = file_clone.path.split('/').last().unwrap();
-                            let video_url = format!("/videos/{}", file_name);
-                            view! {
-                                <video controls width="600">
-                                    <source src={video_url} type="video/mp4"/>
-                                    "Your browser does not support the video tag."
-                                </video>
-                            }
+                    // Display the current count
+                    {log!("Count: {:?}", count.get())}
+                    // Dynamically fetch the file based on the current count
+                    {data.get(count.get()).map(|file| {
+                        let is_video = file.asset_type == "video";
+                        let file_name = file.path.split('/').last().unwrap_or_default();
+                        let video_url = if is_video {
+                            format!("/videos/{}", file_name)
                         } else {
-                            view! {
-                                <video controls width="600">
-                                    <source src={file_clone.path} type="video/mp4"/>
+                            file.path.clone()
+                        };
+                        log!("Video URL: {:?}", video_url);
+                        log!("File: {:?}", file);
+                        view! {
+                            <div>
+                                <p>{format!("hi {:?}", file)}</p>
+                                <video controls width="600" >
+                                    <source src={video_url} type="video/mp4" />
                                     "Your browser does not support the video tag."
                                 </video>
-                            }
+                            </div>
                         }
-                    }
-
-
-
-
-                }).unwrap()}
-            </div>
-        }
+                    }).unwrap_or_else(|| {
+                        // Fallback must match successful branch structure
+                        view! {
+                            <div>
+                                <p>{format!("{:?}", "something")}</p>
+                                <video controls width="600" >
+                                    <source src={fallback_video.to_string()} type="video/mp4" />
+                                    "Your browser does not support the video tag."
+                                </video>
+                            </div>
+                        }
+                    })}
+            }
         })
     };
+
     view! {
         <h1>"Welcome to Leptos!"</h1>
-        <button on:click=on_click>"Click Me: " {count}</button>
+        <button on:click=on_click>
+            "Click Me: " {count}
+        </button>
         <button on:click=move |_| {
             spawn_local(async {
                 get_all_rows().await;
@@ -113,13 +124,12 @@ fn HomePage() -> impl IntoView {
         }>
             "Get Files"
         </button>
-                <div>
+        <div>
             <Suspense>{contents}</Suspense>
         </div>
-
-
     }
 }
+
 
 
 #[server]
@@ -127,6 +137,7 @@ pub async fn get_files() -> Result<Vec<FileType>, ServerFnError> {
     // If scan_files returns a Vec<FileType> directly:
     use crate::filesystem::fs_watcher;
     use crate::filesystem::fs_watcher::scan_files;
+    log!("Getting files");
     let files = scan_files("/home/dopey/videos").await; // Adjust based on actual API
     println!("{:?}", files);
     Ok(files)
@@ -134,8 +145,15 @@ pub async fn get_files() -> Result<Vec<FileType>, ServerFnError> {
 
 #[server]
 pub async fn get_all_rows() -> Result<Vec<MediaFile>, ServerFnError> {
+    //log
+    log!("Getting files");
+    use crate::filesystem::fs_watcher::scan_files;
+    let files = scan_files("/home/dopey/videos").await; // Adjust based on actual API
+    log!("Files gotten");
     use crate::database::return_all_media_assets;
+    log!("Getting all media assets");
     let assets = return_all_media_assets().unwrap();
+    log!("Media assets gotten");
     println!("{:?}", assets);
     Ok(assets)
 }
