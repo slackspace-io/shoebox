@@ -9,7 +9,7 @@ use crate::components::metadata_form::VideoMetadataForm;
 
 #[component]
 pub fn ReviewReload() -> impl IntoView {
-//Redirect to /review
+//Hack to reload after form submission
     view! {
 <Redirect path="/review"/>
 }
