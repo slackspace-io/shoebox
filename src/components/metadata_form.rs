@@ -53,20 +53,23 @@ pub fn VideoMetadataForm(file: String) -> impl IntoView {
         <label for="pets">"Pets: "</label>
         <Input r#type=InputType::Text id="pets" name="pets"  />
         </div>
-        <div class="form">
-
-            <label for="good_take">"Good Take: "</label>
-            <select name="good_take" id="good_take">
-                <option>
-                    "True"
-                </option>
-                <option>
-                    "False"
-                </option>
-            </select>
+        <div class="good_take">
+        <fieldset>
+            <legend>"Good Take"</legend>
+            <div>
+                <input type="radio" id="good_take" name="good_take" value="true" />
+                <label for="good_take">"True"</label>
+            </div>
+            <div>
+                <input type="radio" id="good_take" name="good_take" value="false" />
+                <label for="good_take">"False"</label>
+            </div>
+        </fieldset>
         </div>
+        <div>
             <input type="hidden" name="file" value=file   />
             <Button r#type="Submit" variant=ButtonVariant::Secondary>"Submit"</Button>
+        </div>
         </ActionForm>
         </div>
 

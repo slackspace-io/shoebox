@@ -4,7 +4,16 @@ body {
 }
 
 form {
+	display: flex;
 	margin-top: 50px;
 text-align: center;
-	flex-direction: row;
+	flex-direction: column;
+}
+
+.good_take {
+	display: flex;
+	flex-direction: column;
+	margin-top: 20px;
+	margin-bottom: 20px;
+	align-items: center;
 }
