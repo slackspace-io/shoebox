@@ -11,6 +11,8 @@ use leptos_router::components::Form;
 use leptos_router::hooks::use_query_map;
 use crate::lib_models::{FileType, Metadata};
 use crate::models::MediaFile;
+use crate::pages::homepage::HomePage;
+use crate::pages::metadata_form::FormExample;
 
 pub fn shell(options: LeptosOptions) -> impl IntoView {
     view! {
@@ -60,135 +62,6 @@ pub fn App() -> impl IntoView {
 }
 
 
-#[component]
-fn HomePage() -> impl IntoView {
-    // Reactive signal for the counter
-    let count = RwSignal::new(0);
-    let on_click = move |_| *count.write() += 1;
-
-    // Resource to fetch data asynchronously
-    let res = Resource::new_blocking(
-        || (),
-        |_| async move { get_all_rows().await.unwrap() },
-    );
-
-    let contents = move || {
-        Suspend::new(async move {
-            let data = res.await;
-            //placeholder video name for fallback
-            let fallback_video = "test.mp4";
-            view! {
-                    // Display the current count
-                    {log!("Count: {:?}", count.get())}
-                    // Dynamically fetch the file based on the current count
-                    {data.get(count.get()).map(|file| {
-                        let is_video = file.asset_type == "video";
-                        let file_name = file.path.split('/').last().unwrap_or_default();
-                        let video_url = if is_video {
-                            format!("/videos/{}", file_name)
-                        } else {
-                            file.path.clone()
-                        };
-                        log!("Video URL: {:?}", video_url);
-                        log!("File: {:?}", file);
-                        view! {
-                            <div>
-                                <p>{format!("hi {:?}", video_url)}</p>
-                                <video controls width="600"
-                                src={video_url} id={count.get()}
-                            >
-                                    "Your browser does not support the video tag."
-                                </video>
-                            </div>
-                        }
-                    }).unwrap_or_else(|| {
-                        // Fallback must match successful branch structure
-                        view! {
-                            <div>
-                                <p>{format!("{:?}", "something")}</p>
-                                <video controls width="600"
-                                    src={fallback_video.to_string()}  id={count.get()}
-                            >
-                                    "Your browser does not support the video tag."
-                                </video>
-                            </div>
-                        }
-                    })}
-            }
-        })
-    };
-
-    view! {
-        <h1>"Welcome to Leptos!"</h1>
-        <button on:click=on_click>
-            "Click Me: " {count}
-        </button>
-        <button on:click=move |_| {
-            spawn_local(async {
-                get_files().await;
-            });
-        }>
-            "Get Files"
-        </button>
-        <div>
-            <Suspense
-                    fallback=move || view! { <p>"Loading..."</p> }
-        >
-        {contents}</Suspense>
-        </div>
-    }
-}
-#[component]
-pub fn FormExample() -> impl IntoView {
-    // reactive access to URL query
-    let query = use_query_map();
-    let name = move || query.read().get("name").unwrap_or_default();
-    let number = move || query.read().get("number").unwrap_or_default();
-    let select = move || query.read().get("select").unwrap_or_default();
-
-    view! {
-        // read out the URL query strings
-        <table>
-            <tr>
-                <td><code>"name"</code></td>
-                <td>{name}</td>
-            </tr>
-            <tr>
-                <td><code>"number"</code></td>
-                <td>{number}</td>
-            </tr>
-            <tr>
-                <td><code>"select"</code></td>
-                <td>{select}</td>
-            </tr>
-        </table>
-        // <Form/> will navigate whenever submitted
-        <h2>"Manual Submission"</h2>
-        <Form method="GET" action="">
-            // input names determine query string key
-            <input type="text" name="name" value=name/>
-            <input type="number" name="number" value=number/>
-            <select name="select">
-                // `selected` will set which starts as selected
-                <option selected=move || select() == "A">
-                    "A"
-                </option>
-                <option selected=move || select() == "B">
-                    "B"
-                </option>
-                <option selected=move || select() == "C">
-                    "C"
-                </option>
-            </select>
-            // submitting should cause a client-side
-            // navigation, not a full reload
-            <input type="submit"/>
-        </Form>
-        // This <Form/> uses some JavaScript to submit
-        // on every input
-
-    }
-}
 
 
 

@@ -1,4 +1,6 @@
 pub mod app;
+pub mod pages;
+pub mod components;
 mod lib_models;
 #[cfg(feature = "ssr")]
 pub mod database;
