@@ -72,7 +72,7 @@ pub fn insert_media_asset(media_file: MediaFile) -> Result<usize> {
 
 pub fn return_all_media_assets() -> Result<Vec<MediaFile>> {
     let conn = Connection::open("data.db")?;
-    let mut stmt = conn.prepare("SELECT * FROM media_assets WHERE processed = FALSE")?;
+    let mut stmt = conn.prepare("SELECT * FROM media_assets WHERE processed = FALSE AND asset_type = 'video'")?;
     let media_assets = stmt.query_map([], |row| {
         Ok(MediaFile {
             asset_type: row.get(1)?,

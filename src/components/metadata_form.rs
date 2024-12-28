@@ -33,6 +33,10 @@ async fn handle_form(pets: String, people: String, good_take: String, file: Stri
     //update db
     update_video_metadata(metadata_results).expect("TODO: panic message");
     log!("Updated video metadata");
+    //redirect to homepage
+    //reload home page
+    leptos_axum::redirect("/review/next");
+
     Ok(())
 }
 

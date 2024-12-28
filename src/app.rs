@@ -3,15 +3,12 @@ use leptos::prelude::*;
 use gloo_timers::future::TimeoutFuture;
 use leptos::task::spawn_local;
 use leptos_meta::{provide_meta_context, MetaTags, Stylesheet, Title};
-use leptos_router::{
-    components::{Route, Router, Routes},
-    StaticSegment,
-};
+use leptos_router::{components::{Route, Router, Routes}, path, StaticSegment};
 use leptos_router::components::Form;
 use leptos_router::hooks::use_query_map;
 use crate::lib_models::{FileType, Metadata};
 use crate::models::MediaFile;
-use crate::pages::homepage::HomePage;
+use crate::pages::homepage::{HomePage, ReviewReload};
 
 pub fn shell(options: LeptosOptions) -> impl IntoView {
     view! {
@@ -53,6 +50,8 @@ pub fn App() -> impl IntoView {
             <main>
                 <Routes fallback=|| "Page not found.".into_view()>
                     <Route path=StaticSegment("") view=HomePage/>
+                    <Route path=path!("/review") view=HomePage/>
+                    <Route path=path!("/review/next") view=ReviewReload/>
                 </Routes>
             </main>
         </Router>

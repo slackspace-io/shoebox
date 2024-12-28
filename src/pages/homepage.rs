@@ -2,9 +2,19 @@ use leptos::prelude::*;
 use leptos::logging::log;
 use leptos::prelude::{Get, GlobalAttributes, OnAttribute, Resource, RwSignal, Suspend, Suspense, Write};
 use leptos::task::spawn_local;
+use leptos_router::components::Redirect;
 use crate::app::{get_all_rows, get_files};
 use crate::components::video_player::VideoPlayer;
 use crate::components::metadata_form::VideoMetadataForm;
+
+#[component]
+pub fn ReviewReload() -> impl IntoView {
+//Redirect to /review
+    view! {
+<Redirect path="/review"/>
+}
+}
+
 
 #[component]
 pub fn HomePage() -> impl IntoView {
