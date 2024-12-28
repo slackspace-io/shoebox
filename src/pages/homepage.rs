@@ -4,7 +4,7 @@ use leptos::prelude::{Get, GlobalAttributes, OnAttribute, Resource, RwSignal, Su
 use leptos::task::spawn_local;
 use crate::app::{get_all_rows, get_files};
 use crate::components::video_player::VideoPlayer;
-use crate::pages::metadata_form::VideoMetadataForm;
+use crate::components::metadata_form::VideoMetadataForm;
 
 #[component]
 pub fn HomePage() -> impl IntoView {

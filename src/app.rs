@@ -12,7 +12,7 @@ use leptos_router::hooks::use_query_map;
 use crate::lib_models::{FileType, Metadata};
 use crate::models::MediaFile;
 use crate::pages::homepage::HomePage;
-use crate::pages::metadata_form::FormExample;
+use crate::components::metadata_form::FormExample;
 
 pub fn shell(options: LeptosOptions) -> impl IntoView {
     view! {
