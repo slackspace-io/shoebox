@@ -6,8 +6,8 @@ use leptos::prelude::*;
 
 
 
-
-pub fn video_player  (video_url: String) -> impl IntoView {
+#[component]
+pub fn VideoPlayer  (video_url: String) -> impl IntoView {
     view! {
                             <div>
                                 <p>{format!("{:?}", video_url)}</p>

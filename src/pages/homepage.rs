@@ -3,14 +3,15 @@ use leptos::logging::log;
 use leptos::prelude::{Get, GlobalAttributes, OnAttribute, Resource, RwSignal, Suspend, Suspense, Write};
 use leptos::task::spawn_local;
 use crate::app::{get_all_rows, get_files};
-use crate::components::video_player::video_player;
+use crate::components::video_player::VideoPlayer;
+use crate::pages::metadata_form::VideoMetadataForm;
 
 #[component]
 pub fn HomePage() -> impl IntoView {
     // Reactive signal for the counter
     let count = RwSignal::new(0);
     let on_click = move |_| *count.write() += 1;
-
+    let current_file = RwSignal::new("");
     // Resource to fetch data asynchronously
     let res = Resource::new_blocking(
         || (),
@@ -22,29 +23,33 @@ pub fn HomePage() -> impl IntoView {
             let data = res.await;
             //placeholder video name for fallback
             let fallback_video = "test.mp4";
-            view! {
-                    // Display the current count
-                    {log!("Count: {:?}", count.get())}
-                    // Dynamically fetch the file based on the current count
-                    {data.get(count.get()).map(|file| {
-                        let is_video = file.asset_type == "video";
-                        let file_name = file.path.split('/').last().unwrap_or_default();
-                        let video_url = if is_video {
-                            format!("/videos/{}", file_name)
-                        } else {
-                            file.path.clone()
-                        };
-                        log!("Video URL: {:?}", video_url);
-                        log!("File: {:?}", file);
-                        //play vid
-                        {video_player(video_url)}
+            //set current file
+            *current_file.write() = fallback_video;
+            data.get(count.get()).map(|file| {
+                let is_video = file.asset_type == "video";
+                let file_name = file.path.split('/').last().unwrap_or_default();
+                let mut video_url = if is_video {
+                    format!("/videos/{}", file_name)
+                } else {
+                    file.path.clone()
+                };
+                log!("Video URL: {:?}", video_url);
+                log!("File: {:?}", file);
+                //set current_file
+                //play vid
+                view! {
+                   <VideoPlayer video_url=video_url/>
+                   <VideoMetadataForm file=file.path.clone()/>
+                }
 
-                    }).unwrap_or_else(|| {
-                        // Fallback must match successful branch structure
-                        {video_player(fallback_video.to_string())}
+            }).unwrap_or_else(|| {
+                // Fallback must match successful branch structure
+                view! {
+                   <VideoPlayer video_url=fallback_video.parse().unwrap()/>
+                   <VideoMetadataForm file=fallback_video.parse().unwrap()/>
+                }
 
-                    })}
-            }
+            })
         })
     };
 
@@ -64,7 +69,8 @@ pub fn HomePage() -> impl IntoView {
             <Suspense
                     fallback=move || view! { <p>"Loading..."</p> }
         >
-        {contents}</Suspense>
+        {contents}
+        </Suspense>
         </div>
     }
 }

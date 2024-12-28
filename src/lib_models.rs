@@ -8,17 +8,20 @@ pub enum FileType {
 }
 
 
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq )]
 pub struct VideoMetadata {
     pub path: String,
     //include metadata struct
     pub metadata: Metadata,
 }
 
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq )]
 pub struct Metadata {
-    pub good_take: bool,
-    pub yearly_highlight: bool,
-    pub people: Option<Vec<String>>,
-    pub pets: Option<Vec<String>>,
+    pub good_take: String,
+    pub yearly_highlight: String,
+    pub people: String,
+    pub pets: String,
     //optional fields
-    pub location: Option<String>,
+    pub location: String,
+    pub processed: String
 }
