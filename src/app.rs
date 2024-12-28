@@ -12,7 +12,6 @@ use leptos_router::hooks::use_query_map;
 use crate::lib_models::{FileType, Metadata};
 use crate::models::MediaFile;
 use crate::pages::homepage::HomePage;
-use crate::components::metadata_form::FormExample;
 
 pub fn shell(options: LeptosOptions) -> impl IntoView {
     view! {
@@ -54,7 +53,6 @@ pub fn App() -> impl IntoView {
             <main>
                 <Routes fallback=|| "Page not found.".into_view()>
                     <Route path=StaticSegment("") view=HomePage/>
-                    <Route path=StaticSegment("form") view=FormExample/>
                 </Routes>
             </main>
         </Router>

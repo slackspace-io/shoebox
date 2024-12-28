@@ -1,10 +1,5 @@
 use leptos::prelude::*;
-
-
-
-
-
-
+use crate::components::alert::{Alert, AlertDescription, AlertTitle};
 
 #[component]
 pub fn VideoPlayer  (video_url: String) -> impl IntoView {
