@@ -31,6 +31,8 @@ pub fn HomePage() -> impl IntoView {
     let contents = move || {
         Suspend::new(async move {
             let data = res.await;
+            //Total number of files
+            let total_files = data.len();
             //placeholder video name for fallback
             let fallback_video = "test.mp4";
             //set current file
@@ -48,18 +50,12 @@ pub fn HomePage() -> impl IntoView {
                 //set current_file
                 //play vid
                 view! {
+                <p>"Total Files: " {total_files}</p>
                    <VideoPlayer video_url=video_url/>
                    <VideoMetadataForm file=file.path.clone()/>
                 }
 
-            }).unwrap_or_else(|| {
-                // Fallback must match successful branch structure
-                view! {
-                   <VideoPlayer video_url=fallback_video.parse().unwrap()/>
-                   <VideoMetadataForm file=fallback_video.parse().unwrap()/>
-                }
-
-            })
+            }).unwrap()
         })
     };
 
