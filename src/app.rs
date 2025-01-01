@@ -9,7 +9,7 @@ use leptos_router::hooks::use_query_map;
 use crate::lib_models::{FileType, Metadata};
 use crate::models::MediaFile;
 use crate::pages::review::{ReviewPage, ReviewReload};
-use crate::pages::browse::BrowsePage;
+use crate::pages::browse::{BrowsePage, CardDemo};
 use crate::pages::homepage::HomePage;
 
 pub fn shell(options: LeptosOptions) -> impl IntoView {
