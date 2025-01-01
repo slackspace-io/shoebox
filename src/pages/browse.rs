@@ -19,19 +19,20 @@ pub fn BrowsePage() -> impl IntoView {
         }
     }>
     //list files
-    {move || Suspend::new(async move {
-    let async_files= files.get();
-        async_files.iter().next().map(|file| {
-            for f in file.iter() {
-//                log!("File: {:?}", f);
+    <div>
+        {move || files.get().iter().next().map(|file| {
             view! {
-                <p>"File: "</p>
-            };
+                <div>
+                    {file.iter().map(|f| {
+                        view! {
+                            <p>{format!("File: {:?}", f)}</p>
+                        }
+                    }).collect::<Vec<_>>()}
+                </div>
             }
-        })
+        })}
+    </div>
 
-    }
-    )}
     </Suspense>
     }
 }
