@@ -8,7 +8,9 @@ use leptos_router::components::Form;
 use leptos_router::hooks::use_query_map;
 use crate::lib_models::{FileType, Metadata};
 use crate::models::MediaFile;
-use crate::pages::homepage::{HomePage, ReviewReload};
+use crate::pages::review::{ReviewPage, ReviewReload};
+use crate::pages::browse::BrowsePage;
+use crate::pages::homepage::HomePage;
 
 pub fn shell(options: LeptosOptions) -> impl IntoView {
     view! {
@@ -50,8 +52,9 @@ pub fn App() -> impl IntoView {
             <main>
                 <Routes fallback=|| "Page not found.".into_view()>
                     <Route path=StaticSegment("") view=HomePage/>
-                    <Route path=path!("/review") view=HomePage/>
+                    <Route path=path!("/review") view=ReviewPage/>
                     <Route path=path!("/review/next") view=ReviewReload/>
+                    <Route path=path!("/browse") view=BrowsePage/>
                 </Routes>
             </main>
         </Router>
