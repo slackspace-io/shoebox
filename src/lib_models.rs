@@ -23,5 +23,10 @@ pub struct Metadata {
     pub pets: String,
     //optional fields
     pub location: String,
-    pub processed: String
+    pub processed: String,
+    pub asset_type: String,
+    pub path: String,
+    pub file_name: String,
+    pub creation_date: String,
+    pub discovery_date: String
 }

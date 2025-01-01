@@ -27,6 +27,7 @@ leptos-style = "0.0.3"
 leptos-node-ref = "0.0.3"
 leptos-struct-component = "0.0.3"
 lucide-leptos = "1.1.0"
+chrono = "0.4.39"
 
 [features]
 hydrate = ["leptos/hydrate"]

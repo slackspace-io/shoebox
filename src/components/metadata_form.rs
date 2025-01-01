@@ -19,14 +19,20 @@ async fn handle_form(pets: String, people: String, good_take: String, file: Stri
     log!("File within handle_form: {:?}", file);
     log!("Handling form");
     let metadata_results = VideoMetadata {
-        path: file,
+        path: file.clone(),
         metadata: Metadata {
+            asset_type: "video".to_string(),
+            path: file.clone(),
+            file_name: "test".to_string(),
+            creation_date: "".to_string(),
             good_take: good_take.parse().unwrap(),
             yearly_highlight: "true".parse().unwrap(),
             people: people.parse().unwrap(),
             pets: pets.parse().unwrap(),
             location: "test".to_string(),
             processed: "true".to_string(),
+            discovery_date: "".to_string(),
+
         },
     };
     log!("Metadata results: {:?}", metadata_results);

@@ -117,7 +117,7 @@ pub fn CardDemo(video_metadata: VideoMetadata) -> impl IntoView {
     view! {
         <Card class="w-[380px]">
             <CardHeader>
-                <CardTitle>{video_metadata.path}</CardTitle>
+                <CardTitle>{video_metadata.metadata.file_name}</CardTitle>
                 <CardDescription>{"You have 3 unread messages."}</CardDescription>
             </CardHeader>
             <CardContent class="grid gap-4">

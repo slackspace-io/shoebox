@@ -86,6 +86,7 @@ pub async fn get_all_rows() -> Result<Vec<MediaFile>, ServerFnError> {
     use crate::database::return_all_media_assets;
     log!("Getting all media assets");
     let assets = return_all_media_assets()?;
+    log!("Media assets found {:?}", assets);
     log!("Media assets gotten");
     //log first asset
     //log second asset
