@@ -20,6 +20,7 @@ pub fn BrowsePage() -> impl IntoView {
     let fallback_message = &String::from("No files found");
 //hello world
     view! {
+    <div class="place-items-center">
     <Suspense
     fallback= move || {
         view! {
@@ -42,6 +43,7 @@ pub fn BrowsePage() -> impl IntoView {
     </div>
 
     </Suspense>
+    </div>
     }
 }
 
@@ -120,7 +122,7 @@ pub fn CardDemo(video_metadata: VideoMetadata) -> impl IntoView {
     let yearly_highlight = video_metadata.metadata.yearly_highlight.clone();
     let people = video_metadata.metadata.people.clone();
     view! {
-        <Card class="w-fit">
+        <Card class="w-fit place-content-center">
             <CardHeader>
                 <CardTitle>{path}</CardTitle>
                 <CardDescription>{good_take}</CardDescription>
