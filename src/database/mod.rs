@@ -70,6 +70,31 @@ pub fn insert_media_asset(media_file: MediaFile) -> Result<usize> {
     }
 }
 
+pub fn return_all_video_assets() -> Result<Vec<VideoMetadata>> {
+    let conn = Connection::open("data.db")?;
+    let mut stmt = conn.prepare("SELECT * FROM media_assets WHERE processed = 'true' AND asset_type = 'video'")?;
+    let media_assets = stmt.query_map([], |row| {
+        Ok(VideoMetadata {
+            path: row.get(2)?,
+            metadata: Metadata {
+                good_take: row.get(3)?,
+                yearly_highlight: row.get(4)?,
+                people: row.get(5)?,
+                pets: row.get(6)?,
+                location: row.get(7)?,
+                processed: row.get(8)?,
+            },
+        })
+    })?;
+    let mut media_assets_vec = Vec::new();
+    for media_asset in media_assets {
+        media_assets_vec.push(media_asset?);
+    }
+    log!("Processed media assets: {:?}", media_assets_vec);
+    Ok(media_assets_vec)
+}
+
+
 pub fn return_all_media_assets() -> Result<Vec<MediaFile>> {
     let conn = Connection::open("data.db")?;
     let mut stmt = conn.prepare("SELECT * FROM media_assets WHERE processed = FALSE AND asset_type = 'video'")?;

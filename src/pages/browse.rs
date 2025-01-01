@@ -3,13 +3,18 @@ use leptos::prelude::*;
 use lucide_leptos::{BellRing, Check};
 use crate::components::shadcn_button::Button;
 use crate::components::shadcn_card::{Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle};
+use crate::lib_models::VideoMetadata;
 
 #[component]
 pub fn BrowsePage() -> impl IntoView {
     //get files
+    //let files = Resource::new_blocking(
+    //    || (),
+    //    |_| async move {get_files().await.unwrap() },
+    //);
     let files = Resource::new_blocking(
         || (),
-        |_| async move {get_files().await.unwrap() },
+        |_| async move {get_all_processed().await.unwrap() },
     );
     let fallback_message = &String::from("No files found");
 //hello world
@@ -28,7 +33,7 @@ pub fn BrowsePage() -> impl IntoView {
                 <div>
                     {file.iter().map(|f| {
                         view! {
-                            <CardDemo file_name=f.clone().to_string()/>
+                            <CardDemo video_metadata = f.clone()/>
                         }
                     }).collect::<Vec<_>>()}
                 </div>
@@ -40,6 +45,13 @@ pub fn BrowsePage() -> impl IntoView {
     }
 }
 
+
+#[server]
+pub async fn get_all_processed() -> Result<Vec<VideoMetadata>, ServerFnError> {
+    use crate::database::return_all_video_assets;
+    let processed = return_all_video_assets().expect("TODO: panic message");
+    Ok(processed)
+}
 
 
 
@@ -101,14 +113,11 @@ fn notifications() -> Vec<Notification> {
 }
 
 #[component]
-pub fn CardDemo(file_name: String) -> impl IntoView {
-  //  let file_name_end = file_name.to_string().split('/').last().unwrap_or_default();
-   // let root_directory = file_name.split('/').next().unwrap_or_default();
-
+pub fn CardDemo(video_metadata: VideoMetadata) -> impl IntoView {
     view! {
         <Card class="w-[380px]">
             <CardHeader>
-                <CardTitle>{file_name}</CardTitle>
+                <CardTitle>{video_metadata.path}</CardTitle>
                 <CardDescription>{"You have 3 unread messages."}</CardDescription>
             </CardHeader>
             <CardContent class="grid gap-4">
