@@ -30,3 +30,9 @@ pub struct Metadata {
     pub creation_date: String,
     pub discovery_date: String
 }
+
+impl VideoMetadata {
+    pub fn video_url(&self) -> String {
+        format!("/videos/{}", self.metadata.file_name)
+    }
+}

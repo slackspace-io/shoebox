@@ -1,3 +1,4 @@
+use leptos::html::video;
 use leptos::logging::log;
 use leptos::prelude::*;
 use lucide_leptos::{BellRing, Check};
@@ -19,7 +20,6 @@ pub fn BrowsePage() -> impl IntoView {
     let fallback_message = &String::from("No files found");
 //hello world
     view! {
-        <h1>"Hello, world!"</h1>
     <Suspense
     fallback= move || {
         view! {
@@ -114,18 +114,22 @@ fn notifications() -> Vec<Notification> {
 
 #[component]
 pub fn CardDemo(video_metadata: VideoMetadata) -> impl IntoView {
+    let path = video_metadata.metadata.path.clone();
+    let video_url = video_metadata.video_url();
+    let good_take = video_metadata.metadata.good_take.clone();
+    let yearly_highlight = video_metadata.metadata.yearly_highlight.clone();
+    let people = video_metadata.metadata.people.clone();
     view! {
-        <Card class="w-[380px]">
+        <Card class="w-fit">
             <CardHeader>
-                <CardTitle>{video_metadata.metadata.file_name}</CardTitle>
-                <CardDescription>{"You have 3 unread messages."}</CardDescription>
+                <CardTitle>{path}</CardTitle>
+                <CardDescription>{good_take}</CardDescription>
             </CardHeader>
             <CardContent class="grid gap-4">
                 <div class=" flex items-center space-x-4 rounded-md border p-4">
-                    <BellRing />
                     <div class="flex-1 space-y-1">
                         <p class="text-sm font-medium leading-none">
-                            {"Push Notifications"}
+                    <VideoPlayer video_url=video_url/>
                         </p>
                         <p class="text-sm text-muted-foreground ">
                             {"Send notifications to device."}
@@ -163,4 +167,20 @@ pub fn CardDemo(video_metadata: VideoMetadata) -> impl IntoView {
             </CardFooter>
         </Card>
     }
+}
+
+
+#[component]
+pub fn VideoPlayer  (video_url: String) -> impl IntoView {
+    view! {
+                            <div>
+                                <p>{format!("{:?}", video_url)}</p>
+                                <video controls width="600"
+                                src={video_url}
+                            >
+                                    "Your browser does not support the video tag."
+                                </video>
+                            </div>
+                        }
+
 }
