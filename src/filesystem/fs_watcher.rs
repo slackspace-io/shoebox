@@ -35,6 +35,7 @@ pub async fn scan_files(dir: &str) -> Vec<FileType> {
             };
             let mut media_new = NewMedia {
                 file_path: media_asset.path.clone(),
+                file_name: media_asset.file_name.clone(),
                 media_type: media_asset.asset_type.clone(),
                 reviewed: Option::from(false),
                 created_at: DateTime::from(chrono::Local::now()),

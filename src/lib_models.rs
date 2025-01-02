@@ -1,3 +1,4 @@
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, Serialize, Clone, PartialEq )]
@@ -44,5 +45,16 @@ pub struct MediaFile {
     pub file_name: String,
     pub creation_date: String,
     pub discovery_date: String,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq )]
+pub struct MediaWeb {
+    pub id: i32,
+    pub file_path: String,
+    pub file_name: String,
+    pub media_type: String,
+    pub reviewed: Option<bool>,
+    pub created_at: DateTime<Utc>,
+    pub uploaded_at: Option<DateTime<Utc>>
 }
 

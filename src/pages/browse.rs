@@ -4,7 +4,7 @@ use leptos::prelude::*;
 use lucide_leptos::{BellRing, Check};
 use crate::components::shadcn_button::Button;
 use crate::components::shadcn_card::{Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle};
-use crate::lib_models::VideoMetadata;
+use crate::lib_models::{MediaWeb, VideoMetadata};
 
 #[component]
 pub fn BrowsePage() -> impl IntoView {
@@ -15,7 +15,7 @@ pub fn BrowsePage() -> impl IntoView {
     //);
     let files = Resource::new_blocking(
         || (),
-        |_| async move {get_all_processed().await.unwrap() },
+        |_| async move {get_all_media_assets().await.unwrap() },
     );
     let fallback_message = &String::from("No files found");
 //hello world
@@ -34,7 +34,7 @@ pub fn BrowsePage() -> impl IntoView {
                 <div>
                     {file.iter().map(|f| {
                         view! {
-                            <CardDemo video_metadata = f.clone()/>
+                            <CardDemo media_web = f.clone()/>
                         }
                     }).collect::<Vec<_>>()}
                 </div>
@@ -55,7 +55,25 @@ pub async fn get_all_processed() -> Result<Vec<VideoMetadata>, ServerFnError> {
     Ok(processed)
 }
 
+#[server]
+pub async fn get_all_media_assets() -> Result<Vec<MediaWeb>, ServerFnError> {
+    use crate::models::{Media, NewMedia};
 
+    use crate::database::pg_calls::fetch_all_media_assets;
+    let assets = fetch_all_media_assets();
+    let web_assets = assets.iter().map(|asset| {
+        MediaWeb {
+            id: asset.id,
+            file_path: asset.file_path.clone(),
+            file_name: asset.file_name.clone(),
+            media_type: asset.media_type.clone(),
+            reviewed: asset.reviewed,
+            created_at: asset.created_at,
+            uploaded_at: asset.uploaded_at,
+        }
+    }).collect();
+    Ok(web_assets)
+}
 
 #[server]
 //show directories and files of a given path
@@ -115,17 +133,15 @@ fn notifications() -> Vec<Notification> {
 }
 
 #[component]
-pub fn CardDemo(video_metadata: VideoMetadata) -> impl IntoView {
-    let path = video_metadata.metadata.path.clone();
-    let video_url = video_metadata.video_url();
-    let good_take = video_metadata.metadata.good_take.clone();
-    let yearly_highlight = video_metadata.metadata.yearly_highlight.clone();
-    let people = video_metadata.metadata.people.clone();
+pub fn CardDemo(media_web: MediaWeb) -> impl IntoView {
+    let path = media_web.file_path.clone();
+    let video_url = format!("/videos/{}", media_web.file_name);
+    let file_name = media_web.file_name.clone();
     view! {
         <Card class="w-fit place-content-center">
             <CardHeader>
-                <CardTitle>{path}</CardTitle>
-                <CardDescription>{good_take}</CardDescription>
+                <CardTitle>{file_name}</CardTitle>
+                <CardDescription>"hi"</CardDescription>
             </CardHeader>
             <CardContent class="grid gap-4">
                 <div class=" flex items-center space-x-4 rounded-md border p-4">
