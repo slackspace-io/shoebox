@@ -1,87 +1,204 @@
-use leptos::prelude::*;
+use leptos::html::video;
 use leptos::logging::log;
-use leptos::prelude::{Get, GlobalAttributes, OnAttribute, Resource, RwSignal, Suspend, Suspense, Write};
-use leptos::task::spawn_local;
-use leptos_router::components::Redirect;
-use crate::app::{get_all_rows, get_files};
-use crate::components::video_player::VideoPlayer;
-use crate::components::metadata_form::VideoMetadataForm;
-
-#[component]
-pub fn ReviewReload() -> impl IntoView {
-//Hack to reload after form submission
-    view! {
-<Redirect path="/review"/>
-}
-}
-
+use leptos::prelude::*;
+use lucide_leptos::{BellRing, Check};
+use crate::components::shadcn_button::Button;
+use crate::components::shadcn_card::{Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle};
+use crate::lib_models::{MediaWeb, VideoMetadata};
 
 #[component]
 pub fn ReviewPage() -> impl IntoView {
-    // Reactive signal for the counter
     //get files
+    //let files = Resource::new_blocking(
+    //    || (),
+    //    |_| async move {get_files().await.unwrap() },
+    //);
     let files = Resource::new_blocking(
         || (),
-        |_| async move { get_files().await.unwrap() },
+        |_| async move {get_all_media_assets().await.unwrap() },
     );
-    let count = RwSignal::new(0);
-    let on_click = move |_| *count.write() += 1;
-    let current_file = RwSignal::new("");
-    // Resource to fetch data asynchronously
-    let res = Resource::new_blocking(
-        || (),
-        |_| async move { get_all_rows().await.unwrap() },
-    );
-
-    let contents = move || {
-        Suspend::new(async move {
-            let data = res.await;
-            //Total number of files
-            let total_files = data.len();
-            //placeholder video name for fallback
-            let fallback_video = "test.mp4";
-            //set current file
-            *current_file.write() = fallback_video;
-            data.get(count.get()).map(|file| {
-                let is_video = file.asset_type == "video";
-                let file_name = file.path.split('/').last().unwrap_or_default();
-                let mut video_url = if is_video {
-                    format!("/videos/{}", file_name)
-                } else {
-                    file.path.clone()
-                };
-                log!("Video URL: {:?}", video_url);
-                log!("File: {:?}", file);
-                //set current_file
-                //play vid
-                view! {
-                <p>"Total Files: " {total_files}</p>
-                   <VideoPlayer video_url=video_url/>
-                   <VideoMetadataForm file=file.path.clone()/>
-                }
-
-            }).unwrap()
-        })
-    };
-
+    let fallback_message = &String::from("No files found");
+//hello world
     view! {
-        <h1>"Welcome to Leptos!"</h1>
-        <button on:click=on_click>
-            "Click Me: " {count}
-        </button>
-        <button on:click=move |_| {
-            spawn_local(async {
-                get_files().await;
-            });
-        }>
-            "Get Files"
-        </button>
-        <div>
-            <Suspense
-                    fallback=move || view! { <p>"Loading..."</p> }
-        >
-        {contents}
-        </Suspense>
-        </div>
+    <div class="place-items-center">
+    <Suspense
+    fallback= move || {
+        view! {
+            <p>"Loading..."</p>
+        }
+    }>
+    //list files
+    <div>
+        {move || files.get().iter().next().map(|file| {
+            view! {
+                <div>
+                    {file.iter().map(|f| {
+                        view! {
+                            <CardDemo media_web = f.clone()/>
+                        }
+                    }).collect::<Vec<_>>()}
+                </div>
+            }
+        })}
+    </div>
+
+    </Suspense>
+    </div>
     }
+}
+
+
+#[server]
+pub async fn get_all_processed() -> Result<Vec<VideoMetadata>, ServerFnError> {
+    use crate::database::return_all_video_assets;
+    let processed = return_all_video_assets().expect("TODO: panic message");
+    Ok(processed)
+}
+
+#[server]
+pub async fn get_all_media_assets() -> Result<Vec<MediaWeb>, ServerFnError> {
+    use crate::models::{Media, NewMedia};
+
+    use crate::database::pg_calls::fetch_all_media_assets;
+    let assets = fetch_all_media_assets();
+    let web_assets = assets.iter().map(|asset| {
+        MediaWeb {
+            id: asset.id,
+            file_path: asset.file_path.clone(),
+            file_name: asset.file_name.clone(),
+            media_type: asset.media_type.clone(),
+            reviewed: asset.reviewed,
+            created_at: asset.created_at,
+            uploaded_at: asset.uploaded_at,
+        }
+    }).collect();
+    Ok(web_assets)
+}
+
+#[server]
+//show directories and files of a given path
+pub async fn get_files() -> Result<Vec<String>, ServerFnError> {
+    let path = "/home/dopey/videos";
+    let mut files = Vec::new();
+    // Iterate over entries in the specified directory
+    if let Ok(entries) = std::fs::read_dir(path) {
+        for entry in entries.filter_map(Result::ok) {
+            let path = entry.path();
+            if let Some(extension) = path.extension() {
+                let ext = extension.to_string_lossy().to_lowercase();
+                if matches!(ext.as_str(), "jpg" | "jpeg" | "png" | "gif") {
+                    files.push(path.display().to_string());
+                } else if matches!(ext.as_str(), "mp4" | "mkv" | "avi" | "mov") {
+                    files.push(path.display().to_string());
+                } else {
+                    files.push(path.display().to_string());
+                }
+            }
+        }
+    }
+    println!("{:?}", files);
+    Ok(files)
+}
+
+
+
+
+
+
+
+struct Notification {
+    id: usize,
+    title: &'static str,
+    description: &'static str,
+}
+
+fn notifications() -> Vec<Notification> {
+    vec![
+        Notification {
+            id: 0,
+            title: "Your call has been confirmed.",
+            description: "1 hour ago",
+        },
+        Notification {
+            id: 1,
+            title: "You have a new message!",
+            description: "1 hour ago",
+        },
+        Notification {
+            id: 2,
+            title: "Your subscription is expiring soon!",
+            description: "2 hours ago",
+        },
+    ]
+}
+
+#[component]
+pub fn CardDemo(media_web: MediaWeb) -> impl IntoView {
+    let path = media_web.file_path.clone();
+    let video_url = format!("/videos/{}", media_web.file_name);
+    let file_name = media_web.file_name.clone();
+    view! {
+        <Card class="w-fit place-content-center">
+            <CardHeader>
+                <CardTitle>{file_name}</CardTitle>
+                <CardDescription>"hi"</CardDescription>
+            </CardHeader>
+            <CardContent class="grid gap-4">
+                <div class=" flex items-center space-x-4 rounded-md border p-4">
+                    <div class="flex-1 space-y-1">
+                        <p class="text-sm font-medium leading-none">
+                    <VideoPlayer video_url=video_url/>
+                        </p>
+                        <p class="text-sm text-muted-foreground ">
+                            {"Send notifications to device."}
+                        </p>
+                    </div>
+                </div>
+                <div>
+                    <For
+                        each=move || notifications()
+                        key=|notification| notification.id
+                        children=move |notification: Notification| {
+                    view! {
+                        <div
+                            class="mb-4 grid grid-cols-[25px_1fr] items-start pb-4 last:mb-0 last:pb-0"
+                        >
+                            <span class="flex h-2 w-2 translate-y-1 rounded-full bg-sky-500" />
+                            <div class="space-y-1">
+                                <p class="text-sm font-medium leading-none">
+                                    {notification.title}
+                                </p>
+                                <p class="text-sm text-muted-foreground">
+                                    {notification.description}
+                                </p>
+                            </div>
+                        </div>
+                    }
+                }
+                    />
+                </div>
+            </CardContent>
+            <CardFooter>
+                <Button class="w-full">
+                    <Check />{" Mark all as read"}
+                </Button>
+            </CardFooter>
+        </Card>
+    }
+}
+
+
+#[component]
+pub fn VideoPlayer  (video_url: String) -> impl IntoView {
+    view! {
+                            <div>
+                                <p>{format!("{:?}", video_url)}</p>
+                                <video controls width="600"
+                                src={video_url}
+                            >
+                                    "Your browser does not support the video tag."
+                                </video>
+                            </div>
+                        }
+
 }
