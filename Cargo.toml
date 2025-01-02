@@ -28,6 +28,8 @@ leptos-node-ref = "0.0.3"
 leptos-struct-component = "0.0.3"
 lucide-leptos = "1.1.0"
 chrono = "0.4.39"
+diesel = { version = "2.2.6", features = ["postgres", "chrono"], optional = true }
+dotenvy = "0.15.0"
 
 [features]
 hydrate = ["leptos/hydrate"]
@@ -42,6 +44,7 @@ ssr = [
     "leptos_router/ssr",
     "dep:tracing",
     "rusqlite",
+    "dep:diesel",
 ]
 
 # Defines a size-optimized profile for the WASM bundle in release mode
@@ -113,3 +116,4 @@ lib-default-features = false
 #
 # Optional. Defaults to "release".
 lib-profile-release = "wasm-release"
+

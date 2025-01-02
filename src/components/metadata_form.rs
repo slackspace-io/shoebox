@@ -6,7 +6,6 @@ use leptos_router::hooks::use_query_map;
 use crate::components::shadcn_button::{Button, ButtonVariant};
 use crate::components::shadcn_input::{Input, InputType};
 use crate::lib_models::{Metadata, VideoMetadata};
-use crate::models::MediaFile;
 
 async fn handle_form_results(metadata_results: VideoMetadata) {
     log!("Handling form results");

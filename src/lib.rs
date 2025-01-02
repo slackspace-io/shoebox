@@ -4,9 +4,15 @@ pub mod components;
 mod lib_models;
 #[cfg(feature = "ssr")]
 pub mod database;
+#[cfg(feature = "ssr")]
 mod models;
 #[cfg(feature = "ssr")]
 pub mod filesystem;
+
+#[cfg(feature = "ssr")]
+pub mod schema;
+
+
 
 #[cfg(feature = "hydrate")]
 #[wasm_bindgen::prelude::wasm_bindgen]

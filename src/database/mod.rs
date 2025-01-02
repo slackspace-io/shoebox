@@ -1,8 +1,10 @@
+pub mod pg_conn;
+pub mod pg_calls;
+
 use leptos::logging::log;
 use rusqlite::types::{FromSql, FromSqlError, FromSqlResult, ToSqlOutput, ValueRef};
 use rusqlite::{Connection, Error, Result, ToSql};
-use crate::lib_models::{FileType, Metadata, VideoMetadata};
-use crate::models::MediaFile;
+use crate::lib_models::{FileType, MediaFile, Metadata, VideoMetadata};
 
 pub fn create_table_if_not_exist() -> Result<()> {
     let conn = Connection::open("data.db")?;

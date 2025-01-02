@@ -12,3 +12,6 @@ Cargo.lock
 
 # MSVC Windows builds of rustc generate these, which store debugging information
 *.pdb
+
+
+#command for npx npx tailwindcss -i ./tailwind.css -o ./style/shoebox.css --watch

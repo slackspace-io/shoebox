@@ -1,10 +1,12 @@
 use std::fs;
+use chrono::DateTime;
 use leptos::logging::log;
 use serde::{Deserialize, Serialize};
 use leptos::prelude::Render;
 use crate::database::insert_media_asset;
+use crate::database::pg_calls::insert_new_media;
 use crate::lib_models::{FileType, Metadata};
-use crate::models::MediaFile;
+use crate::models::NewMedia;
 
 pub async fn scan_files(dir: &str) -> Vec<FileType> {
     let mut files = Vec::new();
@@ -31,23 +33,34 @@ pub async fn scan_files(dir: &str) -> Vec<FileType> {
                 //todays date for discovery
                 discovery_date: chrono::Local::now().to_string(),
             };
+            let mut media_new = NewMedia {
+                file_path: media_asset.path.clone(),
+                media_type: media_asset.asset_type.clone(),
+                reviewed: Option::from(false),
+                created_at: DateTime::from(chrono::Local::now()),
+            };
             if let Some(extension) = path.extension() {
                 let ext = extension.to_string_lossy().to_lowercase();
                 if matches!(ext.as_str(), "jpg" | "jpeg" | "png" | "gif") {
                     media_asset.asset_type = "photo".to_string();
+                    media_new.media_type = "photo".to_string();
                     #[cfg(feature = "ssr")]
                     files.push(FileType::Photo(path.display().to_string()));
                 } else if matches!(ext.as_str(), "mp4" | "mkv" | "avi" | "mov") {
                     media_asset.asset_type = "video".to_string();
+                    media_new.media_type = "video".to_string();
                     #[cfg(feature = "ssr")]
                     files.push(FileType::Video(path.display().to_string()));
                 } else {
                     media_asset.asset_type = "other".to_string();
+                    media_new.media_type = "other".to_string();
                     files.push(FileType::Other(path.display().to_string()));
                 }
                 if media_asset.asset_type != "other" {
                     log!("Inserting media asset: {:?}", media_asset);
                     insert_media_asset(media_asset).unwrap();
+                    log!("Insert new media: {:?}", media_new);
+                    insert_new_media(&media_new);
                 }
             }
         }
