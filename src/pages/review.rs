@@ -124,7 +124,8 @@ pub fn MediaCard(media_web: MediaWeb) -> impl IntoView {
     let path = media_web.file_path.clone();
     let video_url = format!("/videos/{}", media_web.file_name);
     let file_name = media_web.file_name.clone();
-    let description = media_web.description.clone();
+    let file_name_no_ext = media_web.file_name_no_ext();
+    let description = Some(media_web.description.clone());
     let tags = media_web.tags.clone();
     let people = media_web.people.clone();
     let media_type = media_web.media_type.clone();
@@ -135,8 +136,8 @@ pub fn MediaCard(media_web: MediaWeb) -> impl IntoView {
         <div>
         <Card class="w-fit place-content-center">
             <CardHeader>
-                <CardTitle>{description}</CardTitle>
-                <CardDescription>"hi"</CardDescription>
+                <CardTitle>{file_name_no_ext}</CardTitle>
+                <CardDescription>{description}</CardDescription>
             </CardHeader>
             <CardContent class="grid gap-4">
                 <div class=" flex items-center space-x-4 rounded-md border p-4">
@@ -148,28 +149,30 @@ pub fn MediaCard(media_web: MediaWeb) -> impl IntoView {
                     </div>
 
                 </div>
+<div class="snap-center flex-row">
+  <h2 class="inline text-cyan-500 font-extrabold">Tags: </h2>
+  <ul class="inline list-none p-0 m-0">
+    {tags.into_iter().map(|tag| {
+      view! {
+        <li class="mr-2 inline">{tag}</li>
+      }
+    }).collect_view()}
+  </ul>
+        </div>
+<div class="snap-center flex-row">
+  <h2 class="inline text-cyan-500 font-extrabold">People: </h2>
+  <ul class="inline list-none p-0 m-0">
+    {people.into_iter().map(|person| {
+      view! {
+        <li class="mr-2 inline">{person}</li>
+      }
+    }).collect_view()}
+  </ul>
+</div>
+
+
                 <div>
-                    <For
-                        each=move || notifications()
-                        key=|notification| notification.id
-                        children=move |notification: Notification| {
-                    view! {
-                        <div
-                            class="mb-4 grid grid-cols-[25px_1fr] items-start pb-4 last:mb-0 last:pb-0"
-                        >
-                            <span class="flex h-2 w-2 translate-y-1 rounded-full bg-sky-500" />
-                            <div class="space-y-1">
-                                <p class="text-sm font-medium leading-none">
-                                    {notification.title}
-                                </p>
-                                <p class="text-sm text-muted-foreground">
-                                    {notification.description}
-                                </p>
-                            </div>
-                        </div>
-                    }
-                }
-                    />
+
                 </div>
             </CardContent>
             <CardFooter>

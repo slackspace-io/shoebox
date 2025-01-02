@@ -61,3 +61,8 @@ pub struct MediaWeb {
     pub uploaded_at: Option<DateTime<Utc>>
 }
 
+impl MediaWeb {
+    pub fn file_name_no_ext(&self) -> String {
+        self.file_name.split('.').next().unwrap().to_string()
+    }
+}
