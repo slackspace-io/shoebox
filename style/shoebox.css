@@ -554,10 +554,6 @@ video {
   display: none;
 }
 
-.pointer-events-auto {
-  pointer-events: auto;
-}
-
 .static {
   position: static;
 }
@@ -572,10 +568,6 @@ video {
 
 .mb-4 {
   margin-bottom: 1rem;
-}
-
-.block {
-  display: block;
 }
 
 .flex {
@@ -714,10 +706,6 @@ video {
   border-width: 1px;
 }
 
-.border-8 {
-  border-width: 8px;
-}
-
 .bg-sky-500 {
   --tw-bg-opacity: 1;
   background-color: rgb(14 165 233 / var(--tw-bg-opacity, 1));
@@ -783,6 +771,10 @@ video {
 
 .tracking-tight {
   letter-spacing: -0.025em;
+}
+
+.underline {
+  text-decoration-line: underline;
 }
 
 .underline-offset-4 {

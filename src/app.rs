@@ -6,6 +6,7 @@ use leptos_meta::{provide_meta_context, MetaTags, Stylesheet, Title};
 use leptos_router::{components::{Route, Router, Routes}, path, StaticSegment};
 use leptos_router::components::Form;
 use leptos_router::hooks::use_query_map;
+use crate::components::shadcn_button::{Button, ButtonVariant};
 use crate::lib_models::{FileType, MediaFile, Metadata};
 use crate::pages::review::{ReviewPage};
 use crate::pages::browse::{BrowsePage, CardDemo};
@@ -49,6 +50,19 @@ pub fn App() -> impl IntoView {
 
         // content for this welcome page
         <Router>
+        <nav class="place-items-center">
+        <div>
+        <Button variant={ButtonVariant::Link}>
+        <a href="/">Home</a>
+        </Button>
+        <Button variant={ButtonVariant::Link}>
+            <a href="/browse">Browse</a>
+        </Button>
+        <Button variant={ButtonVariant::Link}>
+            <a href="/review">Review</a>
+        </Button>
+        </div>
+        </nav>
             <main>
                 <Routes fallback=|| "Page not found.".into_view()>
                     <Route path=StaticSegment("") view=HomePage/>

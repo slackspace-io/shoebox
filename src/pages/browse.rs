@@ -55,25 +55,20 @@ pub async fn get_all_processed() -> Result<Vec<VideoMetadata>, ServerFnError> {
     Ok(processed)
 }
 
+
 #[server]
 pub async fn get_all_media_assets() -> Result<Vec<MediaWeb>, ServerFnError> {
-    use crate::models::{Media, NewMedia};
-
-    use crate::database::pg_calls::fetch_all_media_assets;
-    let assets = fetch_all_media_assets();
-    let web_assets = assets.iter().map(|asset| {
-        MediaWeb {
-            id: asset.id,
-            file_path: asset.file_path.clone(),
-            file_name: asset.file_name.clone(),
-            media_type: asset.media_type.clone(),
-            reviewed: asset.reviewed,
-            created_at: asset.created_at,
-            uploaded_at: asset.uploaded_at,
-        }
-    }).collect();
-    Ok(web_assets)
+    use crate::database::pg_calls::fetch_video_assets;
+    let assets = fetch_video_assets().await;
+    if let Ok(assets) = assets {
+        Ok(assets)
+    } else {
+        Err(ServerFnError::new("Error fetching media assets"))
+    }
 }
+
+
+
 
 #[server]
 //show directories and files of a given path

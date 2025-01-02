@@ -27,11 +27,11 @@ pub fn ReviewPage() -> impl IntoView {
     );
     let fallback_message = &String::from("No files found");
     view! {
+    <div class="place-items-center">
                 <Button variant={ButtonVariant::Outline} onclick={on_click}>
         Next File:
         {count}
     </Button>
-    <div class="place-items-center">
     <Suspense
     fallback= move || {
         view! {
@@ -45,7 +45,7 @@ pub fn ReviewPage() -> impl IntoView {
             file.get(count.get()).map(|f| {
                 Either::Left(view! {
                     <div>
-                        <CardDemo media_web={f.clone()} />
+                        <MediaCard media_web={f.clone()} />
                     </div>
                 })
             })
@@ -69,7 +69,7 @@ pub fn VideoCard(files: Resource::<Vec<MediaWeb>>, count: RwSignal<usize>) -> im
             file.get(count.get()).map(|f| {
                 view! {
                     <div>
-                        <CardDemo media_web={f.clone()} />
+                        <MediaCard media_web={f.clone()} />
                     </div>
                 };
             })
@@ -89,27 +89,6 @@ pub fn FallbackView() -> impl IntoView {
         <p>"No files found"</p>
         <a href="/">"Go Home"</a>
     }
-}
-
-
-#[server]
-pub async fn get_all_media_assets() -> Result<Vec<MediaWeb>, ServerFnError> {
-    use crate::models::{Media, NewMedia};
-
-    use crate::database::pg_calls::fetch_all_media_assets;
-    let assets = fetch_all_media_assets();
-    let web_assets = assets.iter().map(|asset| {
-        MediaWeb {
-            id: asset.id,
-            file_path: asset.file_path.clone(),
-            file_name: asset.file_name.clone(),
-            media_type: asset.media_type.clone(),
-            reviewed: asset.reviewed,
-            created_at: asset.created_at,
-            uploaded_at: asset.uploaded_at,
-        }
-    }).collect();
-    Ok(web_assets)
 }
 
 
@@ -141,15 +120,22 @@ fn notifications() -> Vec<Notification> {
 }
 
 #[component]
-pub fn CardDemo(media_web: MediaWeb) -> impl IntoView {
+pub fn MediaCard(media_web: MediaWeb) -> impl IntoView {
     let path = media_web.file_path.clone();
     let video_url = format!("/videos/{}", media_web.file_name);
     let file_name = media_web.file_name.clone();
+    let description = media_web.description.clone();
+    let tags = media_web.tags.clone();
+    let people = media_web.people.clone();
+    let media_type = media_web.media_type.clone();
+    let reviewed = media_web.reviewed.clone();
+    let created_at = media_web.created_at.clone();
+    let uploaded_at = media_web.uploaded_at.clone();
     view! {
         <div>
         <Card class="w-fit place-content-center">
             <CardHeader>
-                <CardTitle>{file_name}</CardTitle>
+                <CardTitle>{description}</CardTitle>
                 <CardDescription>"hi"</CardDescription>
             </CardHeader>
             <CardContent class="grid gap-4">
@@ -160,6 +146,7 @@ pub fn CardDemo(media_web: MediaWeb) -> impl IntoView {
                             {"Send notifications to device."}
                         </p>
                     </div>
+
                 </div>
                 <div>
                     <For
@@ -210,3 +197,17 @@ pub fn VideoPlayer  (video_url: String) -> impl IntoView {
                         }
 
 }
+
+
+#[server]
+pub async fn get_all_media_assets() -> Result<Vec<MediaWeb>, ServerFnError> {
+    use crate::database::pg_calls::fetch_video_assets;
+    let assets = fetch_video_assets().await;
+    if let Ok(assets) = assets {
+        Ok(assets)
+    } else {
+        Err(ServerFnError::new("Error fetching media assets"))
+    }
+}
+
+
