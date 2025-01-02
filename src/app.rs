@@ -16,7 +16,7 @@ use crate::pages::review_old::ReviewReloadOld;
 pub fn shell(options: LeptosOptions) -> impl IntoView {
     view! {
         <!DOCTYPE html>
-        <html lang="en">
+        <html lang="en" >
             <head>
                 <meta charset="utf-8"/>
                 <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -24,8 +24,10 @@ pub fn shell(options: LeptosOptions) -> impl IntoView {
                 <HydrationScripts options/>
                 <MetaTags/>
             </head>
-            <body>
+            <body class="bg-background">
+        <div>
                 <App/>
+        </div>
             </body>
         </html>
     }
@@ -46,7 +48,7 @@ pub fn App() -> impl IntoView {
         <Stylesheet id="leptos" href="/pkg/shoebox.css"/>
 
         // sets the document title
-        <Title text="Welcome to Leptos"/>
+        <Title text="Shoebox"/>
 
         // content for this welcome page
         <Router>

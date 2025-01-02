@@ -124,7 +124,7 @@
   /* 2 */
   border-style: solid;
   /* 2 */
-  border-color: #e5e7eb;
+  border-color: currentColor;
   /* 2 */
 }
 
@@ -554,28 +554,28 @@ video {
   display: none;
 }
 
+:root {
+  --text: #251c09;
+  --background: #faf6eb;
+  --primary: #69531b;
+  --secondary: #70dbd1;
+  --accent: #3273c8;
+}
+
+.dark {
+  --text: #f6edda;
+  --background: #141005;
+  --primary: #e4ce96;
+  --secondary: #248f84;
+  --accent: #3778cd;
+}
+
 .static {
   position: static;
 }
 
 .relative {
   position: relative;
-}
-
-.right-10 {
-  right: 2.5rem;
-}
-
-.row-auto {
-  grid-row: auto;
-}
-
-.float-right {
-  float: right;
-}
-
-.float-left {
-  float: left;
 }
 
 .m-0 {
@@ -746,9 +746,20 @@ video {
   border-width: 1px;
 }
 
-.bg-sky-500 {
-  --tw-bg-opacity: 1;
-  background-color: rgb(14 165 233 / var(--tw-bg-opacity, 1));
+.bg-background {
+  background-color: var(--background);
+}
+
+.bg-primary {
+  background-color: var(--primary);
+}
+
+.bg-secondary {
+  background-color: var(--secondary);
+}
+
+.p-0 {
+  padding: 0px;
 }
 
 .p-4 {
@@ -757,10 +768,6 @@ video {
 
 .p-6 {
   padding: 1.5rem;
-}
-
-.p-0 {
-  padding: 0px;
 }
 
 .px-3 {
@@ -801,20 +808,16 @@ video {
   line-height: 1.25rem;
 }
 
+.font-extrabold {
+  font-weight: 800;
+}
+
 .font-medium {
   font-weight: 500;
 }
 
 .font-semibold {
   font-weight: 600;
-}
-
-.font-bold {
-  font-weight: 700;
-}
-
-.font-extrabold {
-  font-weight: 800;
 }
 
 .leading-none {
@@ -825,18 +828,8 @@ video {
   letter-spacing: -0.025em;
 }
 
-.text-red-500 {
-  --tw-text-opacity: 1;
-  color: rgb(239 68 68 / var(--tw-text-opacity, 1));
-}
-
-.text-cyan-500 {
-  --tw-text-opacity: 1;
-  color: rgb(6 182 212 / var(--tw-text-opacity, 1));
-}
-
-.underline {
-  text-decoration-line: underline;
+.text-primary {
+  color: var(--primary);
 }
 
 .underline-offset-4 {
@@ -847,6 +840,10 @@ video {
   --tw-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --tw-shadow-colored: 0 1px 2px 0 var(--tw-shadow-color);
   box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+
+.ring-offset-background {
+  --tw-ring-offset-color: var(--background);
 }
 
 .filter {
@@ -861,10 +858,6 @@ video {
 
 .file\:border-0::file-selector-button {
   border-width: 0px;
-}
-
-.file\:bg-transparent::file-selector-button {
-  background-color: transparent;
 }
 
 .file\:text-sm::file-selector-button {
@@ -882,6 +875,10 @@ video {
 
 .last\:pb-0:last-child {
   padding-bottom: 0px;
+}
+
+.hover\:bg-accent:hover {
+  background-color: var(--accent);
 }
 
 .hover\:underline:hover {

@@ -5,6 +5,7 @@ use leptos::html::{video};
 use leptos::logging::log;
 use leptos::prelude::*;
 use lucide_leptos::{BellRing, Check};
+use crate::components::metadata_form::VideoMetadataForm;
 use crate::components::shadcn_button::{Button, ButtonVariant};
 use crate::components::shadcn_card::{Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle};
 use crate::lib_models::{MediaWeb, VideoMetadata};
@@ -176,9 +177,9 @@ pub fn MediaCard(media_web: MediaWeb) -> impl IntoView {
                 </div>
             </CardContent>
             <CardFooter>
-                <Button class="w-full">
-                    <Check />{" Mark all as read"}
-                </Button>
+                        <div class="flex-row items-center">
+                        <VideoMetadataForm file={file_name.clone()} />
+                            </div>
             </CardFooter>
         </Card>
         </div>

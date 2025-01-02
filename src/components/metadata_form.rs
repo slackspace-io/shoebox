@@ -3,9 +3,10 @@ use leptos::prelude::Read;
 use leptos::prelude::*;
 use leptos_router::components::Form;
 use leptos_router::hooks::use_query_map;
+use crate::components::alert::AlertVariant::Default;
 use crate::components::shadcn_button::{Button, ButtonVariant};
 use crate::components::shadcn_input::{Input, InputType};
-use crate::lib_models::{Metadata, VideoMetadata};
+use crate::lib_models::{MediaWeb, Metadata, VideoMetadata};
 
 async fn handle_form_results(metadata_results: VideoMetadata) {
     log!("Handling form results");
@@ -13,34 +14,23 @@ async fn handle_form_results(metadata_results: VideoMetadata) {
 }
 
 #[server]
-async fn handle_form(pets: String, people: String, good_take: String, file: String) -> Result<(), ServerFnError> {
+async fn handle_form(tags: String, people: String, good_take: String, file: String, description: String) -> Result<(), ServerFnError> {
     use crate::database::update_video_metadata;
+    use crate::models::MediaUpdate;
     log!("File within handle_form: {:?}", file);
     log!("Handling form");
-    let metadata_results = VideoMetadata {
-        path: file.clone(),
-        metadata: Metadata {
-            asset_type: "video".to_string(),
-            path: file.clone(),
-            file_name: "test".to_string(),
-            creation_date: "".to_string(),
-            good_take: good_take.parse().unwrap(),
-            yearly_highlight: "true".parse().unwrap(),
-            people: people.parse().unwrap(),
-            pets: pets.parse().unwrap(),
-            location: "test".to_string(),
-            processed: "true".to_string(),
-            discovery_date: "".to_string(),
-
-        },
+    let media_update = MediaUpdate {
+        id: 1,
+        reviewed: Some(true),
+        description,
     };
-    log!("Metadata results: {:?}", metadata_results);
+
     //update db
-    update_video_metadata(metadata_results).expect("TODO: panic message");
+   // update_video_metadata(metadata_results).expect("TODO: panic message");
     log!("Updated video metadata");
     //redirect to homepage
     //reload home page
-    leptos_axum::redirect("/review/next");
+   // leptos_axum::redirect("/review/next");
 
     Ok(())
 }
@@ -52,15 +42,18 @@ pub fn VideoMetadataForm(file: String) -> impl IntoView {
     //handle form data after submit
     view! {
         <div class="form">
-        <h1>"Video Metadata Form"</h1>
         <ActionForm action=submit >
+        <div>
+        <label for="description">"Description: "</label>
+        <Input r#type=InputType::Text id="description" name="description" />
+        </div>
         <div>
             <label for="people">"People: "</label>
             <Input r#type=InputType::Text id="people" name="people" />
         </div>
         <div>
-        <label for="pets">"Pets: "</label>
-        <Input r#type=InputType::Text id="pets" name="pets"  />
+        <label for="tags">"Tags: "</label>
+        <Input r#type=InputType::Text id="tags" name="tags"  />
         </div>
         <div class="good_take">
         <fieldset>
@@ -77,7 +70,7 @@ pub fn VideoMetadataForm(file: String) -> impl IntoView {
         </div>
         <div>
             <input type="hidden" name="file" value=file   />
-            <Button r#type="Submit" variant=ButtonVariant::Secondary>"Submit"</Button>
+            <Button r#type="Submit" >"Submit"</Button>
         </div>
         </ActionForm>
         </div>

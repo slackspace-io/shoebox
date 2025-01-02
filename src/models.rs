@@ -3,6 +3,7 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use crate::components::alert::AlertDescriptionProps;
 use crate::schema::media;
+use crate::schema::media::description;
 use crate::schema::tags;
 use crate::schema::media_tags;
 
@@ -31,6 +32,13 @@ pub struct NewMedia {
     pub created_at: DateTime<Utc>,
 }
 
+#[derive(Insertable, Debug)]
+#[diesel(table_name = media)]
+pub struct MediaUpdate {
+    pub id: i32,
+    pub reviewed: Option<bool>,
+    pub description: String,
+}
 
 #[derive(Queryable, Selectable, Debug)]
 #[diesel(table_name = media_tags)]
