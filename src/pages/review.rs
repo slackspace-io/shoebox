@@ -1,4 +1,5 @@
 use leptos::attr::formaction;
+use leptos::either::Either;
 use leptos::ev::MouseEvent;
 use leptos::html::{video};
 use leptos::logging::log;
@@ -38,19 +39,22 @@ pub fn ReviewPage() -> impl IntoView {
         }
     }>
     //list files
-    <div>
-        {move || files.get().iter().next().map(|file| {
-            view! {
-                <div>
-                    {file.iter().map(|f| {
-                        view! {
-                            <CardDemo media_web = f.clone()/>
-                        }
-                    }).collect::<Vec<_>>()}
-                </div>
-            }
-        })}
-    </div>
+        <div>
+    {move || {
+        files.get().iter().next().and_then(|file| {
+            file.get(count.get()).map(|f| {
+                Either::Left(view! {
+                    <div>
+                        <CardDemo media_web={f.clone()} />
+                    </div>
+                })
+            })
+        }).unwrap_or_else(|| {
+            log!("No files found");
+            Either::Right(FallbackView())
+        })
+    }}
+        </div>
 
     </Suspense>
     </div>
@@ -58,6 +62,34 @@ pub fn ReviewPage() -> impl IntoView {
 }
 
 
+#[component]
+pub fn VideoCard(files: Resource::<Vec<MediaWeb>>, count: RwSignal<usize>) -> impl IntoView {
+    {move || {
+        files.get().iter().next().and_then(|file| {
+            file.get(count.get()).map(|f| {
+                view! {
+                    <div>
+                        <CardDemo media_web={f.clone()} />
+                    </div>
+                };
+            })
+        }).unwrap_or_else(|| {
+            view! {
+                <div>
+                    <p>"No media available."</p>
+                </div>
+            };
+        })
+    }}
+}
+
+#[component]
+pub fn FallbackView() -> impl IntoView {
+    view! {
+        <p>"No files found"</p>
+        <a href="/">"Go Home"</a>
+    }
+}
 
 
 #[server]
@@ -114,6 +146,7 @@ pub fn CardDemo(media_web: MediaWeb) -> impl IntoView {
     let video_url = format!("/videos/{}", media_web.file_name);
     let file_name = media_web.file_name.clone();
     view! {
+        <div>
         <Card class="w-fit place-content-center">
             <CardHeader>
                 <CardTitle>{file_name}</CardTitle>
@@ -158,6 +191,7 @@ pub fn CardDemo(media_web: MediaWeb) -> impl IntoView {
                 </Button>
             </CardFooter>
         </Card>
+        </div>
     }
 }
 
