@@ -1,25 +1,35 @@
-use leptos::html::video;
+use leptos::attr::formaction;
+use leptos::ev::MouseEvent;
+use leptos::html::{video};
 use leptos::logging::log;
 use leptos::prelude::*;
 use lucide_leptos::{BellRing, Check};
-use crate::components::shadcn_button::Button;
+use crate::components::shadcn_button::{Button, ButtonVariant};
 use crate::components::shadcn_card::{Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle};
 use crate::lib_models::{MediaWeb, VideoMetadata};
 
+
+
+
+
+
 #[component]
 pub fn ReviewPage() -> impl IntoView {
-    //get files
-    //let files = Resource::new_blocking(
-    //    || (),
-    //    |_| async move {get_files().await.unwrap() },
-    //);
+    let count = RwSignal::new(0);
+//    let on_click = move |_| *count.write() += 1;
+    let on_click = Callback::new(move |_: MouseEvent| {
+        *count.write() += 1;
+    });
     let files = Resource::new_blocking(
         || (),
         |_| async move {get_all_media_assets().await.unwrap() },
     );
     let fallback_message = &String::from("No files found");
-//hello world
     view! {
+                <Button variant={ButtonVariant::Outline} onclick={on_click}>
+        Next File:
+        {count}
+    </Button>
     <div class="place-items-center">
     <Suspense
     fallback= move || {
@@ -48,12 +58,7 @@ pub fn ReviewPage() -> impl IntoView {
 }
 
 
-#[server]
-pub async fn get_all_processed() -> Result<Vec<VideoMetadata>, ServerFnError> {
-    use crate::database::return_all_video_assets;
-    let processed = return_all_video_assets().expect("TODO: panic message");
-    Ok(processed)
-}
+
 
 #[server]
 pub async fn get_all_media_assets() -> Result<Vec<MediaWeb>, ServerFnError> {
@@ -74,35 +79,6 @@ pub async fn get_all_media_assets() -> Result<Vec<MediaWeb>, ServerFnError> {
     }).collect();
     Ok(web_assets)
 }
-
-#[server]
-//show directories and files of a given path
-pub async fn get_files() -> Result<Vec<String>, ServerFnError> {
-    let path = "/home/dopey/videos";
-    let mut files = Vec::new();
-    // Iterate over entries in the specified directory
-    if let Ok(entries) = std::fs::read_dir(path) {
-        for entry in entries.filter_map(Result::ok) {
-            let path = entry.path();
-            if let Some(extension) = path.extension() {
-                let ext = extension.to_string_lossy().to_lowercase();
-                if matches!(ext.as_str(), "jpg" | "jpeg" | "png" | "gif") {
-                    files.push(path.display().to_string());
-                } else if matches!(ext.as_str(), "mp4" | "mkv" | "avi" | "mov") {
-                    files.push(path.display().to_string());
-                } else {
-                    files.push(path.display().to_string());
-                }
-            }
-        }
-    }
-    println!("{:?}", files);
-    Ok(files)
-}
-
-
-
-
 
 
 
@@ -146,9 +122,7 @@ pub fn CardDemo(media_web: MediaWeb) -> impl IntoView {
             <CardContent class="grid gap-4">
                 <div class=" flex items-center space-x-4 rounded-md border p-4">
                     <div class="flex-1 space-y-1">
-                        <p class="text-sm font-medium leading-none">
                     <VideoPlayer video_url=video_url/>
-                        </p>
                         <p class="text-sm text-muted-foreground ">
                             {"Send notifications to device."}
                         </p>

@@ -1,12 +1,14 @@
 use leptos::{ev::MouseEvent, prelude::*};
+use leptos::attr::Attribute;
 use leptos_node_ref::AnyNodeRef;
 use leptos_struct_component::{struct_component, StructComponent};
 use leptos_style::Style;
 use tailwind_fuse::*;
 
+//class = "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0"
 #[derive(TwClass)]
 #[tw(
-    class = "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0"
+    class = "inline-flex"
 )]
 pub struct ButtonClass {
     pub variant: ButtonVariant,
@@ -70,7 +72,6 @@ pub struct ButtonChildProps {
     // pub popovertargetaction: MaybeProp<String>,
     pub r#type: MaybeProp<String>,
     pub value: MaybeProp<String>,
-
     // Event handler attributes
     pub onclick: Option<Callback<MouseEvent>>,
 }
