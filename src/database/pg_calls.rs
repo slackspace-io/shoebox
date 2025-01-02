@@ -10,9 +10,7 @@ pub fn fetch_all_media_assets() -> Vec<Media> {
     use crate::schema::media::dsl::*;
     let connection = &mut pg_connection();
     let results = media
-        .filter(reviewed.eq(false))
         .filter(media_type.eq("video"))
-        .limit(5)
         .select(Media::as_select())
         .load(connection)
         .expect("Error loading media assets");

@@ -5,6 +5,7 @@ use lucide_leptos::{BellRing, Check};
 use crate::components::shadcn_button::Button;
 use crate::components::shadcn_card::{Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle};
 use crate::lib_models::{MediaWeb, VideoMetadata};
+use crate::pages::review::MediaCard;
 
 #[component]
 pub fn BrowsePage() -> impl IntoView {
@@ -34,7 +35,7 @@ pub fn BrowsePage() -> impl IntoView {
                 <div>
                     {file.iter().map(|f| {
                         view! {
-                            <CardDemo media_web = f.clone()/>
+                            <MediaCard media_web = f.clone()/>
                         }
                     }).collect::<Vec<_>>()}
                 </div>

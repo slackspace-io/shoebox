@@ -33,7 +33,7 @@ pub fn ReviewPage() -> impl IntoView {
         Next File:
         {count}
     </Button>
-        
+
     <Suspense
     fallback= move || {
         view! {
@@ -142,11 +142,10 @@ pub fn MediaCard(media_web: MediaWeb) -> impl IntoView {
                 <CardDescription>{description}</CardDescription>
             </CardHeader>
             <CardContent class="grid gap-4">
-                <div class=" flex items-center space-x-4 rounded-md border p-4">
+                <div class=" flex items-center space-x-4 rounded-md border p-2">
                     <div class="flex-1 space-y-1">
                     <VideoPlayer video_url=video_url/>
                         <p class="text-sm text-muted-foreground ">
-                            {"Send notifications to device."}
                         </p>
                     </div>
 
@@ -180,6 +179,7 @@ pub fn MediaCard(media_web: MediaWeb) -> impl IntoView {
             <CardFooter>
                         <div class="flex-row items-center">
                         <VideoMetadataForm file={file_name.clone()} />
+
                             </div>
             </CardFooter>
         </Card>
@@ -192,7 +192,6 @@ pub fn MediaCard(media_web: MediaWeb) -> impl IntoView {
 pub fn VideoPlayer  (video_url: String) -> impl IntoView {
     view! {
                             <div>
-                                <p>{format!("{:?}", video_url)}</p>
                                 <video controls width="600"
                                 src={video_url}
                             >
