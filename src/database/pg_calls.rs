@@ -11,6 +11,7 @@ pub fn fetch_all_media_assets() -> Vec<Media> {
     let connection = &mut pg_connection();
     let results = media
         .filter(media_type.eq("video"))
+        .limit(10)
         .select(Media::as_select())
         .load(connection)
         .expect("Error loading media assets");

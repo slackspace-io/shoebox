@@ -85,7 +85,7 @@ pub async fn get_files() -> Result<Vec<FileType>, ServerFnError> {
     use crate::filesystem::fs_watcher;
     use crate::filesystem::fs_watcher::scan_files;
     log!("Getting files");
-    let files = scan_files("/home/dopey/videos").await; // Adjust based on actual API
+    let files = scan_files("/mnt/storage/tove/immich/auto-transcoded/").await; // Adjust based on actual API
     println!("{:?}", files);
     Ok(files)
 }

@@ -562,14 +562,6 @@ video {
   --accent: #3273c8;
 }
 
-.dark {
-  --text: #f6edda;
-  --background: #141005;
-  --primary: #e4ce96;
-  --secondary: #248f84;
-  --accent: #3778cd;
-}
-
 .static {
   position: static;
 }
@@ -762,20 +754,16 @@ video {
   padding: 0px;
 }
 
+.p-2 {
+  padding: 0.5rem;
+}
+
 .p-4 {
   padding: 1rem;
 }
 
 .p-6 {
   padding: 1.5rem;
-}
-
-.p-1 {
-  padding: 0.25rem;
-}
-
-.p-2 {
-  padding: 0.5rem;
 }
 
 .px-3 {

@@ -190,19 +190,19 @@ pub fn MediaCard(media_web: MediaWeb) -> impl IntoView {
 
 #[component]
 pub fn VideoPlayer  (video_url: String) -> impl IntoView {
+    let video_url=video_url.clone();
+    let class_url = video_url.clone();
+
     view! {
-                            <div>
-                                <video controls width="600"
-                                src={video_url}
-                            >
-                                    "Your browser does not support the video tag."
-                                </video>
-                            </div>
-                        }
-
+    <div>
+        <p>{format!("{:?}", video_url)}</p>
+        <video controls width="600" height="400" src={class_url}>
+            <source src={video_url} type="video/mp4" />
+            Your browser does not support the video tag.
+        </video>
+    </div>
 }
-
-
+}
 #[server]
 pub async fn get_all_media_assets() -> Result<Vec<MediaWeb>, ServerFnError> {
     use crate::database::pg_calls::fetch_video_assets;

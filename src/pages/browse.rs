@@ -1,4 +1,5 @@
-use leptos::html::video;
+use leptos::attr::controls;
+use leptos::html::{video, Video};
 use leptos::logging::log;
 use leptos::prelude::*;
 use lucide_leptos::{BellRing, Check};
@@ -187,14 +188,12 @@ pub fn CardDemo(media_web: MediaWeb) -> impl IntoView {
 #[component]
 pub fn VideoPlayer  (video_url: String) -> impl IntoView {
     view! {
-                            <div>
-                                <p>{format!("{:?}", video_url)}</p>
-                                <video controls width="600"
-                                src={video_url}
-                            >
-                                    "Your browser does not support the video tag."
-                                </video>
-                            </div>
-                        }
-
+    <div>
+        <p>{format!("{:?}", video_url)}</p>
+        <video controls width="600" height="400">
+            <source src={video_url} type="video/mp4" />
+            Your browser does not support the video tag.
+        </video>
+    </div>
+}
 }
