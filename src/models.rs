@@ -32,10 +32,10 @@ pub struct NewMedia {
     pub created_at: DateTime<Utc>,
 }
 
-#[derive(Insertable, Debug)]
+#[derive(Insertable, Debug, AsChangeset)]
 #[diesel(table_name = media)]
 pub struct MediaUpdate {
-    pub id: i32,
+    pub file_name: String,
     pub reviewed: Option<bool>,
     pub description: String,
 }

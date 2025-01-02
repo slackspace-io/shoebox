@@ -15,18 +15,18 @@ async fn handle_form_results(metadata_results: VideoMetadata) {
 
 #[server]
 async fn handle_form(tags: String, people: String, good_take: String, file: String, description: String) -> Result<(), ServerFnError> {
-    use crate::database::update_video_metadata;
+    use crate::database::pg_calls::update_media;
     use crate::models::MediaUpdate;
     log!("File within handle_form: {:?}", file);
     log!("Handling form");
     let media_update = MediaUpdate {
-        id: 1,
+        file_name: file,
         reviewed: Some(true),
         description,
     };
 
     //update db
-   // update_video_metadata(metadata_results).expect("TODO: panic message");
+    update_media(&media_update).expect("TODO: panic message");
     log!("Updated video metadata");
     //redirect to homepage
     //reload home page

@@ -25,9 +25,7 @@ pub fn shell(options: LeptosOptions) -> impl IntoView {
                 <MetaTags/>
             </head>
             <body class="bg-background">
-        <div>
                 <App/>
-        </div>
             </body>
         </html>
     }
