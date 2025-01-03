@@ -4,6 +4,8 @@ use serde::{Deserialize, Serialize};
 use crate::schema::media;
 use crate::schema::tags;
 use crate::schema::media_tags;
+use crate::schema::media_people;
+use crate::schema::people;
 
 
 #[derive(Queryable, Selectable, Debug, Serialize, Deserialize, Identifiable)]
@@ -66,11 +68,28 @@ pub struct NewTag<'a> {
     pub name: &'a str,
 }
 
-
-#[derive(Debug, Serialize, Deserialize )]
-pub struct MediaView {
-    pub media: Media,
-    pub tags: Vec<Tag>,
+#[derive(Queryable, Selectable, Debug, Insertable, Associations, Identifiable)]
+#[diesel(belongs_to(Media, foreign_key = media_id))]
+#[diesel(belongs_to(Person, foreign_key = person_id))]
+#[diesel(table_name = media_people)]
+#[diesel(primary_key(media_id, person_id))]
+pub struct MediaPerson {
+    pub media_id: i32,
+    pub person_id: i32,
 }
 
 
+#[derive(Queryable, Selectable, Debug, Serialize, Deserialize, Identifiable)]
+#[diesel(table_name = people)]
+#[diesel(check_for_backend(diesel::pg::Pg))]
+pub struct Person {
+    pub id: i32,
+    pub name: String,
+}
+
+#[derive(Insertable, Debug)]
+#[diesel(table_name = people)]
+#[diesel(check_for_backend(diesel::pg::Pg))]
+pub struct NewPerson<'a> {
+    pub name: &'a str,
+}

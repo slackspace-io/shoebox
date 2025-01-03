@@ -38,15 +38,42 @@ async fn handle_tags(tags: String) -> Result<Vec<i32>, ServerFnError> {
 
 }
 
+#[server]
+async fn handle_people(people: String) -> Result<Vec<i32>, ServerFnError> {
+    use crate::database::pg_inserts::insert_new_person;
+    use crate::models::NewPerson;
+    let mut person_ids = Vec::new();
+    log!("Handling tags");
+    //split tags by comma
+    let people_list = people.split(",").collect::<Vec<&str>>();
+    log!("Tags: {:?}", people_list);
+    for person in people_list {
+        //insert new tag into db
+        let new_person = NewPerson {
+            name: person,
+        };
+        let person_id = insert_new_person(&new_person);
+        person_ids.push(person_id?);
+        //check if tag exists
+        //if tag does not exist, create tag
+        //if tag exists, get tag id
+    }
+    log!("Tag ids: {:?}", person_ids);
+    Ok(person_ids)
+
+}
+
 
 
 
 #[server]
 async fn handle_form(tags: String, people: String, good_take: String, file: String, description: String) -> Result<(), ServerFnError> {
     use crate::database::pg_updates::update_media;
+    use crate::database::pg_inserts::insert_new_media_person;
     use crate::database::pg_inserts::insert_new_media_tag;
     use crate::models::MediaUpdate;
     use crate::models::MediaTag;
+    use crate::models::MediaPerson;
     log!("File within handle_form: {:?}", file);
     log!("Handling form");
     let tag_ids = match handle_tags(tags).await {
@@ -57,7 +84,13 @@ async fn handle_form(tags: String, people: String, good_take: String, file: Stri
         }
     };
     log!("Tag ids: {:?}", tag_ids);
-
+    let person_ids = match handle_people(people).await {
+        Ok(person_ids) => person_ids,
+        Err(e) => {
+            log!("Error handling people: {:?}", e);
+            return Err(e);
+        }
+    };
     let media_update = MediaUpdate {
         file_name: file,
         reviewed: Some(true),
@@ -86,6 +119,14 @@ async fn handle_form(tags: String, people: String, good_take: String, file: Stri
         };
         //insert media tag
         insert_new_media_tag(media_tag);
+    }
+    for person_id in person_ids {
+        let media_person = MediaPerson {
+            media_id,
+            person_id,
+        };
+        //insert media tag
+        insert_new_media_person(media_person);
     }
     //update media tags
     //redirect to homepage

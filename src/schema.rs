@@ -14,6 +14,13 @@ diesel::table! {
 }
 
 diesel::table! {
+    media_people (media_id, person_id) {
+        media_id -> Int4,
+        person_id -> Int4,
+    }
+}
+
+diesel::table! {
     media_tags (media_id, tag_id) {
         media_id -> Int4,
         tag_id -> Int4,
@@ -34,11 +41,14 @@ diesel::table! {
     }
 }
 
+diesel::joinable!(media_people -> media (media_id));
+diesel::joinable!(media_people -> people (person_id));
 diesel::joinable!(media_tags -> media (media_id));
 diesel::joinable!(media_tags -> tags (tag_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
     media,
+    media_people,
     media_tags,
     people,
     tags,
