@@ -30,16 +30,14 @@ pub fn BrowsePage() -> impl IntoView {
         }
     }>
     //list files
-    <div>
+    <div class="grid grid-cols-4 gap-4">
         {move || files.get().iter().next().map(|file| {
             view! {
-                <div>
                     {file.iter().map(|f| {
                         view! {
-                            <MediaCard media_web = f.clone()/>
+                            <MediaCard media_web = f.clone() editable = false/>
                         }
                     }).collect::<Vec<_>>()}
-                </div>
             }
         })}
     </div>
@@ -189,7 +187,6 @@ pub fn CardDemo(media_web: MediaWeb) -> impl IntoView {
 pub fn VideoPlayer  (video_url: String) -> impl IntoView {
     view! {
     <div>
-        <p>{format!("{:?}", video_url)}</p>
         <video controls width="600" height="400">
             <source src={video_url} type="video/mp4" />
             Your browser does not support the video tag.

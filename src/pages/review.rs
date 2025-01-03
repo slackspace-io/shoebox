@@ -47,7 +47,7 @@ pub fn ReviewPage() -> impl IntoView {
             file.get(count.get()).map(|f| {
                 Either::Left(view! {
                     <div>
-                        <MediaCard media_web={f.clone()} />
+                        <MediaCard media_web={f.clone()} editable=true />
                     </div>
                 })
             })
@@ -71,7 +71,7 @@ pub fn VideoCard(files: Resource::<Vec<MediaWeb>>, count: RwSignal<usize>) -> im
             file.get(count.get()).map(|f| {
                 view! {
                     <div>
-                        <MediaCard media_web={f.clone()} />
+                        <MediaCard media_web={f.clone()} editable = true />
                     </div>
                 };
             })
@@ -122,7 +122,7 @@ fn notifications() -> Vec<Notification> {
 }
 
 #[component]
-pub fn MediaCard(media_web: MediaWeb) -> impl IntoView {
+pub fn MediaCard(media_web: MediaWeb, editable: bool) -> impl IntoView {
     let path = media_web.file_path.clone();
     let video_url = format!("/videos/{}", media_web.file_name);
     let file_name = media_web.file_name.clone();
@@ -177,10 +177,21 @@ pub fn MediaCard(media_web: MediaWeb) -> impl IntoView {
                 </div>
             </CardContent>
             <CardFooter>
+        {if editable {
+            Either::Left(view!{
+
                         <div class="flex-row items-center">
                         <VideoMetadataForm file={file_name.clone()} />
 
                             </div>
+            })
+            } else {
+            Either::Right(view!{
+                <div></div>
+            })
+        }
+        }
+
             </CardFooter>
         </Card>
         </div>
@@ -195,7 +206,6 @@ pub fn VideoPlayer  (video_url: String) -> impl IntoView {
 
     view! {
     <div>
-        <p>{format!("{:?}", video_url)}</p>
         <video controls width="600" height="400" src={class_url}>
             <source src={video_url} type="video/mp4" />
             Your browser does not support the video tag.
