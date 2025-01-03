@@ -59,7 +59,7 @@ pub async fn get_all_processed() -> Result<Vec<VideoMetadata>, ServerFnError> {
 #[server]
 pub async fn get_all_media_assets() -> Result<Vec<MediaWeb>, ServerFnError> {
     use crate::database::pg_calls::fetch_video_assets;
-    let assets = fetch_video_assets().await;
+    let assets = fetch_video_assets(false).await;
     if let Ok(assets) = assets {
         Ok(assets)
     } else {

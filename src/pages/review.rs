@@ -4,6 +4,7 @@ use leptos::ev::MouseEvent;
 use leptos::html::{video};
 use leptos::logging::log;
 use leptos::prelude::*;
+use leptos_router::components::Redirect;
 use lucide_leptos::{BellRing, Check};
 use crate::components::metadata_form::VideoMetadataForm;
 use crate::components::shadcn_button::{Button, ButtonVariant};
@@ -11,7 +12,13 @@ use crate::components::shadcn_card::{Card, CardContent, CardDescription, CardFoo
 use crate::lib_models::{MediaWeb, VideoMetadata};
 
 
-
+#[component]
+pub fn ReviewReloadOld() -> impl IntoView {
+    //Hack to reload after form submission
+    view! {
+<Redirect path="/review"/>
+}
+}
 
 
 
@@ -171,7 +178,7 @@ pub fn VideoPlayer  (video_url: String) -> impl IntoView {
 #[server]
 pub async fn get_all_media_assets() -> Result<Vec<MediaWeb>, ServerFnError> {
     use crate::database::pg_calls::fetch_video_assets;
-    let assets = fetch_video_assets().await;
+    let assets = fetch_video_assets(true).await;
     if let Ok(assets) = assets {
         Ok(assets)
     } else {

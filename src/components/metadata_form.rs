@@ -131,7 +131,7 @@ async fn handle_form(tags: String, people: String, good_take: String, file: Stri
     //update media tags
     //redirect to homepage
     //reload home page
-   // leptos_axum::redirect("/review/next");
+    leptos_axum::redirect("/review/next");
 
     Ok(())
 }

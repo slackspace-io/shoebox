@@ -5,6 +5,7 @@ use diesel::associations::HasTable;
 use diesel::dsl::insert_into;
 use diesel::query_dsl::methods::GroupByDsl;
 use diesel::result::{DatabaseErrorKind, Error};
+use diesel::sql_types::Bool;
 use leptos::prelude::ServerFnError;
 use crate::database::pg_conn::pg_connection;
 use crate::lib_models::MediaWeb;
@@ -111,10 +112,24 @@ pub fn get_media_people(media_id:i32) -> Vec<String> {
     }
 }
 
+pub fn fetch_assets_for_review() -> Vec<Media> {
+    use crate::schema::media::dsl::*;
+    let connection = &mut pg_connection();
+    let results = media
+        .filter(media_type.eq("video"))
+        .filter(reviewed.eq(false))
+        .limit(10)
+        .select(Media::as_select())
+        .order(id)
+        .load(connection)
+        .expect("Error loading media assets");
+    results
+}
 
 
 
-pub async fn fetch_video_assets() -> Result<Vec<MediaWeb>, ServerFnError> {
+
+pub async fn fetch_video_assets(only_unreviewed: bool) -> Result<Vec<MediaWeb>, ServerFnError> {
     use crate::models::{Media, NewMedia};
     let result = get_media_tags(1);
     println!("result: {:?}", result);
@@ -123,10 +138,13 @@ pub async fn fetch_video_assets() -> Result<Vec<MediaWeb>, ServerFnError> {
     let result = get_media_tags(3);
     println!("result: {:?}", result);
     //   let ass = associate_media_tags();
-
     //create MediaView struct
+    let assets = if only_unreviewed {
+        fetch_assets_for_review()
+    } else {
+        fetch_all_media_assets()
+    };
 
-    let assets = fetch_all_media_assets();
     let web_assets = assets.iter().map(|asset| {
         MediaWeb {
             id: asset.id,
