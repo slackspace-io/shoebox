@@ -1,5 +1,7 @@
 pub mod pg_conn;
 pub mod pg_calls;
+pub mod pg_inserts;
+pub mod pg_updates;
 
 use leptos::logging::log;
 use rusqlite::types::{FromSql, FromSqlError, FromSqlResult, ToSqlOutput, ValueRef};

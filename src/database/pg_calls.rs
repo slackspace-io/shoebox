@@ -36,17 +36,6 @@ pub fn insert_new_media(new_media: &NewMedia) -> QueryResult<usize>{
 }
 
 
-pub fn update_media(media_update: &MediaUpdate) -> QueryResult<usize> {
-    use crate::database::pg_conn::pg_connection;
-    use crate::schema::media::dsl::*;
-    let connection = &mut pg_connection();
-    let result = diesel::update(media)
-        .filter(file_name.eq(&media_update.file_name))
-        .set(media_update)
-        .execute(connection);
-    result
-}
-
 pub async fn fetch_video_assets() -> Result<Vec<MediaWeb>, ServerFnError> {
     use crate::models::{Media, NewMedia};
 
@@ -70,6 +59,8 @@ pub async fn fetch_video_assets() -> Result<Vec<MediaWeb>, ServerFnError> {
     Ok(web_assets)
 
 }
+
+
 
 
 

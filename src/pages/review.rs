@@ -65,27 +65,6 @@ pub fn ReviewPage() -> impl IntoView {
 
 
 #[component]
-pub fn VideoCard(files: Resource::<Vec<MediaWeb>>, count: RwSignal<usize>) -> impl IntoView {
-    {move || {
-        files.get().iter().next().and_then(|file| {
-            file.get(count.get()).map(|f| {
-                view! {
-                    <div>
-                        <MediaCard media_web={f.clone()} editable = true />
-                    </div>
-                };
-            })
-        }).unwrap_or_else(|| {
-            view! {
-                <div>
-                    <p>"No media available."</p>
-                </div>
-            };
-        })
-    }}
-}
-
-#[component]
 pub fn FallbackView() -> impl IntoView {
     view! {
         <p>"No files found"</p>
@@ -95,31 +74,7 @@ pub fn FallbackView() -> impl IntoView {
 
 
 
-struct Notification {
-    id: usize,
-    title: &'static str,
-    description: &'static str,
-}
 
-fn notifications() -> Vec<Notification> {
-    vec![
-        Notification {
-            id: 0,
-            title: "Your call has been confirmed.",
-            description: "1 hour ago",
-        },
-        Notification {
-            id: 1,
-            title: "You have a new message!",
-            description: "1 hour ago",
-        },
-        Notification {
-            id: 2,
-            title: "Your subscription is expiring soon!",
-            description: "2 hours ago",
-        },
-    ]
-}
 
 #[component]
 pub fn MediaCard(media_web: MediaWeb, editable: bool) -> impl IntoView {

@@ -24,6 +24,7 @@ pub struct Media {
 
 #[derive(Insertable, Debug)]
 #[diesel(table_name = media)]
+#[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct NewMedia {
     pub file_path: String,
     pub file_name: String,
@@ -34,13 +35,14 @@ pub struct NewMedia {
 
 #[derive(Insertable, Debug, AsChangeset)]
 #[diesel(table_name = media)]
+#[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct MediaUpdate {
     pub file_name: String,
     pub reviewed: Option<bool>,
     pub description: String,
 }
 
-#[derive(Queryable, Selectable, Debug)]
+#[derive(Queryable, Selectable, Debug, Insertable)]
 #[diesel(table_name = media_tags)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct MediaTag {
@@ -59,6 +61,7 @@ pub struct Tag {
 
 #[derive(Insertable, Debug)]
 #[diesel(table_name = tags)]
-pub struct NewTag {
-    pub name: String,
+#[diesel(check_for_backend(diesel::pg::Pg))]
+pub struct NewTag<'a> {
+    pub name: &'a str,
 }

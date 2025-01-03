@@ -14,20 +14,80 @@ async fn handle_form_results(metadata_results: VideoMetadata) {
 }
 
 #[server]
+async fn handle_tags(tags: String) -> Result<Vec<i32>, ServerFnError> {
+    use crate::database::pg_inserts::insert_new_tag;
+    use crate::models::NewTag;
+    let mut tag_ids = Vec::new();
+    log!("Handling tags");
+    //split tags by comma
+    let tags = tags.split(",").collect::<Vec<&str>>();
+    log!("Tags: {:?}", tags);
+    for tag in tags {
+        //insert new tag into db
+        let new_tag = NewTag {
+            name: tag,
+        };
+        let tag_id = insert_new_tag(&new_tag);
+        tag_ids.push(tag_id?);
+        //check if tag exists
+        //if tag does not exist, create tag
+        //if tag exists, get tag id
+    }
+    log!("Tag ids: {:?}", tag_ids);
+    Ok(tag_ids)
+
+}
+
+
+
+
+#[server]
 async fn handle_form(tags: String, people: String, good_take: String, file: String, description: String) -> Result<(), ServerFnError> {
-    use crate::database::pg_calls::update_media;
+    use crate::database::pg_updates::update_media;
+    use crate::database::pg_inserts::insert_new_media_tag;
     use crate::models::MediaUpdate;
+    use crate::models::MediaTag;
     log!("File within handle_form: {:?}", file);
     log!("Handling form");
+    let tag_ids = match handle_tags(tags).await {
+        Ok(tag_ids) => tag_ids,
+        Err(e) => {
+            log!("Error handling tags: {:?}", e);
+            return Err(e);
+        }
+    };
+    log!("Tag ids: {:?}", tag_ids);
+
     let media_update = MediaUpdate {
         file_name: file,
         reviewed: Some(true),
         description,
     };
 
+
     //update db
-    update_media(&media_update).expect("TODO: panic message");
+    let media_update_results = update_media(&media_update);
+    let media_id = match media_update_results {
+        Ok(media_id) => {
+            log!("Media id: {:?}", media_id);
+            media_id
+        }
+        Err(e) => {
+            log!("Error updating media: {:?}", e);
+            return Err(ServerFnError::from(e));
+        }
+    };
+    log!("Media id: {:?}", media_id);
     log!("Updated video metadata");
+    for tag_id in tag_ids {
+        let media_tag = MediaTag {
+            media_id,
+            tag_id,
+        };
+        //insert media tag
+        insert_new_media_tag(media_tag);
+    }
+    //update media tags
     //redirect to homepage
     //reload home page
    // leptos_axum::redirect("/review/next");
