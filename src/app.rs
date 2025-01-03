@@ -9,7 +9,7 @@ use leptos_router::hooks::use_query_map;
 use crate::components::shadcn_button::{Button, ButtonVariant};
 use crate::lib_models::{FileType, MediaFile, Metadata};
 use crate::pages::review::{ReviewPage};
-use crate::pages::browse::{BrowsePage, CardDemo};
+use crate::pages::browse::{BrowsePage};
 use crate::pages::homepage::HomePage;
 use crate::pages::review_old::ReviewReloadOld;
 

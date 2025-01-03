@@ -1,14 +1,12 @@
 use diesel::prelude::*;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use crate::components::alert::AlertDescriptionProps;
 use crate::schema::media;
-use crate::schema::media::description;
 use crate::schema::tags;
 use crate::schema::media_tags;
 
 
-#[derive(Queryable, Selectable, Debug)]
+#[derive(Queryable, Selectable, Debug, Serialize, Deserialize, Identifiable)]
 #[diesel(table_name = media)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct Media {
@@ -16,8 +14,8 @@ pub struct Media {
     pub file_path: String,
     pub file_name: String,
     pub media_type: String,
-    pub description: Option<String>,
     pub reviewed: Option<bool>,
+    pub description: Option<String>,
     pub created_at: DateTime<Utc>,
     pub uploaded_at: Option<DateTime<Utc>>
 }
@@ -42,16 +40,18 @@ pub struct MediaUpdate {
     pub description: String,
 }
 
-#[derive(Queryable, Selectable, Debug, Insertable)]
+#[derive(Queryable, Selectable, Debug, Insertable, Associations, Identifiable)]
+#[diesel(belongs_to(Media, foreign_key = media_id))]
+#[diesel(belongs_to(Tag, foreign_key = tag_id))]
 #[diesel(table_name = media_tags)]
-#[diesel(check_for_backend(diesel::pg::Pg))]
+#[diesel(primary_key(media_id, tag_id))]
 pub struct MediaTag {
     pub media_id: i32,
     pub tag_id: i32,
 }
 
 
-#[derive(Queryable, Selectable, Debug)]
+#[derive(Queryable, Selectable, Debug, Serialize, Deserialize, Identifiable)]
 #[diesel(table_name = tags)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct Tag {
@@ -65,3 +65,12 @@ pub struct Tag {
 pub struct NewTag<'a> {
     pub name: &'a str,
 }
+
+
+#[derive(Debug, Serialize, Deserialize )]
+pub struct MediaView {
+    pub media: Media,
+    pub tags: Vec<Tag>,
+}
+
+
