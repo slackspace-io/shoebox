@@ -566,8 +566,20 @@ video {
   position: static;
 }
 
+.absolute {
+  position: absolute;
+}
+
 .relative {
   position: relative;
+}
+
+.left-1 {
+  left: 0.25rem;
+}
+
+.top-0 {
+  top: 0px;
 }
 
 .m-0 {
@@ -576,10 +588,6 @@ video {
 
 .mb-1 {
   margin-bottom: 0.25rem;
-}
-
-.mb-4 {
-  margin-bottom: 1rem;
 }
 
 .mr-2 {
@@ -618,20 +626,12 @@ video {
   height: 2.75rem;
 }
 
-.h-2 {
-  height: 0.5rem;
-}
-
 .h-9 {
   height: 2.25rem;
 }
 
 .w-10 {
   width: 2.5rem;
-}
-
-.w-2 {
-  width: 0.5rem;
 }
 
 .w-fit {
@@ -647,11 +647,6 @@ video {
   flex: 1 1 0%;
 }
 
-.translate-y-1 {
-  --tw-translate-y: 0.25rem;
-  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
-}
-
 .snap-center {
   scroll-snap-align: center;
 }
@@ -662,10 +657,6 @@ video {
 
 .grid-cols-4 {
   grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-.grid-cols-\[25px_1fr\] {
-  grid-template-columns: 25px 1fr;
 }
 
 .flex-row {
@@ -682,10 +673,6 @@ video {
 
 .place-items-center {
   place-items: center;
-}
-
-.items-start {
-  align-items: flex-start;
 }
 
 .items-center {
@@ -742,6 +729,10 @@ video {
   border-width: 1px;
 }
 
+.border-secondary {
+  border-color: var(--secondary);
+}
+
 .bg-background {
   background-color: var(--background);
 }
@@ -770,6 +761,11 @@ video {
   padding: 1.5rem;
 }
 
+.px-1\.5 {
+  padding-left: 0.375rem;
+  padding-right: 0.375rem;
+}
+
 .px-3 {
   padding-left: 0.75rem;
   padding-right: 0.75rem;
@@ -785,13 +781,22 @@ video {
   padding-right: 2rem;
 }
 
+.py-0\.5 {
+  padding-top: 0.125rem;
+  padding-bottom: 0.125rem;
+}
+
 .py-2 {
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
 }
 
-.pb-4 {
-  padding-bottom: 1rem;
+.pl-3 {
+  padding-left: 0.75rem;
+}
+
+.pr-1 {
+  padding-right: 0.25rem;
 }
 
 .pt-0 {
@@ -832,6 +837,18 @@ video {
   color: var(--primary);
 }
 
+.text-secondary {
+  color: var(--secondary);
+}
+
+.text-text {
+  color: var(--text);
+}
+
+.text-accent {
+  color: var(--accent);
+}
+
 .underline-offset-4 {
   text-underline-offset: 4px;
 }
@@ -867,14 +884,6 @@ video {
 
 .file\:font-medium::file-selector-button {
   font-weight: 500;
-}
-
-.last\:mb-0:last-child {
-  margin-bottom: 0px;
-}
-
-.last\:pb-0:last-child {
-  padding-bottom: 0px;
 }
 
 .hover\:bg-accent:hover {
