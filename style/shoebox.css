@@ -570,10 +570,6 @@ video {
   position: relative;
 }
 
-.row-span-4 {
-  grid-row: span 4 / span 4;
-}
-
 .m-0 {
   margin: 0px;
 }
@@ -664,12 +660,12 @@ video {
   list-style-type: none;
 }
 
-.grid-cols-\[25px_1fr\] {
-  grid-template-columns: 25px 1fr;
-}
-
 .grid-cols-4 {
   grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.grid-cols-\[25px_1fr\] {
+  grid-template-columns: 25px 1fr;
 }
 
 .flex-row {
