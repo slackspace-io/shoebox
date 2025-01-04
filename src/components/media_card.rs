@@ -176,7 +176,7 @@ pub fn VideoPlayer(video_url: String) -> impl IntoView {
 
     view! {
         <div>
-            <video controls width="600" height="400" src={class_url}>
+            <video controls width="50%"  src={class_url}>
                 <source src={video_url} type="video/mp4" />
                 Your browser does not support the video tag.
             </video>
