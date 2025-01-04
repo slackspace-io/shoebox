@@ -3,9 +3,7 @@ use crate::models::{Media, MediaTag, NewMedia, Tag};
 use crate::schema::*;
 use diesel::associations::HasTable;
 use diesel::dsl::insert_into;
-use diesel::query_dsl::methods::GroupByDsl;
 use diesel::result::{DatabaseErrorKind, Error};
-use diesel::sql_types::Bool;
 use leptos::prelude::ServerFnError;
 use crate::database::pg_conn::pg_connection;
 use crate::lib_models::MediaWeb;
@@ -130,7 +128,6 @@ pub fn fetch_assets_for_review() -> Vec<Media> {
 
 
 pub async fn fetch_video_assets(only_unreviewed: bool) -> Result<Vec<MediaWeb>, ServerFnError> {
-    use crate::models::{Media, NewMedia};
     let result = get_media_tags(1);
     println!("result: {:?}", result);
     let result = get_media_tags(2);

@@ -1,9 +1,8 @@
 use diesel::dsl::insert_into;
-use diesel::result::{DatabaseErrorKind, Error};
 use diesel::query_dsl::QueryDsl;
 use diesel::prelude::*;
 use diesel::{QueryResult, RunQueryDsl};
-use crate::models::{MediaPerson, MediaTag, NewPerson, NewTag, Tag};
+use crate::models::{MediaPerson, MediaTag, NewPerson, NewTag};
 use crate::database::pg_conn::pg_connection;
 
 pub fn insert_new_tag(new_tag: &NewTag) -> QueryResult<i32> {

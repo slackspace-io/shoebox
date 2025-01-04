@@ -8,11 +8,6 @@ use crate::components::shadcn_button::{Button, ButtonVariant};
 use crate::components::shadcn_input::{Input, InputType};
 use crate::lib_models::{MediaWeb, Metadata, VideoMetadata};
 
-async fn handle_form_results(metadata_results: VideoMetadata) {
-    log!("Handling form results");
-
-}
-
 #[server]
 async fn handle_tags(tags: String) -> Result<Vec<i32>, ServerFnError> {
     use crate::database::pg_inserts::insert_new_tag;
