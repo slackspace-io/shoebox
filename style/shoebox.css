@@ -574,8 +574,8 @@ video {
   position: relative;
 }
 
-.left-1 {
-  left: 0.25rem;
+.left-0\.5 {
+  left: 0.125rem;
 }
 
 .top-0 {
@@ -604,6 +604,10 @@ video {
 
 .inline-flex {
   display: inline-flex;
+}
+
+.table {
+  display: table;
 }
 
 .grid {
@@ -645,6 +649,10 @@ video {
 
 .flex-1 {
   flex: 1 1 0%;
+}
+
+.cursor-pointer {
+  cursor: pointer;
 }
 
 .snap-center {
@@ -727,6 +735,10 @@ video {
 
 .border {
   border-width: 1px;
+}
+
+.border-0 {
+  border-width: 0px;
 }
 
 .border-secondary {
@@ -833,20 +845,16 @@ video {
   letter-spacing: -0.025em;
 }
 
+.text-accent {
+  color: var(--accent);
+}
+
 .text-primary {
   color: var(--primary);
 }
 
-.text-secondary {
-  color: var(--secondary);
-}
-
 .text-text {
   color: var(--text);
-}
-
-.text-accent {
-  color: var(--accent);
 }
 
 .underline-offset-4 {

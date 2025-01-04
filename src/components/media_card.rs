@@ -59,8 +59,6 @@ pub fn MediaCard(media_web: MediaWeb, editable: bool) -> impl IntoView {
 
                         //refresh page
                                     });
-                                        let navigate = leptos_router::hooks::use_navigate();
-                                        navigate("/browse", Default::default());
                                 }
             aria-label="Remove tag"
           >
@@ -95,8 +93,6 @@ pub fn MediaCard(media_web: MediaWeb, editable: bool) -> impl IntoView {
 
                         //refresh page
                                     });
-                                        let navigate = leptos_router::hooks::use_navigate();
-                                        navigate("/browse", Default::default());
                                 }
             aria-label="Remove tag"
           >

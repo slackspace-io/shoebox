@@ -1,17 +1,21 @@
-use leptos::logging::log;
-use leptos::prelude::*;
-use gloo_timers::future::TimeoutFuture;
-use leptos::task::spawn_local;
-use leptos_meta::{provide_meta_context, MetaTags, Stylesheet, Title};
-use leptos_router::{components::{Route, Router, Routes}, path, StaticSegment};
-use leptos_router::components::Form;
-use leptos_router::hooks::use_query_map;
 use crate::components::shadcn_button::{Button, ButtonVariant};
 use crate::lib_models::{FileType, MediaFile, Metadata};
-use crate::pages::review::{ReviewPage};
-use crate::pages::browse::{BrowsePage};
+use crate::pages::browse::BrowsePage;
 use crate::pages::homepage::HomePage;
+use crate::pages::review::ReviewPage;
 use crate::pages::review_old::ReviewReloadOld;
+use crate::pages::test_form::FormExample;
+use gloo_timers::future::TimeoutFuture;
+use leptos::logging::log;
+use leptos::prelude::*;
+use leptos::task::spawn_local;
+use leptos_meta::{provide_meta_context, MetaTags, Stylesheet, Title};
+use leptos_router::components::Form;
+use leptos_router::hooks::use_query_map;
+use leptos_router::{
+    components::{Route, Router, Routes},
+    path, StaticSegment,
+};
 
 pub fn shell(options: LeptosOptions) -> impl IntoView {
     view! {
@@ -30,9 +34,6 @@ pub fn shell(options: LeptosOptions) -> impl IntoView {
         </html>
     }
 }
-
-
-
 
 #[component]
 pub fn App() -> impl IntoView {
@@ -69,15 +70,12 @@ pub fn App() -> impl IntoView {
                     <Route path=path!("/review") view=ReviewPage/>
                     <Route path=path!("/review/next") view=ReviewReloadOld/>
                     <Route path=path!("/browse") view=BrowsePage/>
+                    <Route path=path!("/test") view=FormExample/>
                 </Routes>
             </main>
         </Router>
     }
 }
-
-
-
-
 
 #[server]
 pub async fn get_files() -> Result<Vec<FileType>, ServerFnError> {
@@ -104,6 +102,6 @@ pub async fn get_all_rows() -> Result<Vec<MediaFile>, ServerFnError> {
     log!("Media assets gotten");
     //log first asset
     //log second asset
-   // println!("{:?}", assets);
+    // println!("{:?}", assets);
     Ok(assets)
 }
