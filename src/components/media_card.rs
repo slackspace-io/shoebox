@@ -4,10 +4,14 @@ use crate::components::shadcn_card::{
 };
 use crate::lib_models::MediaWeb;
 use leptos::either::Either;
+use leptos::logging::log;
 use leptos::prelude::*;
+use leptos::task::spawn_local;
+use leptos::web_sys::console::log;
 
 #[component]
 pub fn MediaCard(media_web: MediaWeb, editable: bool) -> impl IntoView {
+    let media_id = media_web.id.clone();
     let path = media_web.file_path.clone();
     let video_url = format!("/videos/{}", media_web.file_name);
     let file_name = media_web.file_name.clone();
@@ -39,17 +43,30 @@ pub fn MediaCard(media_web: MediaWeb, editable: bool) -> impl IntoView {
       <h2 class="inline text-cyan-500 font-extrabold mr-2">Tags:</h2>
       <ul class="inline list-none p-0 m-0 flex gap-2">
         {tags.into_iter().map(|tag| {
+            let shownTag = tag.clone();
           view! {
             <Card class="relative flex items-center  border border-secondary rounded-full px-1.5 py-0.5 text-text bg-secondary">
               {/* 'X' link */}
-              <a
-                href="/"
-                class="absolute top-0 left-1 text-sm text-accent hover:text-gray-700"
-                aria-label="Remove tag"
-              >
+          <button
+            class="absolute top-0 left-0.5 text-sm text-accent bg-transparent border-0 cursor-pointer"
+                                on:click=move |_| {
+                                    // Call the server function with the tag to remove
+                                       let tagClone = tag.clone();
+                                        let media_id_tag = media_id.clone();
+                                    spawn_local(async move {
+                                        // Await the server function call
+                                        remove_tag(tagClone, media_id_tag).await.unwrap();
+
+                        //refresh page
+                                    });
+                                        let navigate = leptos_router::hooks::use_navigate();
+                                        navigate("/browse", Default::default());
+                                }
+            aria-label="Remove tag"
+          >
                 x
-              </a>
-              <span class="pl-3 pr-1">{tag}</span>
+              </button>
+              <span class="pl-3 pr-1">{shownTag}</span>
             </Card>
           }
         }).collect_view()}
@@ -62,17 +79,30 @@ pub fn MediaCard(media_web: MediaWeb, editable: bool) -> impl IntoView {
       <h2 class="inline text-cyan-500 font-extrabold mr-2">People:</h2>
       <ul class="inline list-none p-0 m-0 flex gap-2">
         {people.into_iter().map(|person| {
+            let shownPerson = person.clone();
           view! {
             <Card class="relative flex items-center bg-secondary border border-secondary rounded-full px-1.5 py-0.5 text-gray-800">
               {/* 'X' link */}
-              <a
-                href="#"
-                class="absolute top-0 left-1 text-sm text-accent hover:text-gray-700"
-                aria-label="Remove tag"
-              >
+          <button
+            class="absolute top-0 left-0.5 text-sm text-accent bg-transparent border-0 cursor-pointer"
+                                on:click=move |_| {
+                                    // Call the server function with the tag to remove
+                                       let personClone = person.clone();
+                                        let media_id_person = media_id.clone();
+                                    spawn_local(async move {
+                                        // Await the server function call
+                                        remove_person(personClone, media_id_person).await.unwrap();
+
+                        //refresh page
+                                    });
+                                        let navigate = leptos_router::hooks::use_navigate();
+                                        navigate("/browse", Default::default());
+                                }
+            aria-label="Remove tag"
+          >
                 x
-              </a>
-              <span class="pl-3 pr-1">{person}</span>
+              </button>
+              <span class="pl-3 pr-1">{shownPerson}</span>
             </Card>
           }
         }).collect_view()}
@@ -103,6 +133,44 @@ pub fn MediaCard(media_web: MediaWeb, editable: bool) -> impl IntoView {
                                 </Card>
                                 </div>
                             }
+}
+
+#[server]
+pub async fn remove_person(person: String, media_id: i32) -> Result<(), ServerFnError> {
+    use crate::database::pg_deletes::remove_person;
+    println!("Removing Person: {}", person);
+    println!("Removing Person from media_id: {}", media_id);
+    let removal = remove_person(media_id, person);
+    match removal.await {
+        Ok(_) => {
+            log!("Person removed successfully");
+        }
+        Err(e) => {
+            log!("{}", &format!("Error removing tag: {}", e));
+        }
+    }
+    //reload page
+
+    Ok(())
+}
+
+#[server]
+pub async fn remove_tag(tag: String, media_id: i32) -> Result<(), ServerFnError> {
+    use crate::database::pg_deletes::remove_tag;
+    println!("Removing tag: {}", tag);
+    println!("Removing tag from media_id: {}", media_id);
+    let removal = remove_tag(media_id, tag);
+    match removal.await {
+        Ok(_) => {
+            log!("Tag removed successfully");
+        }
+        Err(e) => {
+            log!("{}", &format!("Error removing tag: {}", e));
+        }
+    }
+    //reload page
+
+    Ok(())
 }
 
 #[component]

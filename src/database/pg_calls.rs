@@ -1,12 +1,12 @@
-use diesel::prelude::*;
-use crate::models::{Media, MediaTag, NewMedia, Tag};
+use crate::database::pg_conn::pg_connection;
+use crate::lib_models::MediaWeb;
+use crate::models::{Media, MediaTag, NewMedia, Person, Tag};
 use crate::schema::*;
 use diesel::associations::HasTable;
 use diesel::dsl::insert_into;
+use diesel::prelude::*;
 use diesel::result::{DatabaseErrorKind, Error};
 use leptos::prelude::ServerFnError;
-use crate::database::pg_conn::pg_connection;
-use crate::lib_models::MediaWeb;
 
 pub fn return_all() -> QueryResult<usize> {
     let connection = &mut pg_connection();
@@ -21,7 +21,6 @@ pub fn return_all() -> QueryResult<usize> {
         .expect("Error loading media assets");
     println!("media_with_tags: {:?}", media_view);
 
-
     Ok(0)
 }
 
@@ -31,16 +30,15 @@ pub fn associate_media_tags() -> QueryResult<usize> {
     //let one_asset = media::table
     //    .select(Media::as_select())
     //    .get_results(connection)?;
-    let all_assets=media::table
-        .load::<Media>(connection)?;
-    let all_tags = tags::table
-        .load::<Tag>(connection)?;
-    let media_mapping = MediaTag::belonging_to(&all_assets)
-        .load::<MediaTag>(connection)?;
-    let tag_mapping = MediaTag::belonging_to(&all_tags)
-        .load::<MediaTag>(connection)?;
+    let all_assets = media::table.load::<Media>(connection)?;
+    let all_tags = tags::table.load::<Tag>(connection)?;
+    let media_mapping = MediaTag::belonging_to(&all_assets).load::<MediaTag>(connection)?;
+    let tag_mapping = MediaTag::belonging_to(&all_tags).load::<MediaTag>(connection)?;
     let tags = all_tags.into_iter().zip(&tag_mapping).collect::<Vec<_>>();
-    let media = all_assets.into_iter().zip(&media_mapping).collect::<Vec<_>>();
+    let media = all_assets
+        .into_iter()
+        .zip(&media_mapping)
+        .collect::<Vec<_>>();
     let combo = media.into_iter().zip(tags).collect::<Vec<_>>();
 
     for row in combo {
@@ -62,25 +60,21 @@ pub fn fetch_all_media_assets() -> Vec<Media> {
     results
 }
 
-pub fn insert_new_media(new_media: &NewMedia) -> QueryResult<usize>{
+pub fn insert_new_media(new_media: &NewMedia) -> QueryResult<usize> {
     use crate::database::pg_conn::pg_connection;
     use crate::schema::media::dsl::*;
     let connection = &mut pg_connection();
-    let result = insert_into(media)
-        .values(new_media)
-        .execute(connection);
+    let result = insert_into(media).values(new_media).execute(connection);
     if let Err(Error::DatabaseError(DatabaseErrorKind::UniqueViolation, _)) = result {
         println!("Media already exists in pgsql");
         Ok(0)
     } else {
         println!("Media inserted");
         result
-
     }
 }
 
-
-pub fn get_media_tags(media_id:i32) -> Vec<String> {
+pub fn get_media_tags(media_id: i32) -> Vec<String> {
     let connection = &mut pg_connection();
 
     let get_tag = media_tags::table
@@ -95,7 +89,7 @@ pub fn get_media_tags(media_id:i32) -> Vec<String> {
     }
 }
 
-pub fn get_media_people(media_id:i32) -> Vec<String> {
+pub fn get_media_people(media_id: i32) -> Vec<String> {
     let connection = &mut pg_connection();
 
     let get_people = media_people::table
@@ -124,16 +118,21 @@ pub fn fetch_assets_for_review() -> Vec<Media> {
     results
 }
 
+pub async fn fetch_tag_id(tag: String) -> Result<Tag, Error> {
+    let connection = &mut pg_connection();
+    let tag = tags::table.filter(tags::name.eq(tag)).first(connection);
+    tag
+}
 
-
+pub async fn fetch_person_id(person: String) -> Result<Person, Error> {
+    let connection = &mut pg_connection();
+    let person = people::table
+        .filter(people::name.eq(person))
+        .first(connection);
+    person
+}
 
 pub async fn fetch_video_assets(only_unreviewed: bool) -> Result<Vec<MediaWeb>, ServerFnError> {
-    let result = get_media_tags(1);
-    println!("result: {:?}", result);
-    let result = get_media_tags(2);
-    println!("result: {:?}", result);
-    let result = get_media_tags(3);
-    println!("result: {:?}", result);
     //   let ass = associate_media_tags();
     //create MediaView struct
     let assets = if only_unreviewed {
@@ -142,8 +141,9 @@ pub async fn fetch_video_assets(only_unreviewed: bool) -> Result<Vec<MediaWeb>, 
         fetch_all_media_assets()
     };
 
-    let web_assets = assets.iter().map(|asset| {
-        MediaWeb {
+    let web_assets = assets
+        .iter()
+        .map(|asset| MediaWeb {
             id: asset.id,
             file_path: asset.file_path.clone(),
             file_name: asset.file_name.clone(),
@@ -154,15 +154,7 @@ pub async fn fetch_video_assets(only_unreviewed: bool) -> Result<Vec<MediaWeb>, 
             description: asset.description.clone(),
             tags: get_media_tags(asset.id),
             people: get_media_people(asset.id),
-
-
-        }
-    }).collect();
+        })
+        .collect();
     Ok(web_assets)
-
 }
-
-
-
-
-

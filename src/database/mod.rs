@@ -1,12 +1,13 @@
-pub mod pg_conn;
 pub mod pg_calls;
+pub mod pg_conn;
+pub mod pg_deletes;
 pub mod pg_inserts;
 pub mod pg_updates;
 
+use crate::lib_models::{MediaFile, Metadata, VideoMetadata};
 use leptos::logging::log;
-use rusqlite::types::{FromSql, FromSqlError, FromSqlResult, ToSqlOutput, ValueRef};
-use rusqlite::{Connection, Error, Result, ToSql};
-use crate::lib_models::{FileType, MediaFile, Metadata, VideoMetadata};
+use rusqlite::types::FromSql;
+use rusqlite::{Connection, Result, ToSql};
 
 pub fn create_table_if_not_exist() -> Result<()> {
     let conn = Connection::open("data.db")?;
@@ -30,8 +31,6 @@ pub fn create_table_if_not_exist() -> Result<()> {
     Ok(())
 }
 
-
-
 pub fn check_if_media_asset_exists(media_file: Metadata) -> Result<bool> {
     let conn = Connection::open("data.db")?;
     let mut stmt = conn.prepare("SELECT * FROM media_assets WHERE path = ?1")?;
@@ -42,7 +41,6 @@ pub fn check_if_media_asset_exists(media_file: Metadata) -> Result<bool> {
             file_name: row.get(3)?,
             creation_date: row.get(4)?,
             discovery_date: row.get(5)?,
-
         })
     })?;
     let mut media_assets_vec = Vec::new();
@@ -58,7 +56,6 @@ pub fn check_if_media_asset_exists(media_file: Metadata) -> Result<bool> {
     }
 }
 
-
 pub fn update_video_metadata(metadata: VideoMetadata) -> Result<usize> {
     let conn = Connection::open("data.db")?;
     log!("Updating video metadata");
@@ -68,13 +65,12 @@ pub fn update_video_metadata(metadata: VideoMetadata) -> Result<usize> {
     )
 }
 
-
 pub fn insert_media_asset(media_file: Metadata) -> Result<usize> {
     let conn = Connection::open("data.db")?;
     if check_if_media_asset_exists(media_file.clone())? {
         return Ok(0);
     } else {
-    conn.execute(
+        conn.execute(
         "INSERT INTO media_assets (asset_type, path, file_name, creation_date, discovery_date, good_take, yearly_highlight, people, pets, location, processed) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
         &[&media_file.asset_type, &media_file.path, &media_file.file_name, &media_file.creation_date, &media_file.discovery_date, &media_file.good_take, &media_file.yearly_highlight, &media_file.people, &media_file.pets, &media_file.location, &media_file.processed],
 
@@ -92,7 +88,7 @@ pub fn return_all_video_assets() -> Result<Vec<VideoMetadata>> {
                 asset_type: row.get(1)?,
                 path: row.get(2)?,
                 file_name: row.get(3)?,
-                creation_date:  row.get(4)?,
+                creation_date: row.get(4)?,
                 discovery_date: row.get(5)?,
                 good_take: row.get(6)?,
                 yearly_highlight: row.get(7)?,
@@ -111,10 +107,11 @@ pub fn return_all_video_assets() -> Result<Vec<VideoMetadata>> {
     Ok(media_assets_vec)
 }
 
-
 pub fn return_all_media_assets() -> Result<Vec<MediaFile>> {
     let conn = Connection::open("data.db")?;
-    let mut stmt = conn.prepare("SELECT * FROM media_assets WHERE processed = 'not processed' AND asset_type = 'video'")?;
+    let mut stmt = conn.prepare(
+        "SELECT * FROM media_assets WHERE processed = 'not processed' AND asset_type = 'video'",
+    )?;
     let media_assets = stmt.query_map([], |row| {
         Ok(MediaFile {
             asset_type: row.get(1)?,
@@ -122,7 +119,6 @@ pub fn return_all_media_assets() -> Result<Vec<MediaFile>> {
             file_name: row.get(3)?,
             creation_date: row.get(4)?,
             discovery_date: row.get(5)?,
-
         })
     })?;
     let mut media_assets_vec = Vec::new();
@@ -131,6 +127,3 @@ pub fn return_all_media_assets() -> Result<Vec<MediaFile>> {
     }
     Ok(media_assets_vec)
 }
-
-
-
