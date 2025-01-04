@@ -1,12 +1,13 @@
+use crate::components::alert::AlertVariant::Default;
+use crate::components::shadcn_button::{Button, ButtonVariant};
+use crate::components::shadcn_input::{Input, InputType};
+use crate::lib_models::{MediaWeb, Metadata, VideoMetadata};
+use crate::pages::review::get_all_media_assets;
 use leptos::logging::log;
 use leptos::prelude::Read;
 use leptos::prelude::*;
 use leptos_router::components::Form;
 use leptos_router::hooks::use_query_map;
-use crate::components::alert::AlertVariant::Default;
-use crate::components::shadcn_button::{Button, ButtonVariant};
-use crate::components::shadcn_input::{Input, InputType};
-use crate::lib_models::{MediaWeb, Metadata, VideoMetadata};
 
 #[server]
 async fn handle_tags(tags: String) -> Result<Vec<i32>, ServerFnError> {
@@ -19,9 +20,7 @@ async fn handle_tags(tags: String) -> Result<Vec<i32>, ServerFnError> {
     log!("Tags: {:?}", tags);
     for tag in tags {
         //insert new tag into db
-        let new_tag = NewTag {
-            name: tag,
-        };
+        let new_tag = NewTag { name: tag };
         let tag_id = insert_new_tag(&new_tag);
         tag_ids.push(tag_id?);
         //check if tag exists
@@ -30,7 +29,6 @@ async fn handle_tags(tags: String) -> Result<Vec<i32>, ServerFnError> {
     }
     log!("Tag ids: {:?}", tag_ids);
     Ok(tag_ids)
-
 }
 
 #[server]
@@ -44,9 +42,7 @@ async fn handle_people(people: String) -> Result<Vec<i32>, ServerFnError> {
     log!("Tags: {:?}", people_list);
     for person in people_list {
         //insert new tag into db
-        let new_person = NewPerson {
-            name: person,
-        };
+        let new_person = NewPerson { name: person };
         let person_id = insert_new_person(&new_person);
         person_ids.push(person_id?);
         //check if tag exists
@@ -55,20 +51,22 @@ async fn handle_people(people: String) -> Result<Vec<i32>, ServerFnError> {
     }
     log!("Tag ids: {:?}", person_ids);
     Ok(person_ids)
-
 }
 
-
-
-
 #[server]
-async fn handle_form(tags: String, people: String, good_take: String, file: String, description: String) -> Result<(), ServerFnError> {
-    use crate::database::pg_updates::update_media;
+async fn handle_form(
+    tags: String,
+    people: String,
+    good_take: String,
+    file: String,
+    description: String,
+) -> Result<(), ServerFnError> {
     use crate::database::pg_inserts::insert_new_media_person;
     use crate::database::pg_inserts::insert_new_media_tag;
-    use crate::models::MediaUpdate;
-    use crate::models::MediaTag;
+    use crate::database::pg_updates::update_media;
     use crate::models::MediaPerson;
+    use crate::models::MediaTag;
+    use crate::models::MediaUpdate;
     log!("File within handle_form: {:?}", file);
     log!("Handling form");
     let tag_ids = match handle_tags(tags).await {
@@ -92,7 +90,6 @@ async fn handle_form(tags: String, people: String, good_take: String, file: Stri
         description,
     };
 
-
     //update db
     let media_update_results = update_media(&media_update);
     let media_id = match media_update_results {
@@ -108,10 +105,7 @@ async fn handle_form(tags: String, people: String, good_take: String, file: Stri
     log!("Media id: {:?}", media_id);
     log!("Updated video metadata");
     for tag_id in tag_ids {
-        let media_tag = MediaTag {
-            media_id,
-            tag_id,
-        };
+        let media_tag = MediaTag { media_id, tag_id };
         //insert media tag
         insert_new_media_tag(media_tag);
     }
@@ -135,6 +129,7 @@ async fn handle_form(tags: String, people: String, good_take: String, file: Stri
 #[component]
 pub fn VideoMetadataForm(file: String) -> impl IntoView {
     let submit = ServerAction::<HandleForm>::new();
+    let tags = Resource::new_blocking(|| (), |_| async move { get_all_tags().await.unwrap() });
     //handle form data after submit
     view! {
         <div class="form">
@@ -172,4 +167,20 @@ pub fn VideoMetadataForm(file: String) -> impl IntoView {
         </div>
 
     }
+}
+
+#[server]
+pub async fn get_all_tags() -> Result<Vec<String>, ServerFnError> {
+    use crate::database::pg_calls::fetch_all_tags;
+    let tags = fetch_all_tags().await?;
+    let tag_names = tags.iter().map(|tag| tag.name.clone()).collect();
+    Ok(tag_names)
+}
+
+#[server]
+pub async fn get_all_people() -> Result<Vec<String>, ServerFnError> {
+    use crate::database::pg_calls::fetch_all_people;
+    let people = fetch_all_people().await?;
+    let people_names = people.iter().map(|person| person.name.clone()).collect();
+    Ok(people_names)
 }

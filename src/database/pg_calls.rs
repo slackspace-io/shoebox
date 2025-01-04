@@ -132,6 +132,18 @@ pub async fn fetch_person_id(person: String) -> Result<Person, Error> {
     person
 }
 
+pub async fn fetch_all_tags() -> Result<Vec<Tag>, Error> {
+    let connection = &mut pg_connection();
+    let tags = tags::table.load(connection);
+    tags
+}
+
+pub async fn fetch_all_people() -> Result<Vec<Person>, Error> {
+    let connection = &mut pg_connection();
+    let people = people::table.load(connection);
+    people
+}
+
 pub async fn fetch_video_assets(only_unreviewed: bool) -> Result<Vec<MediaWeb>, ServerFnError> {
     //   let ass = associate_media_tags();
     //create MediaView struct
