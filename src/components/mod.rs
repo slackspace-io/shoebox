@@ -5,3 +5,4 @@ pub mod shadcn_input;
 pub mod utils;
 pub mod shadcn_button;
 pub mod shadcn_card;
+pub mod media_card;

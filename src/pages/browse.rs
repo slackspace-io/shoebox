@@ -3,10 +3,10 @@ use leptos::html::{video, Video};
 use leptos::logging::log;
 use leptos::prelude::*;
 use lucide_leptos::{BellRing, Check};
+use crate::components::media_card::MediaCard;
 use crate::components::shadcn_button::Button;
 use crate::components::shadcn_card::{Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle};
 use crate::lib_models::{MediaWeb, VideoMetadata};
-use crate::pages::review::MediaCard;
 
 #[component]
 pub fn BrowsePage() -> impl IntoView {
