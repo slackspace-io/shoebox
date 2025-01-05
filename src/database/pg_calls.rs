@@ -225,3 +225,14 @@ pub async fn search_media_assets(search_string: &str) -> Result<Vec<MediaWeb>, S
 
     Ok(media_map.into_values().collect())
 }
+
+pub fn get_file_paths_by_ids(media_ids: Vec<i32>) -> Result<Vec<String>, diesel::result::Error> {
+    use crate::schema::media::dsl::*;
+    let connection = &mut pg_connection();
+    let results = media
+        .filter(id.eq_any(media_ids)) // Filter by the provided IDs
+        .select(file_path) // Select only the file_path
+        .load::<String>(connection)?; // Load the results as a vector of Strings
+
+    Ok(results)
+}

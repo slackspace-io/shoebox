@@ -25,6 +25,7 @@ pub fn SearchPage() -> impl IntoView {
     //);
 
     let selected_media = RwSignal::new(Vec::<i32>::new());
+    let selected_media_count = RwSignal::new(0);
     let submit_search = ServerAction::<SearchMedia>::new();
     let search_results = submit_search.value();
 
@@ -42,8 +43,8 @@ pub fn SearchPage() -> impl IntoView {
     let fallback_message = &String::from("No files found");
     //hello world
     view! {
-                <button on:click=on_selected_submit>
-            "Click Me: " {selected_media}
+                <button on:click=on_selected_submit class="p-2 rounded-md bg-accent">
+            "Prepare Selected: " {selected_media_count}
         </button>
     <div class="place-items-center text-primary">
         <div class="border-5 gap-10">
@@ -79,8 +80,10 @@ pub fn SearchPage() -> impl IntoView {
                                             selected_media.update(|selected| {
                                                 println!("clicked");
                                                 if selected.contains(&media_id) {
+                                                    *selected_media_count.write() += -1;
                                                     selected.retain(|&id| id != media_id);
                                                 } else {
+                                                    *selected_media_count.write() += 1;
                                                     selected.push(media_id);
                                                 }
                                             });
@@ -122,14 +125,22 @@ pub async fn search_media(query: String) -> Result<Vec<MediaWeb>, ServerFnError>
 #[server(ProcessSelectedMedia)] // Give your server function a name
 pub async fn process_selected_media(ids: Vec<i32>) -> Result<(), ServerFnError> {
     // Perform server-side actions with the selected IDs
-    println!("hi");
+    use crate::database::pg_calls::get_file_paths_by_ids;
+    use crate::filesystem::fs_prepare::copy_files_to_destination;
     log!("Server received IDs: {:?}", ids);
-
-    // Example: Delete selected media from the database
-    for id in ids {
-        // Call your database deletion function here
-        // ...
+    //get filepaths
+    let file_paths = get_file_paths_by_ids(ids);
+    //copy files
+    if let Ok(file_paths) = file_paths {
+        let prepare_files =
+            copy_files_to_destination(&file_paths, "/mnt/nand/scratch/shoebox".to_string());
+        if let Ok(prepare_files) = prepare_files {
+            log!("Files prepared");
+            Ok(())
+        } else {
+            Err(ServerFnError::new("Error preparing files"))
+        }
+    } else {
+        Err(ServerFnError::new("Error fetching file paths"))
     }
-
-    Ok(())
 }
