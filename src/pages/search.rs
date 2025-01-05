@@ -4,7 +4,9 @@ use crate::components::shadcn_card::{
     Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle,
 };
 use crate::lib_models::{MediaWeb, VideoMetadata};
+use crate::pages::review::FallbackView;
 use leptos::attr::controls;
+use leptos::either::Either;
 use leptos::html::{video, Video};
 use leptos::logging::log;
 use leptos::prelude::*;
@@ -20,6 +22,8 @@ pub fn SearchPage() -> impl IntoView {
     //    |_| async move {get_files().await.unwrap() },
     //);
     let submit_search = ServerAction::<SearchMedia>::new();
+    let search_results = submit_search.value();
+
     let files = Resource::new_blocking(
         || (),
         |_| async move { search_media("Tove".to_string()).await.unwrap() },
@@ -32,34 +36,27 @@ pub fn SearchPage() -> impl IntoView {
         <input
           type="text"
           name="query"
-          value="closures-everywhere" oninput="this.form.requestSubmit()"
+          oninput="this.form.requestSubmit()"
         />
-        <input type="submit"/>
       </ActionForm>
 
+            <Suspense fallback=move || view! { <p>"Loading..."</p> }>
+                <div class="grid grid-cols-4 gap-4">
+                    {move || {
+                        search_results.get().map(|results| match results {
+                            Ok(files) => {
+                                files.iter().map(|f| {
+                                    Either::Right(view! { <MediaCard media_web=f.clone() editable=false/> })
+                                }).collect::<Vec<_>>()
 
-
-
-    <Suspense
-    fallback= move || {
-        view! {
-            <p>"Loading..."</p>
-        }
-    }>
-    //list files
-    <div class="grid grid-cols-4 gap-4">
-        {move || files.get().iter().next().map(|file| {
-            view! {
-                    {file.iter().map(|f| {
-                        view! {
-                            <MediaCard media_web = f.clone() editable = false/>
-                        }
-                    }).collect::<Vec<_>>()}
-            }
-        })}
-    </div>
-
-    </Suspense>
+                            }
+                            Err(e) => {
+                                vec![Either::Left(view!{ <div></div>})]
+                            }
+                        }).unwrap_or_default()
+                    }}
+                </div>
+            </Suspense>
     </div>
     }
 }
