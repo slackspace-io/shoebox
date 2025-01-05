@@ -32,13 +32,18 @@ pub fn SearchPage() -> impl IntoView {
     //hello world
     view! {
     <div class="place-items-center">
+        <div class="border-5 gap-10">
               <ActionForm action=submit_search>
+        <label for="search">"Search: "</label>
         <input
           type="text"
           name="query"
+            id="search"
           oninput="this.form.requestSubmit()"
         />
       </ActionForm>
+        </div>
+        <br/>
 
             <Suspense fallback=move || view! { <p>"Loading..."</p> }>
                 <div class="grid grid-cols-4 gap-4">

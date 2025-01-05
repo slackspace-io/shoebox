@@ -156,7 +156,7 @@ pub fn VideoMetadataForm(file: String) -> impl IntoView {
             </div>
             <div>
                 <input type="radio" id="bad_take" name="good_take" value="false" />
-                <label for="good_take">"False"</label>
+                <label for="bad_take">"False"</label>
             </div>
         </fieldset>
         </div>
