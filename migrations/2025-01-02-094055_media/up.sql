@@ -6,6 +6,7 @@ CREATE TABLE media
     file_path   TEXT        NOT NULL unique,
     media_type  TEXT        NOT NULL CHECK (media_type IN ('photo', 'video')),
     good_take   BOOLEAN              DEFAULT TRUE,
+    highlight   BOOLEAN              DEFAULT FALSE,
     reviewed    BOOLEAN              DEFAULT FALSE,
     description TEXT,
     created_at  TIMESTAMPtz NOT NULL DEFAULT NOW(),

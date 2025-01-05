@@ -16,6 +16,7 @@ pub struct Media {
     pub file_name: String,
     pub media_type: String,
     pub good_take: Option<bool>,
+    pub highlight: Option<bool>,
     pub reviewed: Option<bool>,
     pub description: Option<String>,
     pub created_at: DateTime<Utc>,
@@ -29,6 +30,7 @@ pub struct NewMedia {
     pub file_path: String,
     pub file_name: String,
     pub media_type: String,
+    pub highlight: Option<bool>,
     pub good_take: Option<bool>,
     pub reviewed: Option<bool>,
     pub created_at: DateTime<Utc>,
@@ -40,6 +42,7 @@ pub struct NewMedia {
 pub struct MediaUpdate {
     pub file_name: String,
     pub good_take: Option<bool>,
+    pub highlight: Option<bool>,
     pub reviewed: Option<bool>,
     pub description: String,
 }

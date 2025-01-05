@@ -66,6 +66,7 @@ async fn handle_form(
     tags: String,
     people: String,
     good_take: String,
+    highlight: String,
     file: String,
     description: String,
 ) -> Result<(), ServerFnError> {
@@ -95,6 +96,7 @@ async fn handle_form(
     let media_update = MediaUpdate {
         file_name: file,
         good_take: good_take.parse::<bool>().ok(),
+        highlight: highlight.parse::<bool>().ok(),
         reviewed: Some(true),
         description,
     };
@@ -165,6 +167,19 @@ pub fn VideoMetadataForm(file: String) -> impl IntoView {
             <div>
                 <input type="radio" id="bad_take" name="good_take" value="false" />
                 <label for="bad_take">"No"</label>
+            </div>
+        </fieldset>
+        </div>
+        <div class="highlight">
+        <fieldset>
+            <legend>"Highlight"</legend>
+            <div>
+                <input type="radio" id="highlight" name="highlight" value="true" />
+                <label for="highlight">"Yes"</label>
+            </div>
+            <div>
+                <input type="radio" id="not_highlight" name="highlight" value="false" />
+                <label for="not_highlight">"No"</label>
             </div>
         </fieldset>
         </div>

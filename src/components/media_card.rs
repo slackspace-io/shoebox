@@ -23,9 +23,16 @@ pub fn MediaCard(media_web: MediaWeb, editable: bool) -> impl IntoView {
     let reviewed = media_web.reviewed.clone();
     let created_at = media_web.created_at.clone();
     let uploaded_at = media_web.uploaded_at.clone();
+    let highlight = media_web.highlight.clone();
+    let card_class_string = if highlight.expect("REASON") {
+        "w-fit place-content-center border-accent border-double"
+    } else {
+        "w-fit place-content-center"
+    };
+
     view! {
                                 <div>
-                                <Card class="w-fit place-content-center">
+                                <Card class=card_class_string >
                                     <CardHeader>
                                         <CardTitle>{file_name_no_ext}</CardTitle>
                                         <CardDescription>{description}</CardDescription>

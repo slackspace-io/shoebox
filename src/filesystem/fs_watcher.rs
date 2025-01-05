@@ -36,6 +36,7 @@ pub async fn scan_files(dir: &str) -> Vec<FileType> {
                 file_name: media_asset.file_name.clone(),
                 media_type: media_asset.asset_type.clone(),
                 good_take: Option::from(true),
+                highlight: Option::from(false),
                 reviewed: Option::from(false),
                 created_at: DateTime::from(chrono::Local::now()),
             };

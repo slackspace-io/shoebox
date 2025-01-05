@@ -1,12 +1,14 @@
+use crate::components::media_card::MediaCard;
+use crate::components::shadcn_button::Button;
+use crate::components::shadcn_card::{
+    Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle,
+};
+use crate::lib_models::{MediaWeb, VideoMetadata};
 use leptos::attr::controls;
 use leptos::html::{video, Video};
 use leptos::logging::log;
 use leptos::prelude::*;
 use lucide_leptos::{BellRing, Check};
-use crate::components::media_card::MediaCard;
-use crate::components::shadcn_button::Button;
-use crate::components::shadcn_card::{Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle};
-use crate::lib_models::{MediaWeb, VideoMetadata};
 
 #[component]
 pub fn BrowsePage() -> impl IntoView {
@@ -17,10 +19,10 @@ pub fn BrowsePage() -> impl IntoView {
     //);
     let files = Resource::new_blocking(
         || (),
-        |_| async move {get_all_media_assets().await.unwrap() },
+        |_| async move { get_all_media_assets().await.unwrap() },
     );
     let fallback_message = &String::from("No files found");
-//hello world
+    //hello world
     view! {
     <div class="place-items-center">
     <Suspense
@@ -34,6 +36,7 @@ pub fn BrowsePage() -> impl IntoView {
         {move || files.get().iter().next().map(|file| {
             view! {
                     {file.iter().map(|f| {
+
                         view! {
                             <MediaCard media_web = f.clone() editable = false/>
                         }
@@ -47,8 +50,6 @@ pub fn BrowsePage() -> impl IntoView {
     }
 }
 
-
-
 #[server]
 pub async fn get_all_media_assets() -> Result<Vec<MediaWeb>, ServerFnError> {
     use crate::database::pg_calls::fetch_video_assets;
@@ -59,9 +60,3 @@ pub async fn get_all_media_assets() -> Result<Vec<MediaWeb>, ServerFnError> {
         Err(ServerFnError::new("Error fetching media assets"))
     }
 }
-
-
-
-
-
-

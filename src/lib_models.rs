@@ -55,6 +55,7 @@ pub struct MediaWeb {
     pub tags: Vec<String>,
     pub people: Vec<String>,
     pub media_type: String,
+    pub highlight: Option<bool>,
     pub good_take: Option<bool>,
     pub reviewed: Option<bool>,
     pub created_at: DateTime<Utc>,
