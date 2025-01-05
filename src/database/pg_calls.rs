@@ -170,3 +170,58 @@ pub async fn fetch_video_assets(only_unreviewed: bool) -> Result<Vec<MediaWeb>, 
         .collect();
     Ok(web_assets)
 }
+
+pub async fn search_media_assets(search_string: &str) -> Result<Vec<MediaWeb>, ServerFnError> {
+    let connection = &mut pg_connection();
+    let search_pattern = format!("%{}%", search_string);
+
+    let results = media::table
+        .left_outer_join(media_tags::table.on(media::id.eq(media_tags::media_id)))
+        .left_outer_join(tags::table.on(media_tags::tag_id.eq(tags::id)))
+        .left_outer_join(media_people::table.on(media::id.eq(media_people::media_id)))
+        .left_outer_join(people::table.on(media_people::person_id.eq(people::id)))
+        .filter(
+            media::description
+                .ilike(&search_pattern)
+                .or(tags::name.ilike(&search_pattern))
+                .or(people::name.ilike(&search_pattern)),
+        )
+        .select((
+            Media::as_select(),
+            Option::<Tag>::as_select(),
+            Option::<Person>::as_select(),
+        ))
+        .load::<(Media, Option<Tag>, Option<Person>)>(connection)
+        .map_err(|_| ServerFnError::new("Error searching media assets"))?;
+
+    let mut media_map = std::collections::HashMap::new();
+
+    for (media, tag, person) in results {
+        let entry = media_map.entry(media.id).or_insert_with(|| MediaWeb {
+            id: media.id,
+            file_path: media.file_path.clone(),
+            file_name: media.file_name.clone(),
+            description: media.description.clone(),
+            tags: vec![],
+            people: vec![],
+            media_type: media.media_type.clone(),
+            reviewed: media.reviewed,
+            created_at: media.created_at,
+            uploaded_at: media.uploaded_at,
+        });
+
+        if let Some(tag) = tag {
+            if !entry.tags.contains(&tag.name) {
+                entry.tags.push(tag.name);
+            }
+        }
+
+        if let Some(person) = person {
+            if !entry.people.contains(&person.name) {
+                entry.people.push(person.name);
+            }
+        }
+    }
+
+    Ok(media_map.into_values().collect())
+}

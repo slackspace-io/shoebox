@@ -4,6 +4,7 @@ use crate::pages::browse::BrowsePage;
 use crate::pages::homepage::HomePage;
 use crate::pages::review::ReviewPage;
 use crate::pages::review_old::ReviewReloadOld;
+use crate::pages::search::SearchPage;
 use crate::pages::test_form::FormExample;
 use gloo_timers::future::TimeoutFuture;
 use leptos::logging::log;
@@ -62,6 +63,9 @@ pub fn App() -> impl IntoView {
         <Button variant={ButtonVariant::Link}>
             <a href="/review">Review</a>
         </Button>
+        <Button variant={ButtonVariant::Link}>
+            <a href="/search">Search</a>
+        </Button>
         </div>
         </nav>
             <main>
@@ -71,6 +75,7 @@ pub fn App() -> impl IntoView {
                     <Route path=path!("/review/next") view=ReviewReloadOld/>
                     <Route path=path!("/browse") view=BrowsePage/>
                     <Route path=path!("/test") view=FormExample/>
+                    <Route path=path!("/search") view=SearchPage/>
                 </Routes>
             </main>
         </Router>
