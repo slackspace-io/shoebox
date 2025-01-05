@@ -31,7 +31,7 @@ pub fn SearchPage() -> impl IntoView {
     let fallback_message = &String::from("No files found");
     //hello world
     view! {
-    <div class="place-items-center">
+    <div class="place-items-center text-primary">
         <div class="border-5 gap-10">
               <ActionForm action=submit_search>
         <label for="search">"Search: "</label>
