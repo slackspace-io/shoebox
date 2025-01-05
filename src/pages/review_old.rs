@@ -1,37 +1,32 @@
-use leptos::prelude::*;
+use crate::app::{get_all_rows, get_files};
+use crate::components::metadata_form::VideoMetadataForm;
+use crate::components::video_player::VideoPlayer;
 use leptos::logging::log;
-use leptos::prelude::{Get, GlobalAttributes, OnAttribute, Resource, RwSignal, Suspend, Suspense, Write};
+use leptos::prelude::*;
+use leptos::prelude::{
+    Get, OnAttribute, Resource, RwSignal, Suspend, Suspense, Write,
+};
 use leptos::task::spawn_local;
 use leptos_router::components::Redirect;
-use crate::app::{get_all_rows, get_files};
-use crate::components::video_player::VideoPlayer;
-use crate::components::metadata_form::VideoMetadataForm;
 
 #[component]
 pub fn ReviewReloadOld() -> impl IntoView {
-//Hack to reload after form submission
+    //Hack to reload after form submission
     view! {
-<Redirect path="/review"/>
+    <Redirect path="/review"/>
+    }
 }
-}
-
 
 #[component]
 pub fn ReviewPageOld() -> impl IntoView {
     // Reactive signal for the counter
     //get files
-    let files = Resource::new_blocking(
-        || (),
-        |_| async move { get_files().await.unwrap() },
-    );
+    let files = Resource::new_blocking(|| (), |_| async move { get_files().await.unwrap() });
     let count = RwSignal::new(0);
     let on_click = move |_| *count.write() += 1;
     let current_file = RwSignal::new("");
     // Resource to fetch data asynchronously
-    let res = Resource::new_blocking(
-        || (),
-        |_| async move { get_all_rows().await.unwrap() },
-    );
+    let res = Resource::new_blocking(|| (), |_| async move { get_all_rows().await.unwrap() });
 
     let contents = move || {
         Suspend::new(async move {
@@ -42,25 +37,26 @@ pub fn ReviewPageOld() -> impl IntoView {
             let fallback_video = "test.mp4";
             //set current file
             *current_file.write() = fallback_video;
-            data.get(count.get()).map(|file| {
-                let is_video = file.asset_type == "video";
-                let file_name = file.path.split('/').last().unwrap_or_default();
-                let mut video_url = if is_video {
-                    format!("/videos/{}", file_name)
-                } else {
-                    file.path.clone()
-                };
-                log!("Video URL: {:?}", video_url);
-                log!("File: {:?}", file);
-                //set current_file
-                //play vid
-                view! {
-                <p>"Total Files: " {total_files}</p>
-                   <VideoPlayer video_url=video_url/>
-                   <VideoMetadataForm file=file.path.clone()/>
-                }
-
-            }).unwrap()
+            data.get(count.get())
+                .map(|file| {
+                    let is_video = file.asset_type == "video";
+                    let file_name = file.path.split('/').last().unwrap_or_default();
+                    let mut video_url = if is_video {
+                        format!("/videos/{}", file_name)
+                    } else {
+                        file.path.clone()
+                    };
+                    log!("Video URL: {:?}", video_url);
+                    log!("File: {:?}", file);
+                    //set current_file
+                    //play vid
+                    view! {
+                    <p>"Total Files: " {total_files}</p>
+                       <VideoPlayer video_url=video_url/>
+                       <VideoMetadataForm file=file.path.clone()/>
+                    }
+                })
+                .unwrap()
         })
     };
 

@@ -27,16 +27,17 @@ wasm-bindgen = "0.2.99"
 tracing = { version = "0.1.41", optional = true }
 http = "1"
 serde = { version = "1.0.217", features = ["derive"] }
-rusqlite = {version = "0.32.1", features = ["bundled"], optional = true}
+rusqlite = { version = "0.32.1", features = ["bundled"], optional = true }
 gloo-timers = { version = "0.3.0", features = ["futures"] }
 tailwind_fuse = { version = "0.3.1", features = ["variant"] }
 leptos-style = "0.0.3"
 leptos-node-ref = "0.0.3"
 leptos-struct-component = "0.0.3"
 lucide-leptos = "1.1.0"
-chrono = {  version = "0.4.39", features = ["serde"] }
+chrono = { version = "0.4.39", features = ["serde"] }
 diesel = { version = "2.2.6", features = ["postgres", "chrono"], optional = true }
 dotenvy = "0.15.0"
+web-sys = "0.3.76"
 
 
 [features]
