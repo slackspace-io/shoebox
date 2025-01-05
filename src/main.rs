@@ -1,8 +1,6 @@
-
 use axum::routing::get_service;
-use tower_http::services::ServeDir;
 use http::StatusCode;
-use shoebox::database::create_table_if_not_exist;
+use tower_http::services::ServeDir;
 
 #[cfg(feature = "ssr")]
 #[tokio::main]
@@ -12,7 +10,6 @@ async fn main() {
     use leptos::prelude::*;
     use leptos_axum::{generate_route_list, LeptosRoutes};
     use shoebox::app::*;
-    create_table_if_not_exist().unwrap();
     let conf = get_configuration(None).unwrap();
     let addr = conf.leptos_options.site_addr;
     let leptos_options = conf.leptos_options;
@@ -26,8 +23,12 @@ async fn main() {
             move || shell(leptos_options.clone())
         })
         .fallback(leptos_axum::file_and_error_handler(shell))
-        .nest_service("/videos", get_service(ServeDir::new("/mnt/storage/tove/immich/auto-transcoded/")).handle_error(|_| async { (StatusCode::INTERNAL_SERVER_ERROR, "Internal Server Error") }))
-
+        .nest_service(
+            "/videos",
+            get_service(ServeDir::new("/mnt/storage/tove/immich/auto-transcoded/")).handle_error(
+                |_| async { (StatusCode::INTERNAL_SERVER_ERROR, "Internal Server Error") },
+            ),
+        )
         .with_state(leptos_options);
 
     // run our app with hyper

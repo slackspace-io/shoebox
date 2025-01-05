@@ -1,4 +1,3 @@
-use crate::database::insert_media_asset;
 use crate::database::pg_calls::insert_new_media;
 use crate::lib_models::{FileType, Metadata};
 use crate::models::NewMedia;
@@ -59,7 +58,6 @@ pub async fn scan_files(dir: &str) -> Vec<FileType> {
                 }
                 if media_asset.asset_type != "other" {
                     log!("Inserting media asset: {:?}", media_asset);
-                    insert_media_asset(media_asset).unwrap();
                     log!("Insert new media: {:?}", media_new);
                     insert_new_media(&media_new);
                 }

@@ -3,7 +3,6 @@ use crate::lib_models::{FileType, MediaFile, Metadata};
 use crate::pages::browse::BrowsePage;
 use crate::pages::homepage::HomePage;
 use crate::pages::review::ReviewPage;
-use crate::pages::review_old::ReviewReloadOld;
 use crate::pages::search::SearchPage;
 use crate::pages::test_form::FormExample;
 use gloo_timers::future::TimeoutFuture;
@@ -72,7 +71,6 @@ pub fn App() -> impl IntoView {
                 <Routes fallback=|| "Page not found.".into_view()>
                     <Route path=StaticSegment("") view=HomePage/>
                     <Route path=path!("/review") view=ReviewPage/>
-                    <Route path=path!("/review/next") view=ReviewReloadOld/>
                     <Route path=path!("/browse") view=BrowsePage/>
                     <Route path=path!("/test") view=FormExample/>
                     <Route path=path!("/search") view=SearchPage/>
@@ -91,22 +89,4 @@ pub async fn get_files() -> Result<Vec<FileType>, ServerFnError> {
     let files = scan_files("/mnt/storage/tove/immich/auto-transcoded/").await; // Adjust based on actual API
     println!("{:?}", files);
     Ok(files)
-}
-
-#[server]
-pub async fn get_all_rows() -> Result<Vec<MediaFile>, ServerFnError> {
-    //log
-    //log!("Getting files");
-    //use crate::filesystem::fs_watcher::scan_files;
-    //let files = scan_files("/home/dopey/videos").await; // Adjust based on actual API
-    //log!("Files gotten");
-    use crate::database::return_all_media_assets;
-    log!("Getting all media assets");
-    let assets = return_all_media_assets()?;
-    log!("Media assets found {:?}", assets);
-    log!("Media assets gotten");
-    //log first asset
-    //log second asset
-    // println!("{:?}", assets);
-    Ok(assets)
 }
