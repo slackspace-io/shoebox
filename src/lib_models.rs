@@ -1,22 +1,21 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize, Serialize, Clone, PartialEq )]
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq)]
 pub enum FileType {
     Video(String),
     Photo(String),
     Other(String),
 }
 
-
-#[derive(Debug, Deserialize, Serialize, Clone, PartialEq )]
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq)]
 pub struct VideoMetadata {
     pub path: String,
     //include metadata struct
     pub metadata: Metadata,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone, PartialEq )]
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq)]
 pub struct Metadata {
     pub good_take: String,
     pub yearly_highlight: String,
@@ -29,7 +28,7 @@ pub struct Metadata {
     pub path: String,
     pub file_name: String,
     pub creation_date: String,
-    pub discovery_date: String
+    pub discovery_date: String,
 }
 
 impl VideoMetadata {
@@ -38,7 +37,7 @@ impl VideoMetadata {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone, PartialEq )]
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq)]
 pub struct MediaFile {
     pub asset_type: String,
     pub path: String,
@@ -47,7 +46,7 @@ pub struct MediaFile {
     pub discovery_date: String,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone, PartialEq )]
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq)]
 pub struct MediaWeb {
     pub id: i32,
     pub file_path: String,
@@ -56,9 +55,10 @@ pub struct MediaWeb {
     pub tags: Vec<String>,
     pub people: Vec<String>,
     pub media_type: String,
+    pub good_take: Option<bool>,
     pub reviewed: Option<bool>,
     pub created_at: DateTime<Utc>,
-    pub uploaded_at: Option<DateTime<Utc>>
+    pub uploaded_at: Option<DateTime<Utc>>,
 }
 
 impl MediaWeb {

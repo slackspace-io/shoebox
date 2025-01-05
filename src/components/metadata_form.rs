@@ -20,6 +20,10 @@ async fn handle_tags(tags: String) -> Result<Vec<i32>, ServerFnError> {
     let tags = tags.split(",").collect::<Vec<&str>>();
     log!("Tags: {:?}", tags);
     for tag in tags {
+        if tag.len() < 1 {
+            continue;
+        }
+        println!("{}", tag.len());
         //insert new tag into db
         let new_tag = NewTag { name: tag };
         let tag_id = insert_new_tag(&new_tag);
@@ -42,6 +46,9 @@ async fn handle_people(people: String) -> Result<Vec<i32>, ServerFnError> {
     let people_list = people.split(",").collect::<Vec<&str>>();
     log!("Tags: {:?}", people_list);
     for person in people_list {
+        if people.len() < 1 {
+            continue;
+        }
         //insert new tag into db
         let new_person = NewPerson { name: person };
         let person_id = insert_new_person(&new_person);
@@ -87,6 +94,7 @@ async fn handle_form(
     };
     let media_update = MediaUpdate {
         file_name: file,
+        good_take: good_take.parse::<bool>().ok(),
         reviewed: Some(true),
         description,
     };
@@ -149,14 +157,14 @@ pub fn VideoMetadataForm(file: String) -> impl IntoView {
         </div>
         <div class="good_take">
         <fieldset>
-            <legend>"Good Take"</legend>
+            <legend>"Usable?"</legend>
             <div>
                 <input type="radio" id="good_take" name="good_take" value="true" />
-                <label for="good_take">"True"</label>
+                <label for="good_take">"Yes"</label>
             </div>
             <div>
                 <input type="radio" id="bad_take" name="good_take" value="false" />
-                <label for="bad_take">"False"</label>
+                <label for="bad_take">"No"</label>
             </div>
         </fieldset>
         </div>

@@ -1,12 +1,11 @@
-use diesel::prelude::*;
-use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize};
 use crate::schema::media;
-use crate::schema::tags;
-use crate::schema::media_tags;
 use crate::schema::media_people;
+use crate::schema::media_tags;
 use crate::schema::people;
-
+use crate::schema::tags;
+use chrono::{DateTime, Utc};
+use diesel::prelude::*;
+use serde::{Deserialize, Serialize};
 
 #[derive(Queryable, Selectable, Debug, Serialize, Deserialize, Identifiable)]
 #[diesel(table_name = media)]
@@ -16,10 +15,11 @@ pub struct Media {
     pub file_path: String,
     pub file_name: String,
     pub media_type: String,
+    pub good_take: Option<bool>,
     pub reviewed: Option<bool>,
     pub description: Option<String>,
     pub created_at: DateTime<Utc>,
-    pub uploaded_at: Option<DateTime<Utc>>
+    pub uploaded_at: Option<DateTime<Utc>>,
 }
 
 #[derive(Insertable, Debug)]
@@ -29,6 +29,7 @@ pub struct NewMedia {
     pub file_path: String,
     pub file_name: String,
     pub media_type: String,
+    pub good_take: Option<bool>,
     pub reviewed: Option<bool>,
     pub created_at: DateTime<Utc>,
 }
@@ -38,6 +39,7 @@ pub struct NewMedia {
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct MediaUpdate {
     pub file_name: String,
+    pub good_take: Option<bool>,
     pub reviewed: Option<bool>,
     pub description: String,
 }
@@ -51,7 +53,6 @@ pub struct MediaTag {
     pub media_id: i32,
     pub tag_id: i32,
 }
-
 
 #[derive(Queryable, Selectable, Debug, Serialize, Deserialize, Identifiable)]
 #[diesel(table_name = tags)]
@@ -77,7 +78,6 @@ pub struct MediaPerson {
     pub media_id: i32,
     pub person_id: i32,
 }
-
 
 #[derive(Queryable, Selectable, Debug, Serialize, Deserialize, Identifiable)]
 #[diesel(table_name = people)]

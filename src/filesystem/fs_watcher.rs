@@ -1,12 +1,10 @@
-use std::fs;
-use chrono::DateTime;
-use leptos::logging::log;
-use serde::{Deserialize, Serialize};
-use leptos::prelude::Render;
 use crate::database::insert_media_asset;
 use crate::database::pg_calls::insert_new_media;
 use crate::lib_models::{FileType, Metadata};
 use crate::models::NewMedia;
+use chrono::DateTime;
+use leptos::logging::log;
+use std::fs;
 
 pub async fn scan_files(dir: &str) -> Vec<FileType> {
     let mut files = Vec::new();
@@ -37,6 +35,7 @@ pub async fn scan_files(dir: &str) -> Vec<FileType> {
                 file_path: media_asset.path.clone(),
                 file_name: media_asset.file_name.clone(),
                 media_type: media_asset.asset_type.clone(),
+                good_take: Option::from(true),
                 reviewed: Option::from(false),
                 created_at: DateTime::from(chrono::Local::now()),
             };
@@ -69,5 +68,3 @@ pub async fn scan_files(dir: &str) -> Vec<FileType> {
 
     files
 }
-
-
