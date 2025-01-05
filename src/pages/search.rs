@@ -8,6 +8,8 @@ use leptos::attr::controls;
 use leptos::html::{video, Video};
 use leptos::logging::log;
 use leptos::prelude::*;
+use leptos_router::components::Form;
+use leptos_router::hooks::use_query_map;
 use lucide_leptos::{BellRing, Check};
 
 #[component]
@@ -17,14 +19,27 @@ pub fn SearchPage() -> impl IntoView {
     //    || (),
     //    |_| async move {get_files().await.unwrap() },
     //);
+    let submit_search = ServerAction::<SearchMedia>::new();
     let files = Resource::new_blocking(
         || (),
-        |_| async move { get_all_media_assets().await.unwrap() },
+        |_| async move { search_media("Tove".to_string()).await.unwrap() },
     );
     let fallback_message = &String::from("No files found");
     //hello world
     view! {
     <div class="place-items-center">
+              <ActionForm action=submit_search>
+        <input
+          type="text"
+          name="query"
+          value="closures-everywhere" oninput="this.form.requestSubmit()"
+        />
+        <input type="submit"/>
+      </ActionForm>
+
+
+
+
     <Suspense
     fallback= move || {
         view! {
@@ -50,13 +65,15 @@ pub fn SearchPage() -> impl IntoView {
 }
 
 #[server]
-pub async fn get_all_media_assets() -> Result<Vec<MediaWeb>, ServerFnError> {
+pub async fn search_media(query: String) -> Result<Vec<MediaWeb>, ServerFnError> {
     use crate::database::pg_calls::fetch_video_assets;
+    println!("Searching for: {} ", query);
     use crate::database::pg_calls::search_media_assets;
-    let assets = search_media_assets("Dancing").await;
+    let assets = search_media_assets(query.as_str()).await;
 
     // let assets = fetch_video_assets(false).await;
     if let Ok(assets) = assets {
+        println!("assets: {:?} ", assets);
         Ok(assets)
     } else {
         Err(ServerFnError::new("Error fetching media assets"))
