@@ -2,7 +2,8 @@ use crate::components::alert::AlertVariant::Default;
 use crate::components::shadcn_button::{Button, ButtonVariant};
 use crate::components::shadcn_input::{Input, InputType};
 use crate::lib_models::{MediaWeb, Metadata, VideoMetadata};
-use crate::pages::review::get_all_media_assets;
+use crate::pages::review::{get_all_media_assets, FallbackView};
+use leptos::either::Either;
 use leptos::logging::log;
 use leptos::prelude::Read;
 use leptos::prelude::*;
@@ -129,11 +130,11 @@ async fn handle_form(
 #[component]
 pub fn VideoMetadataForm(file: String) -> impl IntoView {
     let submit = ServerAction::<HandleForm>::new();
-    let tags = Resource::new_blocking(|| (), |_| async move { get_all_tags().await.unwrap() });
     //handle form data after submit
     view! {
         <div class="form">
         <ActionForm action=submit >
+
         <div>
         <label for="description">"Description: "</label>
         <Input r#type=InputType::Text id="description" name="description" />
@@ -154,7 +155,7 @@ pub fn VideoMetadataForm(file: String) -> impl IntoView {
                 <label for="good_take">"True"</label>
             </div>
             <div>
-                <input type="radio" id="good_take" name="good_take" value="false" />
+                <input type="radio" id="bad_take" name="good_take" value="false" />
                 <label for="good_take">"False"</label>
             </div>
         </fieldset>
