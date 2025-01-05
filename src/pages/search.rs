@@ -32,7 +32,22 @@ pub fn SearchPage() -> impl IntoView {
     let on_selected_submit = move |_| {
         let selected_media = selected_media.clone().get();
         spawn_local(async {
-            process_selected_media(selected_media).await;
+            match process_selected_media(selected_media).await {
+                Ok(_) => {
+                    println!("Selected media processed successfully");
+                    log!("Selected media processed successfully");
+                    window()
+                        .alert_with_message(&"Prepared!".to_string())
+                        .unwrap();
+                }
+                Err(e) => {
+                    window()
+                        .alert_with_message(&format!("Error: {:?}", e))
+                        .unwrap();
+
+                    log!("Error processing selected media: {}", e);
+                }
+            }
         })
     };
 
