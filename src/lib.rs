@@ -1,18 +1,18 @@
 pub mod app;
-pub mod pages;
 pub mod components;
-mod lib_models;
 #[cfg(feature = "ssr")]
 pub mod database;
 #[cfg(feature = "ssr")]
-mod models;
-#[cfg(feature = "ssr")]
 pub mod filesystem;
+mod lib_models;
+#[cfg(feature = "ssr")]
+mod models;
+pub mod pages;
 
 #[cfg(feature = "ssr")]
 pub mod schema;
 
-
+pub mod settings;
 
 #[cfg(feature = "hydrate")]
 #[wasm_bindgen::prelude::wasm_bindgen]

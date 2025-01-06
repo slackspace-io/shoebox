@@ -1,10 +1,17 @@
 use axum::routing::get_service;
 use http::StatusCode;
+use shoebox::settings::settings;
 use tower_http::services::ServeDir;
+
+mod settings;
 
 #[cfg(feature = "ssr")]
 #[tokio::main]
 async fn main() {
+    let settings = settings();
+
+    // Print out our settings
+    println!("{settings:?}");
     use axum::Router;
     use leptos::logging::log;
     use leptos::prelude::*;
@@ -23,12 +30,6 @@ async fn main() {
             move || shell(leptos_options.clone())
         })
         .fallback(leptos_axum::file_and_error_handler(shell))
-        .nest_service(
-            "/videos-two",
-            get_service(ServeDir::new("/mnt/storage/tove/immich/auto-transcoded/")).handle_error(
-                |_| async { (StatusCode::INTERNAL_SERVER_ERROR, "Internal Server Error") },
-            ),
-        )
         .nest_service(
             "/videos",
             get_service(ServeDir::new("/mnt/storage/tove/immich/auto-transcoded/")).handle_error(
