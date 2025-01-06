@@ -1,4 +1,4 @@
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, FixedOffset, Utc};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, Serialize, Clone, PartialEq)]
@@ -66,4 +66,10 @@ impl MediaWeb {
     pub fn file_name_no_ext(&self) -> String {
         self.file_name.split('.').next().unwrap().to_string()
     }
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq)]
+pub struct ExifMetaData {
+    pub creation_date: Option<DateTime<FixedOffset>>,
+    pub duration_ms: Option<i32>,
 }

@@ -19,6 +19,7 @@ pub struct Media {
     pub highlight: Option<bool>,
     pub reviewed: Option<bool>,
     pub description: Option<String>,
+    pub duration_ms: Option<i32>,
     pub created_at: DateTime<Utc>,
     pub uploaded_at: Option<DateTime<Utc>>,
 }
@@ -33,6 +34,7 @@ pub struct NewMedia {
     pub highlight: Option<bool>,
     pub good_take: Option<bool>,
     pub reviewed: Option<bool>,
+    pub duration_ms: i32,
     pub created_at: DateTime<Utc>,
 }
 

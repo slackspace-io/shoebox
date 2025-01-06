@@ -10,6 +10,7 @@ diesel::table! {
         highlight -> Nullable<Bool>,
         reviewed -> Nullable<Bool>,
         description -> Nullable<Text>,
+        duration_ms -> Nullable<Int4>,
         created_at -> Timestamptz,
         uploaded_at -> Nullable<Timestamptz>,
     }

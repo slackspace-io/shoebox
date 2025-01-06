@@ -9,6 +9,7 @@ CREATE TABLE media
     highlight   BOOLEAN              DEFAULT FALSE,
     reviewed    BOOLEAN              DEFAULT FALSE,
     description TEXT,
+    duration_ms INTEGER              DEFAULT 0,
     created_at  TIMESTAMPtz NOT NULL DEFAULT NOW(),
     uploaded_at timestamptz          DEFAULT NOW()
 );

@@ -39,6 +39,8 @@ dotenvy = "0.15.0"
 web-sys = "0.3.76"
 anyhow = "1.0.95"
 log = "0.4.22"
+nom-exif = "2.2.1"
+
 
 
 [features]

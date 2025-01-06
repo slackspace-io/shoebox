@@ -26,6 +26,9 @@ pub fn HomePage() -> impl IntoView {
 #[server]
 pub async fn load_files() -> Result<String, ServerFnError> {
     use crate::app::get_files;
+    use crate::filesystem::exif_test::test_exif;
+    println!("Running exif test");
+    //test_exif().await;
     get_files().await?;
     Ok("Done".to_string())
 }

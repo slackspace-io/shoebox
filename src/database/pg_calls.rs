@@ -55,7 +55,7 @@ pub fn fetch_all_media_assets() -> Vec<Media> {
         .filter(media_type.eq("video"))
         .limit(10)
         .select(Media::as_select())
-        .order(id)
+        .order(duration_ms.desc())
         .load(connection)
         .expect("Error loading media assets");
     results
@@ -67,10 +67,8 @@ pub fn insert_new_media(new_media: &NewMedia) -> QueryResult<usize> {
     let connection = &mut pg_connection();
     let result = insert_into(media).values(new_media).execute(connection);
     if let Err(Error::DatabaseError(DatabaseErrorKind::UniqueViolation, _)) = result {
-        println!("Media already exists in pgsql");
         Ok(0)
     } else {
-        println!("Media inserted");
         result
     }
 }
@@ -111,9 +109,10 @@ pub fn fetch_assets_for_review() -> Vec<Media> {
     let results = media
         .filter(media_type.eq("video"))
         .filter(reviewed.eq(false))
+        .filter(good_take.eq(true))
         .limit(10)
         .select(Media::as_select())
-        .order(id)
+        .order(created_at.asc())
         .load(connection)
         .expect("Error loading media assets");
     results
