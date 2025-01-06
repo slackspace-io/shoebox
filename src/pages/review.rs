@@ -1,31 +1,37 @@
+use crate::components::media_card::MediaCard;
+use crate::components::metadata_form::VideoMetadataForm;
+use crate::components::shadcn_button::{Button, ButtonVariant};
+use crate::components::shadcn_card::{
+    Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle,
+};
+use crate::lib_models::{MediaWeb, VideoMetadata};
 use leptos::attr::formaction;
 use leptos::either::Either;
 use leptos::ev::MouseEvent;
 use leptos::html::video;
 use leptos::logging::log;
 use leptos::prelude::*;
+use leptos_router::components::Redirect;
 use lucide_leptos::{BellRing, Check};
-use crate::components::media_card::MediaCard;
-use crate::components::metadata_form::VideoMetadataForm;
-use crate::components::shadcn_button::{Button, ButtonVariant};
-use crate::components::shadcn_card::{Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle};
-use crate::lib_models::{MediaWeb, VideoMetadata};
 
-
-
-
-
+#[component]
+pub fn ReviewReload() -> impl IntoView {
+    //Hack to reload after form submission
+    view! {
+    <Redirect path="/review"/>
+    }
+}
 
 #[component]
 pub fn ReviewPage() -> impl IntoView {
     let count = RwSignal::new(0);
-//    let on_click = move |_| *count.write() += 1;
+    //    let on_click = move |_| *count.write() += 1;
     let on_click = Callback::new(move |_: MouseEvent| {
         *count.write() += 1;
     });
     let files = Resource::new_blocking(
         || (),
-        |_| async move {get_all_media_assets().await.unwrap() },
+        |_| async move { get_all_media_assets().await.unwrap() },
     );
     let fallback_message = &String::from("No files found");
     view! {
@@ -64,7 +70,6 @@ pub fn ReviewPage() -> impl IntoView {
     }
 }
 
-
 #[component]
 pub fn FallbackView() -> impl IntoView {
     view! {
@@ -83,5 +88,3 @@ pub async fn get_all_media_assets() -> Result<Vec<MediaWeb>, ServerFnError> {
         Err(ServerFnError::new("Error fetching media assets"))
     }
 }
-
-

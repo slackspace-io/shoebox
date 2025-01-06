@@ -2,7 +2,7 @@ use crate::components::shadcn_button::{Button, ButtonVariant};
 use crate::lib_models::{FileType, MediaFile, Metadata};
 use crate::pages::browse::BrowsePage;
 use crate::pages::homepage::HomePage;
-use crate::pages::review::ReviewPage;
+use crate::pages::review::{ReviewPage, ReviewReload};
 use crate::pages::search::SearchPage;
 use crate::pages::test_form::FormExample;
 use gloo_timers::future::TimeoutFuture;
@@ -74,6 +74,7 @@ pub fn App() -> impl IntoView {
                     <Route path=path!("/browse") view=BrowsePage/>
                     <Route path=path!("/test") view=FormExample/>
                     <Route path=path!("/search") view=SearchPage/>
+                    <Route path=path!("/review/next") view=ReviewReload/>
                 </Routes>
             </main>
         </Router>
@@ -81,12 +82,11 @@ pub fn App() -> impl IntoView {
 }
 
 #[server]
-pub async fn get_files() -> Result<Vec<FileType>, ServerFnError> {
-    // If scan_files returns a Vec<FileType> directly:
+pub async fn get_files() -> Result<(), ServerFnError> {
     use crate::filesystem::fs_watcher;
-    use crate::filesystem::fs_watcher::scan_files;
+    use crate::filesystem::fs_watcher::scan_all;
     log!("Getting files");
-    let files = scan_files("/mnt/storage/tove/immich/auto-transcoded/").await; // Adjust based on actual API
-    println!("{:?}", files);
-    Ok(files)
+    let files = scan_all().await;
+    log!("Files: {:?}", files);
+    Ok(())
 }

@@ -12,8 +12,10 @@ use serde::{Deserialize, Serialize};
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct Media {
     pub id: i32,
-    pub file_path: String,
+    pub root_path: String,
+    pub route: String,
     pub file_name: String,
+    pub file_path: String,
     pub media_type: String,
     pub good_take: Option<bool>,
     pub highlight: Option<bool>,
@@ -28,8 +30,10 @@ pub struct Media {
 #[diesel(table_name = media)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct NewMedia {
-    pub file_path: String,
+    pub root_path: String,
+    pub route: String,
     pub file_name: String,
+    pub file_path: String,
     pub media_type: String,
     pub highlight: Option<bool>,
     pub good_take: Option<bool>,

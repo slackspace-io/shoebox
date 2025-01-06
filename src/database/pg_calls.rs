@@ -24,7 +24,6 @@ pub fn return_all() -> QueryResult<usize> {
     Ok(0)
 }
 
-//Working example..
 pub fn associate_media_tags() -> QueryResult<usize> {
     let connection = &mut pg_connection();
     //let one_asset = media::table
@@ -157,6 +156,8 @@ pub async fn fetch_video_assets(only_unreviewed: bool) -> Result<Vec<MediaWeb>, 
         .iter()
         .map(|asset| MediaWeb {
             id: asset.id,
+            route: asset.route.clone(),
+            root_path: asset.root_path.clone(),
             file_path: asset.file_path.clone(),
             file_name: asset.file_name.clone(),
             media_type: asset.media_type.clone(),
@@ -202,6 +203,8 @@ pub async fn search_media_assets(search_string: &str) -> Result<Vec<MediaWeb>, S
     for (media, tag, person) in results {
         let entry = media_map.entry(media.id).or_insert_with(|| MediaWeb {
             id: media.id,
+            route: media.route.clone(),
+            root_path: media.root_path.clone(),
             file_path: media.file_path.clone(),
             file_name: media.file_name.clone(),
             description: media.description.clone(),

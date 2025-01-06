@@ -2,11 +2,46 @@ use crate::database::pg_calls::insert_new_media;
 use crate::filesystem::exif_parse::parse_exif;
 use crate::lib_models::{FileType, Metadata};
 use crate::models::NewMedia;
+use crate::settings::settings;
 use chrono::DateTime;
 use leptos::logging::log;
 use std::fs;
 
-pub async fn scan_files(dir: &str) -> Vec<FileType> {
+pub async fn scan_all() {
+    let settings = settings();
+    for path in &settings.paths {
+        let _ = scan_files(
+            path.root_path.as_str(),
+            path.route(&path.root_path).as_str(),
+            path.root_path.as_str(),
+        )
+        .await;
+        let dirs = find_dirs(path.root_path.as_str());
+        for dir in dirs {
+            let _ = scan_files(
+                dir.as_str(),
+                path.route(&path.root_path).as_str(),
+                path.root_path.as_str(),
+            )
+            .await;
+        }
+    }
+}
+
+pub fn find_dirs(dir: &str) -> Vec<String> {
+    let mut dirs = Vec::new();
+    if let Ok(entries) = fs::read_dir(dir) {
+        for entry in entries.filter_map(Result::ok) {
+            if entry.file_type().unwrap().is_dir() {
+                dirs.push(entry.path().display().to_string());
+                dirs.append(&mut find_dirs(entry.path().to_str().unwrap()));
+            }
+        }
+    }
+    dirs
+}
+
+pub async fn scan_files(dir: &str, route: &str, root_path: &str) -> Vec<FileType> {
     let mut files = Vec::new();
     log!("initiating scan_files");
     println!("initiating scan_files");
@@ -15,6 +50,10 @@ pub async fn scan_files(dir: &str) -> Vec<FileType> {
     if let Ok(entries) = fs::read_dir(dir) {
         //log!("Inside read_dir");
         for entry in entries.filter_map(Result::ok) {
+            //check if entry is a dir
+            if entry.file_type().unwrap().is_dir() {
+                continue;
+            }
             log!("Entry: {:?}", entry);
             //if count > 10 {
             //    break;
@@ -23,14 +62,28 @@ pub async fn scan_files(dir: &str) -> Vec<FileType> {
             let path = entry.path();
             let file_path = path.display().to_string();
             println!("file_path {:?}", file_path);
-            let metadata = parse_exif(file_path.clone()).await.unwrap();
+            if let Some(extension) = path.extension() {
+                let ext = extension.to_string_lossy().to_lowercase();
+                if !matches!(ext.as_str(), "mp4" | "mkv" | "avi" | "mov") {
+                    println!("Not a video SKIPPING");
+                    continue;
+                }
+            }
+
+            let metadata = match parse_exif(file_path.clone()).await {
+                Ok(metadata) => metadata,
+                Err(e) => {
+                    println!("Error on {:?}", file_path);
+                    println!("Error: {:?}", e);
+                    continue;
+                }
+            };
             let good_take_duration =
                 if Some(metadata.duration_ms) != None && metadata.duration_ms.unwrap() < 5000 {
                     Some(false)
                 } else {
                     Some(true)
                 };
-
             let mut media_asset = Metadata {
                 good_take: "not processed".to_string(),
                 yearly_highlight: "not processed".to_string(),
@@ -47,6 +100,8 @@ pub async fn scan_files(dir: &str) -> Vec<FileType> {
                 discovery_date: chrono::Local::now().to_string(),
             };
             let mut media_new = NewMedia {
+                root_path: root_path.to_string(),
+                route: route.to_string(),
                 file_path: media_asset.path.clone(),
                 file_name: media_asset.file_name.clone(),
                 media_type: media_asset.asset_type.clone(),

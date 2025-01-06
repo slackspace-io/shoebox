@@ -1,3 +1,5 @@
+use base64::engine::general_purpose::URL_SAFE_NO_PAD;
+use base64::Engine as _;
 use config::{Config, ConfigError, Environment, File};
 use once_cell::sync::Lazy;
 use serde_derive::Deserialize;
@@ -22,6 +24,12 @@ pub struct PathConfig {
     pub description: String,
 }
 
+impl PathConfig {
+    pub fn route(&self, root_path: &str) -> String {
+        URL_SAFE_NO_PAD.encode(root_path)
+    }
+}
+
 impl Settings {
     pub(crate) fn new() -> Result<Self, ConfigError> {
         //        let run_mode = env::var("RUN_MODE").unwrap_or_else(|_| "development".into());
@@ -38,7 +46,7 @@ impl Settings {
             //)
             // Add in a local configuration file
             // This file shouldn't be checked in to git
-            .add_source(File::with_name("examples/hierarchical-env/config/local").required(false))
+            .add_source(File::with_name(".env").required(false))
             // Add in settings from the environment (with a prefix of APP)
             // Eg.. `APP_DEBUG=1 ./target/app` would set the `debug` key
             .add_source(Environment::with_prefix("SHOEBOX"))
@@ -48,7 +56,6 @@ impl Settings {
 
         // Now that we're done, let's access our configuration
         //        println!("debug: {:?}", s.get_bool("debug"));
-        println!("server: {:?}", s.get::<String>("paths"));
         println!(
             "database: {:?}",
             s.get::<String>("database.database_ip_port")

@@ -49,6 +49,8 @@ pub struct MediaFile {
 #[derive(Debug, Deserialize, Serialize, Clone, PartialEq)]
 pub struct MediaWeb {
     pub id: i32,
+    pub route: String,
+    pub root_path: String,
     pub file_path: String,
     pub file_name: String,
     pub description: Option<String>,
@@ -65,6 +67,13 @@ pub struct MediaWeb {
 impl MediaWeb {
     pub fn file_name_no_ext(&self) -> String {
         self.file_name.split('.').next().unwrap().to_string()
+    }
+
+    pub fn relative_file_path(&self) -> String {
+        self.file_path
+            .strip_prefix(self.root_path.as_str())
+            .unwrap()
+            .to_string()
     }
 }
 

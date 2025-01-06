@@ -13,7 +13,8 @@ use leptos::web_sys::console::log;
 pub fn MediaCard(media_web: MediaWeb, editable: bool) -> impl IntoView {
     let media_id = media_web.id.clone();
     let path = media_web.file_path.clone();
-    let video_url = format!("/videos/{}", media_web.file_name);
+    let video_url = format!("{}/{}", media_web.route, media_web.relative_file_path());
+    println!("videl url {:?}", video_url);
     let file_name = media_web.file_name.clone();
     let file_name_no_ext = media_web.file_name_no_ext();
     let description = Some(media_web.description.clone());

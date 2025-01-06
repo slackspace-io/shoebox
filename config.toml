@@ -5,7 +5,7 @@ database_name = "shoebox"
 
 [[paths]]
 root_path = "/mnt/storage/tove/immich/auto-transcoded/"
-name = "bmpcc"
+name = "videos"
 description = "Bmpcc transcoded videos"
 
 

@@ -24,18 +24,24 @@ async fn main() {
     let routes = generate_route_list(App);
     //run get_files from App
     //let files = get_files().await.unwrap();
-    let app = Router::new()
+
+    let mut app = Router::new();
+
+    for path in &settings.paths {
+        let route = format!("/{}", path.route(&path.root_path));
+        println!("Route {:?}", route);
+        let service = get_service(ServeDir::new(&path.root_path)).handle_error(|_| async {
+            (StatusCode::INTERNAL_SERVER_ERROR, "Internal Server Error")
+        });
+        app = app.nest_service(route.as_str(), service);
+    }
+
+    let app = app
         .leptos_routes(&leptos_options, routes, {
             let leptos_options = leptos_options.clone();
             move || shell(leptos_options.clone())
         })
         .fallback(leptos_axum::file_and_error_handler(shell))
-        .nest_service(
-            "/videos",
-            get_service(ServeDir::new("/mnt/storage/tove/immich/auto-transcoded/")).handle_error(
-                |_| async { (StatusCode::INTERNAL_SERVER_ERROR, "Internal Server Error") },
-            ),
-        )
         .with_state(leptos_options);
 
     // run our app with hyper

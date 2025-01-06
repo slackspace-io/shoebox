@@ -3,6 +3,8 @@
 diesel::table! {
     media (id) {
         id -> Int4,
+        root_path -> Text,
+        route -> Text,
         file_name -> Text,
         file_path -> Text,
         media_type -> Text,
