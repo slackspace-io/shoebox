@@ -8,7 +8,7 @@ diesel::table! {
         file_name -> Text,
         file_path -> Text,
         media_type -> Text,
-        good_take -> Nullable<Bool>,
+        usable -> Nullable<Bool>,
         highlight -> Nullable<Bool>,
         reviewed -> Nullable<Bool>,
         description -> Nullable<Text>,

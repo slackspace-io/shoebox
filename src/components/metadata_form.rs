@@ -1,7 +1,7 @@
 use crate::components::alert::AlertVariant::Default;
 use crate::components::shadcn_button::{Button, ButtonVariant};
 use crate::components::shadcn_input::{Input, InputType};
-use crate::lib_models::{MediaWeb, Metadata, VideoMetadata};
+use crate::lib_models::{MediaReviewForm, MediaWeb, Metadata, VideoMetadata};
 use crate::pages::review::{get_all_media_assets, FallbackView};
 use leptos::either::Either;
 use leptos::logging::log;
@@ -62,23 +62,18 @@ async fn handle_people(people: String) -> Result<Vec<i32>, ServerFnError> {
 }
 
 #[server]
-async fn handle_form(
-    tags: String,
-    people: String,
-    good_take: String,
-    highlight: String,
-    file: String,
-    description: String,
-) -> Result<(), ServerFnError> {
+async fn handle_form(data: MediaReviewForm) -> Result<(), ServerFnError> {
+    log::info!("Received form data: {:?}", data);
+    println!("usable bool {:?}", data.usable);
     use crate::database::pg_inserts::insert_new_media_person;
     use crate::database::pg_inserts::insert_new_media_tag;
     use crate::database::pg_updates::update_media;
     use crate::models::MediaPerson;
     use crate::models::MediaTag;
     use crate::models::MediaUpdate;
-    log!("File within handle_form: {:?}", file);
+    log!("File within handle_form: {:?}", data.file);
     log!("Handling form");
-    let tag_ids = match handle_tags(tags).await {
+    let tag_ids = match handle_tags(data.tags).await {
         Ok(tag_ids) => tag_ids,
         Err(e) => {
             log!("Error handling tags: {:?}", e);
@@ -86,7 +81,7 @@ async fn handle_form(
         }
     };
     log!("Tag ids: {:?}", tag_ids);
-    let person_ids = match handle_people(people).await {
+    let person_ids = match handle_people(data.people).await {
         Ok(person_ids) => person_ids,
         Err(e) => {
             log!("Error handling people: {:?}", e);
@@ -94,12 +89,13 @@ async fn handle_form(
         }
     };
     let media_update = MediaUpdate {
-        file_name: file,
-        good_take: good_take.parse::<bool>().ok(),
-        highlight: highlight.parse::<bool>().ok(),
+        file_name: data.file,
+        usable: data.usable,
+        highlight: data.highlight,
         reviewed: Some(true),
-        description,
+        description: data.description,
     };
+    println!("Media Update {:?}", media_update);
 
     //update db
     let media_update_results = update_media(&media_update);
@@ -147,25 +143,21 @@ pub fn VideoMetadataForm(file: String) -> impl IntoView {
 
         <div>
         <label for="description">"Description: "</label>
-        <Input r#type=InputType::Text id="description" name="description" />
+        <Input r#type=InputType::Text id="description" name="data[description]" />
         </div>
         <div>
             <label for="people">"People: "</label>
-            <Input r#type=InputType::Text id="people" name="people" />
+            <Input r#type=InputType::Text id="people" name="data[people]" />
         </div>
         <div>
         <label for="tags">"Tags: "</label>
-        <Input r#type=InputType::Text id="tags" name="tags"  />
+        <Input r#type=InputType::Text id="tags" name="data[tags]"  />
         </div>
-        <div class="good_take">
+        <div class="usable">
         <fieldset>
             <legend>"Usable?"</legend>
             <div>
-                <input type="radio" id="good_take" name="good_take" value="true" />
-                <label for="good_take">"Yes"</label>
-            </div>
-            <div>
-                <input type="radio" id="bad_take" name="good_take" value="false" />
+                <input type="radio" id="usable" name="data[usable]" value="false" />
                 <label for="bad_take">"No"</label>
             </div>
         </fieldset>
@@ -174,17 +166,20 @@ pub fn VideoMetadataForm(file: String) -> impl IntoView {
         <fieldset>
             <legend>"Highlight"</legend>
             <div>
-                <input type="radio" id="highlight" name="highlight" value="true" />
+                <input type="radio" id="highlight" name="data[highlight]" value="true" />
                 <label for="highlight">"Yes"</label>
             </div>
             <div>
-                <input type="radio" id="not_highlight" name="highlight" value="false" />
+                <input required=false type="radio" id="not_highlight" name="data[highlight]" value="false" />
                 <label for="not_highlight">"No"</label>
             </div>
         </fieldset>
+        <select>
+        <option value="0">"0"</option>
+        </select>
         </div>
         <div>
-            <input type="hidden" name="file" value=file   />
+            <input type="hidden" name="data[file]" value=file   />
             <Button r#type="Submit" >"Submit"</Button>
         </div>
         </ActionForm>

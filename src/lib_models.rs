@@ -17,7 +17,7 @@ pub struct VideoMetadata {
 
 #[derive(Debug, Deserialize, Serialize, Clone, PartialEq)]
 pub struct Metadata {
-    pub good_take: String,
+    pub usable: String,
     pub yearly_highlight: String,
     pub people: String,
     pub pets: String,
@@ -58,7 +58,7 @@ pub struct MediaWeb {
     pub people: Vec<String>,
     pub media_type: String,
     pub highlight: Option<bool>,
-    pub good_take: Option<bool>,
+    pub usable: Option<bool>,
     pub reviewed: Option<bool>,
     pub created_at: DateTime<Utc>,
     pub uploaded_at: Option<DateTime<Utc>>,
@@ -81,4 +81,14 @@ impl MediaWeb {
 pub struct ExifMetaData {
     pub creation_date: Option<DateTime<FixedOffset>>,
     pub duration_ms: Option<i32>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq)]
+pub struct MediaReviewForm {
+    pub file: String,
+    pub description: String,
+    pub people: String,
+    pub tags: String,
+    pub usable: Option<bool>,
+    pub highlight: Option<bool>,
 }

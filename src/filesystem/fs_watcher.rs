@@ -78,14 +78,14 @@ pub async fn scan_files(dir: &str, route: &str, root_path: &str) -> Vec<FileType
                     continue;
                 }
             };
-            let good_take_duration =
+            let usable_duration =
                 if Some(metadata.duration_ms) != None && metadata.duration_ms.unwrap() < 5000 {
                     Some(false)
                 } else {
                     Some(true)
                 };
             let mut media_asset = Metadata {
-                good_take: "not processed".to_string(),
+                usable: "not processed".to_string(),
                 yearly_highlight: "not processed".to_string(),
                 people: "not processed".to_string(),
                 pets: "not processed".to_string(),
@@ -105,7 +105,7 @@ pub async fn scan_files(dir: &str, route: &str, root_path: &str) -> Vec<FileType
                 file_path: media_asset.path.clone(),
                 file_name: media_asset.file_name.clone(),
                 media_type: media_asset.asset_type.clone(),
-                good_take: good_take_duration,
+                usable: usable_duration,
                 highlight: Option::from(false),
                 reviewed: Option::from(false),
                 duration_ms: metadata.duration_ms.unwrap(),

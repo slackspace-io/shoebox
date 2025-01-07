@@ -50,7 +50,7 @@ pub fn fetch_all_media_assets() -> Vec<Media> {
     use crate::schema::media::dsl::*;
     let connection = &mut pg_connection();
     let results = media
-        .filter(good_take.eq(true))
+        .filter(usable.eq(true))
         .filter(media_type.eq("video"))
         .limit(10)
         .select(Media::as_select())
@@ -108,7 +108,7 @@ pub fn fetch_assets_for_review() -> Vec<Media> {
     let results = media
         .filter(media_type.eq("video"))
         .filter(reviewed.eq(false))
-        .filter(good_take.eq(true))
+        .filter(usable.eq(true))
         .limit(10)
         .select(Media::as_select())
         .order(created_at.asc())
@@ -161,7 +161,7 @@ pub async fn fetch_video_assets(only_unreviewed: bool) -> Result<Vec<MediaWeb>, 
             file_path: asset.file_path.clone(),
             file_name: asset.file_name.clone(),
             media_type: asset.media_type.clone(),
-            good_take: asset.good_take,
+            usable: asset.usable,
             highlight: asset.highlight,
             reviewed: asset.reviewed,
             created_at: asset.created_at,
@@ -183,7 +183,7 @@ pub async fn search_media_assets(search_string: &str) -> Result<Vec<MediaWeb>, S
         .left_outer_join(tags::table.on(media_tags::tag_id.eq(tags::id)))
         .left_outer_join(media_people::table.on(media::id.eq(media_people::media_id)))
         .left_outer_join(people::table.on(media_people::person_id.eq(people::id)))
-        .filter(media::good_take.eq(true))
+        .filter(media::usable.eq(true))
         .filter(
             media::description
                 .ilike(&search_pattern)
@@ -211,7 +211,7 @@ pub async fn search_media_assets(search_string: &str) -> Result<Vec<MediaWeb>, S
             tags: vec![],
             people: vec![],
             media_type: media.media_type.clone(),
-            good_take: media.good_take,
+            usable: media.usable,
             highlight: media.highlight,
             reviewed: media.reviewed,
             created_at: media.created_at,
