@@ -50,6 +50,7 @@ pub fn fetch_all_media_assets() -> Vec<Media> {
     use crate::schema::media::dsl::*;
     let connection = &mut pg_connection();
     let results = media
+        .filter(reviewed.eq(true))
         .filter(usable.eq(true))
         .filter(media_type.eq("video"))
         .limit(10)

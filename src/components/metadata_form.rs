@@ -142,6 +142,9 @@ pub fn VideoMetadataForm(file: String) -> impl IntoView {
         <ActionForm action=submit >
 
         <div>
+            <Button r#type="Submit" name="data[usable]" value="false" >"Unusable"</Button>
+        </div>
+        <div>
         <label for="description">"Description: "</label>
         <Input r#type=InputType::Text id="description" name="data[description]" />
         </div>
@@ -154,13 +157,13 @@ pub fn VideoMetadataForm(file: String) -> impl IntoView {
         <Input r#type=InputType::Text id="tags" name="data[tags]"  />
         </div>
         <div class="usable">
-        <fieldset>
-            <legend>"Usable?"</legend>
-            <div>
-                <input type="radio" id="usable" name="data[usable]" value="false" />
-                <label for="bad_take">"No"</label>
-            </div>
-        </fieldset>
+        //<fieldset>
+        //    <legend>"Usable?"</legend>
+        //    <div>
+        //        <input type="radio" id="usable" name="data[usable]" value="false" />
+        //        <label for="bad_take">"No"</label>
+        //    </div>
+        //</fieldset>
         </div>
         <div class="highlight">
         <fieldset>
