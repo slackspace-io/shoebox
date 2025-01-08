@@ -1,17 +1,21 @@
+use crate::immich::albums::get_album_info;
 use axum::routing::get_service;
 use http::StatusCode;
 use shoebox::settings::settings;
 use tower_http::services::ServeDir;
 
+mod immich;
 mod settings;
 
 #[cfg(feature = "ssr")]
 #[tokio::main]
 async fn main() {
     let settings = settings();
-
-    // Print out our settings
     println!("{settings:?}");
+    println!("Calling albums");
+    let album_info = get_album_info().await;
+    println!("Done");
+    // Print out our settings
     use axum::Router;
     use leptos::logging::log;
     use leptos::prelude::*;

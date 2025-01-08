@@ -9,8 +9,12 @@ name = "videos"
 description = "Bmpcc transcoded videos"
 
 
-[[paths]]
-root_path = "/mnt/immich/app/upload/library/Jacob/"
-name = "my_phone"
-description = "My phone photos"
+[immich]
+server_url = "https://immich.your.domain"
+
+
+#[[paths]]
+#root_path = "/mnt/immich/app/upload/library/Jacob/"
+#name = "my_phone"
+#description = "My phone photos"
 

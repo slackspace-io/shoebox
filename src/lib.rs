@@ -13,6 +13,7 @@ pub mod pages;
 pub mod schema;
 
 pub mod settings;
+mod immich;
 
 #[cfg(feature = "hydrate")]
 #[wasm_bindgen::prelude::wasm_bindgen]

@@ -9,6 +9,19 @@ use std::sync::Arc;
 pub struct Settings {
     pub database: DatabaseConfig,
     pub paths: Vec<PathConfig>,
+    pub immich: ImmichConfig,
+    pub immich_album: ImmichAlbumConfig,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ImmichAlbumConfig {
+    pub album_id: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ImmichConfig {
+    pub server_url: String,
+    pub api_key: String,
 }
 
 #[derive(Debug, Deserialize)]
