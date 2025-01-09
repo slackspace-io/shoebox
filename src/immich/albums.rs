@@ -1,3 +1,5 @@
+use crate::immich::models::AlbumInfo;
+
 pub async fn get_album_info() -> Result<String, ()> {
     println!("In albums");
     let settings = crate::settings::settings();
@@ -15,9 +17,13 @@ pub async fn get_album_info() -> Result<String, ()> {
         .unwrap();
 
     if response.status().is_success() {
-        println!("Raw Response {}", response.text().await.unwrap());
-        //let album_info: AlbumInfo = response.json().await.unwrap();
-        //println!("Album info: {:?}", album_info);
+        //println!("Raw Response {}", response.text().await.unwrap());
+        let album_info: AlbumInfo = response.json().await.unwrap();
+        for asset in album_info.assets.unwrap() {
+            println!("{:?}", &asset);
+            println!("{:?}", asset.id);
+        }
+        //        println!("Album info: {:?}", album_info);
         Ok("hi".to_string())
     } else {
         println!("{:?}", response.status());
