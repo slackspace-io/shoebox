@@ -82,20 +82,22 @@ pub struct ExifInfo {
 
 #[derive(Deserialize, Debug)]
 pub struct People {
-    pub birth_date: Option<String>,
+    pub id: String,
+    pub name: String,
+    pub birthDate: Option<String>,
     pub faces: Vec<Face>,
 }
 
 #[derive(Deserialize, Debug)]
 pub struct Face {
-    pub bounding_box_x1: i64,
-    pub bounding_box_x2: i64,
-    pub bounding_box_y1: i64,
-    pub bounding_box_y2: i64,
+    pub boundingBoxX1: i64,
+    pub boundingBoxX2: i64,
+    pub boundingBoxY1: i64,
+    pub boundingBoxY2: i64,
     pub id: String,
-    pub image_height: i64,
-    pub image_width: i64,
-    pub source_type: Option<String>, // Possible values: ["machine-learning", "exif"]
+    pub imageHeight: i64,
+    pub imageWidth: i64,
+    pub sourceType: Option<String>, // Possible values: ["machine-learning", "exif"]
 }
 
 #[derive(Deserialize, Debug)]
