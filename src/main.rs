@@ -1,4 +1,3 @@
-use crate::immich::albums::get_album_info;
 use axum::routing::get_service;
 use http::StatusCode;
 use shoebox::settings::settings;
@@ -12,9 +11,6 @@ mod settings;
 async fn main() {
     let settings = settings();
     println!("{settings:?}");
-    println!("Calling albums");
-    let album_info = get_album_info().await;
-    println!("Done");
     // Print out our settings
     use axum::Router;
     use leptos::logging::log;

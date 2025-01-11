@@ -26,8 +26,11 @@ pub struct ImmichConfig {
 
 #[derive(Debug, Deserialize)]
 pub struct DatabaseConfig {
-    pub database_ip_port: String,
+    pub database_ip: String,
+    pub database_port: String,
     pub database_name: String,
+    pub database_user: String,
+    pub database_password: String,
 }
 
 #[derive(Debug, Deserialize)]

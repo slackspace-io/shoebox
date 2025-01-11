@@ -1,6 +1,10 @@
 [database]
-database_ip_port = "127.0.0.1:5432"
+database_ip = "127.0.0.1"
+database_port = "5432"
 database_name = "shoebox"
+database_user = "shoebox"
+database_password = "shoebox"
+
 
 
 [[paths]]
