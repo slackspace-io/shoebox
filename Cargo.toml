@@ -47,6 +47,7 @@ base64 = "0.22.1"
 futures = "0.3.31"
 tokio-stream = "0.1.17"
 reqwest = { version = "0.12.11", features = ["json"] }
+diesel_migrations = { version = "2.2.0", features = ["postgres"], optional = true }
 
 
 
@@ -63,6 +64,7 @@ ssr = [
     "leptos_router/ssr",
     "dep:tracing",
     "diesel",
+    "diesel_migrations",
 ]
 
 # Defines a size-optimized profile for the WASM bundle in release mode

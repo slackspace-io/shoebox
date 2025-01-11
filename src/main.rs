@@ -1,10 +1,13 @@
 use axum::routing::get_service;
+use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use http::StatusCode;
+use shoebox::database::pg_conn::pg_connection;
 use shoebox::settings::settings;
 use tower_http::services::ServeDir;
-
 mod immich;
 mod settings;
+
+pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
 
 #[cfg(feature = "ssr")]
 #[tokio::main]
@@ -12,6 +15,10 @@ async fn main() {
     let settings = settings();
     println!("{settings:?}");
     // Print out our settings
+    let mut connection = pg_connection();
+    connection.run_pending_migrations(MIGRATIONS).unwrap();
+
+    //run migrations
     use axum::Router;
     use leptos::logging::log;
     use leptos::prelude::*;
