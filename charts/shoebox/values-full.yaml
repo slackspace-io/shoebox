@@ -1,0 +1,40 @@
+replicaCount: 1
+namespace: shoebox
+
+image:
+  repository: ghcr.io/slackspace-io/shoebox  # Assuming this image is accessible as a placeholder
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+service:
+  annotations: { }
+  labels: { }
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: false
+  labels: { }
+  ingressClassName: ""
+  paths:
+    - /
+  pathType: Prefix
+  extraPaths: [ ]
+  https: false
+  annotations: { }
+  tls: [ ]
+  hosts:
+    - test.shoebox.default # Placeholder domain
+
+config:
+  database:
+    database_ip: "127.0.0.1"
+    database_port: "5432"
+    database_name: "shoebox"
+    database_user: "shoebox"
+    database_password: "shoebox"
+  paths:
+    - root_path: "/mnt/storage/tove/immich/auto-transcoded/"
+      name: "videos"
+      description: "Bmpcc transcoded videos"
+
