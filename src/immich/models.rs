@@ -30,22 +30,22 @@ pub struct AlbumUser {
 #[derive(Deserialize, Debug)]
 pub struct Asset {
     pub checksum: String, // Base64 encoded SHA1 hash
-    pub device_asset_id: Option<String>,
-    pub device_id: Option<String>,
-    pub duplicate_id: Option<String>,
+    pub deviceAssetId: Option<String>,
+    pub deviceId: Option<String>,
+    pub duplicateId: Option<String>,
     pub duration: String,
-    pub exif_info: Option<ExifInfo>,
-    pub file_created_at: Option<String>,
-    pub file_modified_at: Option<String>,
-    pub has_metadata: Option<bool>,
+    pub exifInfo: Option<ExifInfo>,
+    pub fileCreatedAt: Option<String>,
+    pub fileModifiedAt: Option<String>,
+    pub hasMetadata: Option<bool>,
     pub id: String,
     pub isArchived: Option<bool>,
     pub isFavorite: Option<bool>,
     pub isOffline: Option<bool>,
     pub isTrashed: Option<bool>,
     pub libraryId: Option<String>, // Deprecated
-    pub live_photo_video_id: Option<String>,
-    pub local_date_time: Option<String>,
+    pub livePhotoVideoId: Option<String>,
+    pub localDateTime: Option<String>,
     pub originalFileName: Option<String>,
     pub originalMimeType: Option<String>,
     pub originalPath: Option<String>,
@@ -58,26 +58,26 @@ pub struct Asset {
 pub struct ExifInfo {
     pub city: Option<String>,
     pub country: Option<String>,
-    pub date_time_original: Option<String>,
+    pub dateTimeOriginal: Option<String>,
     pub description: Option<String>,
-    pub exif_image_height: Option<f64>,
-    pub exif_image_width: Option<f64>,
-    pub exposure_time: Option<String>,
-    pub f_number: Option<f64>,
-    pub file_size_in_byte: Option<i64>,
-    pub focal_length: Option<f64>,
+    pub exifImageHeight: Option<f64>,
+    pub exifImageWidth: Option<f64>,
+    pub exposureTime: Option<String>,
+    pub fNumber: Option<f64>,
+    pub fileSizeInByte: Option<i64>,
+    pub focalLength: Option<f64>,
     pub iso: Option<f64>,
     pub latitude: Option<f64>,
-    pub lens_model: Option<String>,
+    pub lensModel: Option<String>,
     pub longitude: Option<f64>,
     pub make: Option<String>,
     pub model: Option<String>,
-    pub modify_date: Option<String>,
+    pub modifyDate: Option<String>,
     pub orientation: Option<String>,
-    pub projection_type: Option<String>,
+    pub projectionType: Option<String>,
     pub rating: Option<f64>,
     pub state: Option<String>,
-    pub time_zone: Option<String>,
+    pub timeZone: Option<String>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -103,14 +103,14 @@ pub struct Face {
 #[derive(Deserialize, Debug)]
 pub struct Tag {
     pub color: Option<String>,
-    pub created_at: String,
+    pub createdAt: String,
     pub id: String,
     pub name: String,
-    pub parent_id: Option<String>,
-    pub updated_at: String,
+    pub parentId: Option<String>,
+    pub updatedAt: String,
     pub value: String,
     pub thumbhash: String,
-    pub tag_type: String, // Possible values: ["IMAGE", "VIDEO", "AUDIO", "OTHER"]
+    pub tagType: String, // Possible values: ["IMAGE", "VIDEO", "AUDIO", "OTHER"]
 }
 
 #[derive(Deserialize, Debug)]
