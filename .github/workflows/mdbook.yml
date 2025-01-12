@@ -7,7 +7,7 @@ name: Deploy mdBook site to Pages
 on:
   # Runs on pushes targeting the default branch
   push:
-    branches: ["main"]
+    branches: [ "main" ]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -42,10 +42,14 @@ jobs:
         uses: actions/configure-pages@v5
       - name: Build with mdBook
         run: mdbook build
+      - name: Publish Helm Index
+        run: |
+          mkdir -p ./site/helm
+          cp ./index.yaml ./site/helm/index.yaml
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./book
+          path: ./site
 
   # Deployment job
   deploy:
