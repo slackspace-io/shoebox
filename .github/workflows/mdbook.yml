@@ -10,7 +10,7 @@ on:
     branches: [ "main" ]
 
     paths:
-      - "docs/**
+      - "docs/**"
       - "book.toml"
       - ".github/workflows/mdbook.yml"
       - "index.html"
