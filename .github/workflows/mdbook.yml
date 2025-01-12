@@ -7,12 +7,12 @@ name: Deploy mdBook site to Pages
 on:
   # Runs on pushes targeting the default branch
   push:
-    branches: [ "main" ]i
-  paths:
-    - "docs/**
-    - "book.toml"
-    - ".github/workflows/mdbook.yml"
-    - "index.html"
+    branches: [ "main" ]
+    paths:
+      - "docs/**
+      - "book.toml"
+      - ".github/workflows/mdbook.yml"
+      - "index.html"
 
 
   # Allows you to run this workflow manually from the Actions tab
