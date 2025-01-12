@@ -62,6 +62,7 @@ impl Settings {
             //)
             // Add in a local configuration file
             // This file shouldn't be checked in to git
+            .add_source(File::with_name("/app/config/config").required(false))
             .add_source(File::with_name(".env").required(false))
             // Add in settings from the environment (with a prefix of APP)
             // Eg.. `APP_DEBUG=1 ./target/app` would set the `debug` key
