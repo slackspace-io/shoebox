@@ -73,10 +73,10 @@ impl Settings {
 
         // Now that we're done, let's access our configuration
         //        println!("debug: {:?}", s.get_bool("debug"));
-        println!(
-            "database: {:?}",
-            s.get::<String>("database.database_ip_port")
-        );
+        //println!(
+        //    "database: {:?}",
+        //    s.get::<String>("database.database_ip_port")
+        //);
         println!("config {:?}", s);
 
         // You can deserialize (and thus freeze) the entire configuration as
