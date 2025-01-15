@@ -15,6 +15,11 @@ on:
       - ".github/workflows/mdbook.yml"
       - "index.html"
 
+  workflow_run:
+    workflows: [ 'Release Charts' ]
+    types: [ completed ]
+
+
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 

@@ -37,7 +37,15 @@ spec:
               value: {{ $val | quote }}
               {{- end }}
             {{- end }}
+          {{- if .Values.volumeMounts }}
+          volumeMounts:
+            {{- toYaml .Values.volumeMounts | default "" | nindent 12 }}
+          {{- end }}
       volumes:
         - name: config-volume
           configMap:
             name: {{ .Chart.Name }}-config
+        {{- if .Values.volumes }}
+        {{- toYaml .Values.volumes | default "" | nindent 8 }}
+        {{- end }}
+
