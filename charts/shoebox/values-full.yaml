@@ -26,6 +26,20 @@ ingress:
   hosts:
     - test.shoebox.default # Placeholder domain
 
+volumeMounts:
+  - name: "test"
+    mountPath: "/mnt/testMount"
+    subPath: "/testMount"
+
+
+volumes:
+  - name: "test"
+    PersistentVolumeClaim:
+      claimName: "test"
+
+
+
+
 config:
   database:
     database_ip: "127.0.0.1"
