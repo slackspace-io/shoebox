@@ -2,6 +2,15 @@ apiVersion: v1
 entries:
   shoebox-helm:
   - apiVersion: v2
+    created: "2025-01-15T20:17:57.479148218Z"
+    description: A Helm chart for Kubernetes to deploy Shoebox
+    digest: a5e88dae5e705a87502f7c4da1d4e9a748ade41d039b601e34554179f500262d
+    name: shoebox-helm
+    type: application
+    urls:
+    - https://github.com/slackspace-io/shoebox/releases/download/shoebox-helm-0.0.4/shoebox-helm-0.0.4.tgz
+    version: 0.0.4
+  - apiVersion: v2
     created: "2025-01-15T19:06:07.192780597Z"
     description: A Helm chart for Kubernetes to deploy Shoebox
     digest: d8d16a7e0c9e312c280715246c00b2f97c2885b59097ef0e4f056e2becd198c7
@@ -28,4 +37,4 @@ entries:
     urls:
     - https://github.com/slackspace-io/shoebox/releases/download/shoebox-helm-0.0.1/shoebox-helm-0.0.1.tgz
     version: 0.0.1
-generated: "2025-01-15T19:06:07.192791066Z"
+generated: "2025-01-15T20:17:57.479168235Z"
