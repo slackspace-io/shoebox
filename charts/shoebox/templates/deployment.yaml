@@ -21,9 +21,6 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - containerPort: {{ .Values.service.port }}
-          volumeMounts:
-            - name: config-volume
-              mountPath: /app/config
           env:
             {{- range $key, $val := .Values.customEnv }}
               {{- if $val.fromSecret.enabled }}
@@ -39,6 +36,8 @@ spec:
             {{- end }}
           {{- if .Values.volumeMounts }}
           volumeMounts:
+            - name: config-volume
+              mountPath: /app/config
             {{- toYaml .Values.volumeMounts | default "" | nindent 12 }}
           {{- end }}
       volumes:
