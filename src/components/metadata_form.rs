@@ -190,19 +190,3 @@ pub fn VideoMetadataForm(file: String) -> impl IntoView {
 
     }
 }
-
-#[server]
-pub async fn get_all_tags() -> Result<Vec<String>, ServerFnError> {
-    use crate::database::pg_calls::fetch_all_tags;
-    let tags = fetch_all_tags().await?;
-    let tag_names = tags.iter().map(|tag| tag.name.clone()).collect();
-    Ok(tag_names)
-}
-
-#[server]
-pub async fn get_all_people() -> Result<Vec<String>, ServerFnError> {
-    use crate::database::pg_calls::fetch_all_people;
-    let people = fetch_all_people().await?;
-    let people_names = people.iter().map(|person| person.name.clone()).collect();
-    Ok(people_names)
-}

@@ -10,7 +10,12 @@ use leptos::task::spawn_local;
 use leptos::web_sys::console::log;
 
 #[component]
-pub fn MediaCard(media_web: MediaWeb, editable: bool) -> impl IntoView {
+pub fn MediaCard(
+    media_web: MediaWeb,
+    tags: Option<Vec<String>>,
+    people: Option<Vec<String>>,
+    editable: bool,
+) -> impl IntoView {
     let media_id = media_web.id.clone();
     let path = media_web.file_path.clone();
     let video_url = format!("{}/{}", media_web.route, media_web.relative_file_path());
@@ -18,8 +23,16 @@ pub fn MediaCard(media_web: MediaWeb, editable: bool) -> impl IntoView {
     let file_name = media_web.file_name.clone();
     let file_name_no_ext = media_web.file_name_no_ext();
     let description = Some(media_web.description.clone());
-    let tags = media_web.tags.clone();
-    let people = media_web.people.clone();
+    let current_tags = match tags {
+        Some(tags) => tags,
+        None => media_web.tags.clone(),
+    };
+    let current_people = match people {
+        Some(people) => people,
+        None => media_web.people.clone(),
+    };
+    //    let current_tags = media_web.tags.clone();
+    //    let people = media_web.people.clone();
     let media_type = media_web.media_type.clone();
     let reviewed = media_web.reviewed.clone();
     let created_at = media_web.created_at.clone();
@@ -50,7 +63,7 @@ pub fn MediaCard(media_web: MediaWeb, editable: bool) -> impl IntoView {
     <div class="snap-center flex items-center">
       <h2 class="inline text-cyan-500 font-extrabold mr-2">Tags:</h2>
       <ul class="inline list-none p-0 m-0 flex gap-2">
-        {tags.into_iter().map(|tag| {
+        {current_tags.into_iter().map(|tag| {
             let shownTag = tag.clone();
           view! {
             <Card class="relative flex items-center  border border-secondary rounded-full px-1.5 py-0.5 text-text bg-secondary">
@@ -84,7 +97,7 @@ pub fn MediaCard(media_web: MediaWeb, editable: bool) -> impl IntoView {
     <div class="snap-center flex items-center">
       <h2 class="inline text-cyan-500 font-extrabold mr-2">People:</h2>
       <ul class="inline list-none p-0 m-0 flex gap-2">
-        {people.into_iter().map(|person| {
+        {current_people.into_iter().map(|person| {
             let shownPerson = person.clone();
           view! {
             <Card class="relative flex items-center bg-secondary border border-secondary rounded-full px-1.5 py-0.5 text-gray-800">

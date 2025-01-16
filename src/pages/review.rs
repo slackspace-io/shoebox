@@ -33,6 +33,10 @@ pub fn ReviewPage() -> impl IntoView {
         || (),
         |_| async move { get_all_media_assets().await.unwrap() },
     );
+
+    let tags = Resource::new_blocking(|| (), |_| async move { get_all_tags().await.unwrap() });
+    let people = Resource::new_blocking(|| (), |_| async move { get_all_people().await.unwrap() });
+
     let fallback_message = &String::from("No files found");
     view! {
     <div class="place-items-center">
@@ -54,7 +58,7 @@ pub fn ReviewPage() -> impl IntoView {
             file.get(count.get()).map(|f| {
                 Either::Left(view! {
                     <div>
-                        <MediaCard media_web={f.clone()} editable=true />
+                        <MediaCard media_web={f.clone()} tags=tags.get() people=people.get() editable=true />
                     </div>
                 })
             })
@@ -87,4 +91,20 @@ pub async fn get_all_media_assets() -> Result<Vec<MediaWeb>, ServerFnError> {
     } else {
         Err(ServerFnError::new("Error fetching media assets"))
     }
+}
+
+#[server]
+pub async fn get_all_tags() -> Result<Vec<String>, ServerFnError> {
+    use crate::database::pg_calls::fetch_all_tags;
+    let tags = fetch_all_tags().await?;
+    let tag_names = tags.iter().map(|tag| tag.name.clone()).collect();
+    Ok(tag_names)
+}
+
+#[server]
+pub async fn get_all_people() -> Result<Vec<String>, ServerFnError> {
+    use crate::database::pg_calls::fetch_all_people;
+    let people = fetch_all_people().await?;
+    let people_names = people.iter().map(|person| person.name.clone()).collect();
+    Ok(people_names)
 }

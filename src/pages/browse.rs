@@ -38,7 +38,7 @@ pub fn BrowsePage() -> impl IntoView {
                     {file.iter().map(|f| {
 
                         view! {
-                            <MediaCard media_web = f.clone() editable = false/>
+                            <MediaCard media_web = f.clone() tags=None people=None editable = false/>
                         }
                     }).collect::<Vec<_>>()}
             }

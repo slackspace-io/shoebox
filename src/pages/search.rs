@@ -104,7 +104,7 @@ pub fn SearchPage() -> impl IntoView {
                                             });
                                         }
                                             class=class_string style="cursor: pointer;"> // Use the signal here
-                                            <MediaCard media_web=f.clone() editable=false/>
+                                            <MediaCard media_web=f.clone() tags=None people=None editable=false/>
                                         </div>
                                     })
                                 }).collect::<Vec<_>>()
