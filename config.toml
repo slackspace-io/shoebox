@@ -1,7 +1,7 @@
 [database]
 database_ip = "127.0.0.1"
 database_port = "5432"
-database_name = "shoebox"
+database_name = "shoebox-dev"
 database_user = "shoebox"
 database_password = "shoebox"
 

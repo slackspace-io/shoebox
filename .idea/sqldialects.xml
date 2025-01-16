@@ -6,7 +6,6 @@
     <file url="file://$PROJECT_DIR$/migrations/2025-01-02-113242_tags/down.sql" dialect="PostgreSQL" />
     <file url="file://$PROJECT_DIR$/migrations/2025-01-02-113246_people/down.sql" dialect="PostgreSQL" />
     <file url="file://$PROJECT_DIR$/migrations/2025-01-02-113543_media_tags/down.sql" dialect="PostgreSQL" />
-    <file url="file://$PROJECT_DIR$/migrations/2025-01-03-105316_media_view/up.sql" dialect="PostgreSQL" />
     <file url="PROJECT" dialect="PostgreSQL" />
   </component>
 </project>
