@@ -1,9 +1,7 @@
-use axum::routing::get_service;
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use http::StatusCode;
 use shoebox::database::pg_conn::pg_connection;
 use shoebox::settings::settings;
-use tower_http::services::ServeDir;
 mod immich;
 mod settings;
 
@@ -19,11 +17,12 @@ async fn main() {
     connection.run_pending_migrations(MIGRATIONS).unwrap();
 
     //run migrations
+    use axum::routing::get_service;
     use axum::Router;
-    use leptos::logging::log;
-    use leptos::prelude::*;
+    use leptos::{logging::log, prelude::*};
     use leptos_axum::{generate_route_list, LeptosRoutes};
     use shoebox::app::*;
+    use tower_http::services::ServeDir;
     let conf = get_configuration(None).unwrap();
     let addr = conf.leptos_options.site_addr;
     let leptos_options = conf.leptos_options;
@@ -33,7 +32,6 @@ async fn main() {
     //let files = get_files().await.unwrap();
 
     let mut app = Router::new();
-
     for path in &settings.paths {
         let route = format!("/{}", path.route(&path.root_path));
         println!("Route {:?}", route);

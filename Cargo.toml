@@ -14,39 +14,39 @@ edition = "2021"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-leptos = { version = "0.7.2" }
-leptos_router = { version = "0.7.2" }
+leptos = { version = "0.7.8" }
+leptos_router = { version = "0.7.8" }
 axum = { version = "0.7.9", optional = true }
 console_error_panic_hook = "0.1.7"
-leptos_axum = { version = "0.7.2", optional = true }
-leptos_meta = { version = "0.7.2" }
-tokio = { version = "1.42.0", features = ["full"], optional = true }
+leptos_axum = { version = "0.7.8", optional = true }
+leptos_meta = { version = "0.7.8" }
+tokio = { version = "1.44.2", features = ["full"], optional = true }
 tower = { version = "0.5.2", optional = true }
 tower-http = { version = "0.6.2", features = ["fs"], optional = true }
-wasm-bindgen = "0.2.99"
+wasm-bindgen = "0.2.100"
 tracing = { version = "0.1.41", optional = true }
 http = "1"
-serde = { version = "1.0.217", features = ["derive"] }
+serde = { version = "1.0.219", features = ["derive"] }
 gloo-timers = { version = "0.3.0", features = ["futures"] }
-tailwind_fuse = { version = "0.3.1", features = ["variant"] }
-leptos-style = "0.0.3"
-leptos-node-ref = "0.0.3"
-leptos-struct-component = "0.0.3"
+tailwind_fuse = { version = "0.3.2", features = ["variant"] }
+leptos-style = "0.1.0"
+leptos-node-ref = "0.1.0"
+leptos-struct-component = "0.1.0"
 lucide-leptos = "1.1.0"
-chrono = { version = "0.4.39", features = ["serde"] }
-diesel = { version = "2.2.6", features = ["postgres", "chrono"], optional = true }
-dotenvy = "0.15.0"
-web-sys = "0.3.76"
-anyhow = "1.0.95"
-log = "0.4.22"
-nom-exif = "2.2.1"
-config = { version = "0.15.4", features = ["toml"] }
-serde_derive = "1.0.217"
-once_cell = "1.20.2"
+chrono = { version = "0.4.40", features = ["serde"] }
+diesel = { version = "2.2.9", features = ["postgres", "chrono"], optional = true }
+dotenvy = "0.15.7"
+web-sys = "0.3.77"
+anyhow = "1.0.97"
+log = "0.4.27"
+nom-exif = "2.5.1"
+config = { version = "0.15.11", features = ["toml"] }
+serde_derive = "1.0.219"
+once_cell = "1.21.3"
 base64 = "0.22.1"
 futures = "0.3.31"
 tokio-stream = "0.1.17"
-reqwest = { version = "0.12.11", features = ["json"] }
+reqwest = { version = "0.12.15", features = ["json"] }
 diesel_migrations = { version = "2.2.0", features = ["postgres"], optional = true }
 
 
