@@ -1,5 +1,6 @@
 use crate::components::alert::AlertVariant::Default;
 use crate::components::shadcn_button::{Button, ButtonVariant};
+use crate::components::shadcn_card::Card;
 use crate::components::shadcn_input::{Input, InputType};
 use crate::lib_models::{MediaReviewForm, MediaWeb, Metadata, VideoMetadata};
 use crate::pages::review::{get_all_media_assets, FallbackView};
@@ -134,12 +135,51 @@ async fn handle_form(data: MediaReviewForm) -> Result<(), ServerFnError> {
 
 //Make form for video_metadatal model
 #[component]
-pub fn VideoMetadataForm(file: String) -> impl IntoView {
+pub fn VideoMetadataForm(
+    file: String,
+    tags: Option<Vec<String>>,
+    people: Option<Vec<String>>,
+) -> impl IntoView {
     let submit = ServerAction::<HandleForm>::new();
+    log!("Tags: {:?}", tags);
+    let current_tags = match tags {
+        Some(tags) => tags,
+        None => vec![],
+    };
+    let current_people = match people {
+        Some(people) => people,
+        None => vec![],
+    };
     //handle form data after submit
     view! {
         <div class="form">
         <ActionForm action=submit >
+    <div class="snap-center flex items-center">
+      <h2 class="inline text-cyan-500 font-extrabold mr-2">Tags:</h2>
+      <ul class="inline list-none p-0 m-0 flex gap-2">
+        {current_tags.into_iter().map(|tag| {
+            let shownTag = tag.clone();
+            log!("Tag: {:?}", tag);
+          view! {
+            <Card class="relative flex items-center  border border-secondary rounded-full px-1.5 py-0.5 text-text bg-secondary">
+              {/* 'X' link */}
+          <button
+            class="absolute top-0 left-0.5 text-sm text-accent bg-transparent border-0 cursor-pointer"
+                                on:click=move |_| {
+                                    // Call the server function with the tag to remove
+                                       let tagClone = tag.clone();
+                                }
+            aria-label="Remove tag"
+          >
+                x
+              </button>
+              <span class="pl-3 pr-1">{shownTag}</span>
+            </Card>
+          }
+        }).collect_view()}
+      </ul>
+    </div>
+
 
         <div>
             <Button r#type="Submit" name="data[usable]" value="false" >"Unusable"</Button>

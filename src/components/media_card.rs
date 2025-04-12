@@ -23,8 +23,10 @@ pub fn MediaCard(
     let file_name = media_web.file_name.clone();
     let file_name_no_ext = media_web.file_name_no_ext();
     let description = Some(media_web.description.clone());
+    let review_people = people.clone();
+    let review_tags = tags.clone();
     let current_tags = match tags {
-        Some(tags) => tags,
+        Some(tags) => tags.clone(),
         None => media_web.tags.clone(),
     };
     let current_people = match people {
@@ -135,7 +137,7 @@ pub fn MediaCard(
                                     Either::Left(view!{
 
                                                 <div class="flex-row items-center">
-                                                <VideoMetadataForm file={file_name.clone()} />
+                                                <VideoMetadataForm file={file_name.clone()} tags={review_tags} people={review_people} />
 
                                                     </div>
                                     })
