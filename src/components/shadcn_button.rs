@@ -1,5 +1,5 @@
-use leptos::{ev::MouseEvent, prelude::*};
 use leptos::attr::Attribute;
+use leptos::{ev::MouseEvent, prelude::*};
 use leptos_node_ref::AnyNodeRef;
 use leptos_struct_component::{struct_component, StructComponent};
 use leptos_style::Style;
@@ -114,7 +114,7 @@ pub fn Button(
             variant: variant.get(),
             size: size.get(),
         }
-            .with_class(class.get().unwrap_or_default())
+        .with_class(class.get().unwrap_or_default())
     });
 
     let child_props = ButtonChildProps {

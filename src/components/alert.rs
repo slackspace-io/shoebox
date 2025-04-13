@@ -37,7 +37,7 @@ pub fn Alert(
         AlertClass {
             variant: variant.get(),
         }
-            .with_class(class.get().unwrap_or_default())
+        .with_class(class.get().unwrap_or_default())
     });
 
     view! {

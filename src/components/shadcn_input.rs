@@ -1,8 +1,8 @@
+use crate::components::utils::handlers::{Handler, MaybeCallback};
 use leptos::{ev::Event, ev::FocusEvent, prelude::*};
 use leptos_node_ref::AnyNodeRef;
 use leptos_style::Style;
 use tailwind_fuse::*;
-use crate::components::utils::handlers::{Handler, MaybeCallback};
 
 #[derive(Default, Clone)]
 pub enum InputType {

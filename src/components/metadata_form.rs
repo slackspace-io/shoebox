@@ -141,6 +141,8 @@ pub fn VideoMetadataForm(
     people: Option<Vec<String>>,
 ) -> impl IntoView {
     let submit = ServerAction::<HandleForm>::new();
+    let selected_tags = RwSignal::new(Vec::<String>::new());
+    let selected_tags_count = RwSignal::new(0);
     log!("Tags: {:?}", tags);
     let current_tags = match tags {
         Some(tags) => tags,
@@ -157,26 +159,41 @@ pub fn VideoMetadataForm(
     <div class="snap-center flex items-center">
       <h2 class="inline text-cyan-500 font-extrabold mr-2">Tags:</h2>
       <ul class="inline list-none p-0 m-0 flex gap-2">
-        {current_tags.into_iter().map(|tag| {
-            let shownTag = tag.clone();
-            log!("Tag: {:?}", tag);
+        {current_tags.into_iter().map(|t| {
+            let tag = t.clone();
+            let tag_other = t.clone();
+            let is_selected = Memo::new(move |_| {
+                println!("something selected");
+                selected_tags.get().contains(&tag)
+            });
+            let class_string = move || if is_selected.get() { "p-2 rounded-md bg-accent" } else { "p-2 rounded-md" };
+
+
           view! {
-            <Card class="relative flex items-center  border border-secondary rounded-full px-1.5 py-0.5 text-text bg-secondary">
-              {/* 'X' link */}
-          <button
-            class="absolute top-0 left-0.5 text-sm text-accent bg-transparent border-0 cursor-pointer"
-                                on:click=move |_| {
-                                    // Call the server function with the tag to remove
-                                       let tagClone = tag.clone();
-                                }
-            aria-label="Remove tag"
-          >
-                x
-              </button>
-              <span class="pl-3 pr-1">{shownTag}</span>
-            </Card>
+                <div on:click=move |_| {
+                    let tag_clone = tag_other.clone();
+                    selected_tags.update(|selected| {
+                        println!("clicked");
+                        if selected.contains(&tag_clone) {
+                            *selected_tags_count.write() += -1;
+                            selected.retain(|t| t != &tag_clone);
+                        } else {
+                            *selected_tags_count.write() += 1;
+                            selected.push(tag_clone);
+                        }
+                    });
+                    log!("Selected tags: {:?}", selected_tags.get());
+                }
+                class=class_string style="cursor: pointer;"
+                >
+
+              <span class="pl-3 pr-1">{tag_other.clone()}</span>
+                </div>
+
+
+
           }
-        }).collect_view()}
+        }).collect::<Vec<_>>()}
       </ul>
     </div>
 

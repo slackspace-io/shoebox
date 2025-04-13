@@ -12,8 +12,8 @@ pub mod pages;
 #[cfg(feature = "ssr")]
 pub mod schema;
 
-pub mod settings;
 mod immich;
+pub mod settings;
 
 #[cfg(feature = "hydrate")]
 #[wasm_bindgen::prelude::wasm_bindgen]

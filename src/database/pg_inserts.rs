@@ -1,9 +1,9 @@
-use diesel::dsl::insert_into;
-use diesel::query_dsl::QueryDsl;
-use diesel::prelude::*;
-use diesel::{QueryResult, RunQueryDsl};
-use crate::models::{MediaPerson, MediaTag, NewPerson, NewTag};
 use crate::database::pg_conn::pg_connection;
+use crate::models::{MediaPerson, MediaTag, NewPerson, NewTag};
+use diesel::dsl::insert_into;
+use diesel::prelude::*;
+use diesel::query_dsl::QueryDsl;
+use diesel::{QueryResult, RunQueryDsl};
 
 pub fn insert_new_tag(new_tag: &NewTag) -> QueryResult<i32> {
     use crate::schema::tags::dsl::*;
@@ -34,7 +34,6 @@ pub fn insert_new_media_tag(new_media_tag: MediaTag) -> QueryResult<usize> {
         .execute(connection)
 }
 
-
 pub fn insert_new_person(new_person: &NewPerson) -> QueryResult<i32> {
     use crate::schema::people::dsl::*;
     let connection = &mut pg_connection();
@@ -48,7 +47,8 @@ pub fn insert_new_person(new_person: &NewPerson) -> QueryResult<i32> {
         Ok(tag_id) => Ok(tag_id), // Successfully inserted, return the id.
         Err(diesel::result::Error::NotFound) => {
             // Conflict occurred, fetch the id of the existing tag.
-            people.filter(name.eq(&new_person.name)) // Pass the name as a reference directly.
+            people
+                .filter(name.eq(&new_person.name)) // Pass the name as a reference directly.
                 .select(id)
                 .first(connection)
         }

@@ -1,8 +1,8 @@
-use diesel::dsl::insert_into;
-use diesel::query_dsl::QueryDsl;
-use diesel::prelude::*;
-use diesel::{QueryResult, RunQueryDsl};
 use crate::models::MediaUpdate;
+use diesel::dsl::insert_into;
+use diesel::prelude::*;
+use diesel::query_dsl::QueryDsl;
+use diesel::{QueryResult, RunQueryDsl};
 
 pub fn update_media(media_update: &MediaUpdate) -> QueryResult<i32> {
     use crate::database::pg_conn::pg_connection;
@@ -15,4 +15,3 @@ pub fn update_media(media_update: &MediaUpdate) -> QueryResult<i32> {
         .get_result(connection);
     result
 }
-

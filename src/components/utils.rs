@@ -4,7 +4,6 @@
 //!
 //! See [the Rust shadcn/ui book](https://shadcn-ui.rustforweb.org/) for more documenation.
 
-
 pub mod handlers {
     use leptos::prelude::{Callable, Callback};
 
