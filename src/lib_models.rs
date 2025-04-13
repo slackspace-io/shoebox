@@ -89,6 +89,8 @@ pub struct MediaReviewForm {
     pub description: String,
     pub people: String,
     pub tags: String,
+    pub tags_manual: String,
+    pub people_manual: String,
     pub usable: Option<bool>,
     pub highlight: Option<bool>,
 }

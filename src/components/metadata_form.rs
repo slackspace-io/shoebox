@@ -74,7 +74,9 @@ async fn handle_form(data: MediaReviewForm) -> Result<(), ServerFnError> {
     use crate::models::MediaUpdate;
     log!("File within handle_form: {:?}", data.file);
     log!("Handling form");
-    let tag_ids = match handle_tags(data.tags).await {
+    //combine tags and manual tags
+    let all_tags = data.tags + "," + &*data.tags_manual;
+    let tag_ids = match handle_tags(all_tags).await {
         Ok(tag_ids) => tag_ids,
         Err(e) => {
             log!("Error handling tags: {:?}", e);
@@ -82,7 +84,8 @@ async fn handle_form(data: MediaReviewForm) -> Result<(), ServerFnError> {
         }
     };
     log!("Tag ids: {:?}", tag_ids);
-    let person_ids = match handle_people(data.people).await {
+    let all_people = data.people + "," + &*data.people_manual;
+    let person_ids = match handle_people(all_people).await {
         Ok(person_ids) => person_ids,
         Err(e) => {
             log!("Error handling people: {:?}", e);
@@ -143,6 +146,8 @@ pub fn VideoMetadataForm(
     let submit = ServerAction::<HandleForm>::new();
     let selected_tags = RwSignal::new(Vec::<String>::new());
     let selected_tags_count = RwSignal::new(0);
+    let selected_people = RwSignal::new(Vec::<String>::new());
+    let selected_people_count = RwSignal::new(0);
     log!("Tags: {:?}", tags);
     let current_tags = match tags {
         Some(tags) => tags,
@@ -156,6 +161,49 @@ pub fn VideoMetadataForm(
     view! {
         <div class="form">
         <ActionForm action=submit >
+
+    <div class="snap-center flex items-center">
+      <h2 class="inline text-cyan-500 font-extrabold mr-2">People:</h2>
+      <ul class="inline list-none p-0 m-0 flex gap-2">
+        {current_people.into_iter().map(|p| {
+            let person = p.clone();
+            let person_other = p.clone();
+            let is_selected = Memo::new(move |_| {
+                println!("something selected");
+                selected_people.get().contains(&person)
+            });
+            let class_string = move || if is_selected.get() { "p-2 rounded-md bg-accent" } else { "p-2 rounded-md" };
+
+
+          view! {
+                <div on:click=move |_| {
+                    let person_clone = person_other.clone();
+                    selected_people.update(|selected| {
+                        println!("clicked");
+                        if selected.contains(&person_clone) {
+                            *selected_people_count.write() += -1;
+                            selected.retain(|t| t != &person_clone);
+                        } else {
+                            *selected_people_count.write() += 1;
+                            selected.push(person_clone);
+                        }
+                    });
+                    log!("Selected People: {:?}", selected_people.get());
+                }
+                class=class_string style="cursor: pointer;"
+                >
+
+              <span class="pl-3 pr-1">{person_other.clone()}</span>
+                </div>
+
+
+
+          }
+        }).collect::<Vec<_>>()}
+      </ul>
+    </div>
+
+
     <div class="snap-center flex items-center">
       <h2 class="inline text-cyan-500 font-extrabold mr-2">Tags:</h2>
       <ul class="inline list-none p-0 m-0 flex gap-2">
@@ -207,11 +255,11 @@ pub fn VideoMetadataForm(
         </div>
         <div>
             <label for="people">"People: "</label>
-            <Input r#type=InputType::Text id="people" name="data[people]" />
+            <Input r#type=InputType::Text id="people" name="data[people_manual]" />
         </div>
         <div>
         <label for="tags">"Tags: "</label>
-        <Input r#type=InputType::Text id="tags" name="data[tags]"  />
+        <Input r#type=InputType::Text id="tags" name="data[tags_manual]"  />
         </div>
         <div class="usable">
         //<fieldset>
@@ -240,6 +288,8 @@ pub fn VideoMetadataForm(
         </div>
         <div>
             <input type="hidden" name="data[file]" value=file   />
+            <input type="hidden" name="data[tags]" value=move || selected_tags.get().join(",") />
+            <input type="hidden" name="data[people]" value=move || selected_people.get().join(",") />
             <Button r#type="Submit" >"Submit"</Button>
         </div>
         </ActionForm>
