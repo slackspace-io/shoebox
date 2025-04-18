@@ -11,6 +11,12 @@ pub struct Settings {
     pub paths: Vec<PathConfig>,
     pub immich: ImmichConfig,
     pub immich_album: ImmichAlbumConfig,
+    pub processing: ProcessingConfig,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ProcessingConfig {
+    pub destination_path: String,
 }
 
 #[derive(Debug, Deserialize)]

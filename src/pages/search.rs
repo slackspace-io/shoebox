@@ -5,6 +5,7 @@ use crate::components::shadcn_card::{
 };
 use crate::lib_models::{MediaWeb, VideoMetadata};
 use crate::pages::review::FallbackView;
+use crate::settings::settings;
 use leptos::attr::{controls, selected};
 use leptos::either::Either;
 use leptos::html::{video, Video};
@@ -142,14 +143,14 @@ pub async fn process_selected_media(ids: Vec<i32>) -> Result<(), ServerFnError> 
     // Perform server-side actions with the selected IDs
     use crate::database::pg_calls::get_file_paths_by_ids;
     use crate::filesystem::fs_prepare::copy_files_to_destination;
+    let settings = settings();
+    let destination_path = &settings.processing.destination_path;
     log!("Server received IDs: {:?}", ids);
     //get filepaths
     let file_paths = get_file_paths_by_ids(ids);
     //copy files
     if let Ok(file_paths) = file_paths {
-        let prepare_files =
-        //TODO: Add config for destination
-            copy_files_to_destination(&file_paths, "/mnt/nand/scratch/shoebox".to_string());
+        let prepare_files = copy_files_to_destination(&file_paths, destination_path);
         if let Ok(prepare_files) = prepare_files {
             log!("Files prepared");
             Ok(())

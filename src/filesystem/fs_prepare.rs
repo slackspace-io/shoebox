@@ -4,10 +4,13 @@ use log::{info, warn};
 use std::fs;
 use std::path::Path;
 
-pub fn copy_files_to_destination(file_paths: &Vec<String>, destination_root: String) -> Result<()> {
+pub fn copy_files_to_destination(
+    file_paths: &Vec<String>,
+    destination_root: &String,
+) -> Result<()> {
     let now: DateTime<Local> = Local::now();
     let dir_name = now.format("%Y-%m-%d_%H-%M-%S").to_string(); // Format the date and time
-    let destination_path = Path::new(&destination_root).join(&dir_name); // Create unique directory
+    let destination_path = Path::new(destination_root).join(&dir_name); // Create unique directory
 
     // Create the destination directory
     fs::create_dir_all(&destination_path)?;
