@@ -75,22 +75,42 @@ async fn handle_form(data: MediaReviewForm) -> Result<(), ServerFnError> {
     log!("File within handle_form: {:?}", data.file);
     log!("Handling form");
     //combine tags and manual tags
-    let all_tags = data.tags + "," + &*data.tags_manual;
-    let tag_ids = match handle_tags(all_tags).await {
-        Ok(tag_ids) => tag_ids,
-        Err(e) => {
-            log!("Error handling tags: {:?}", e);
-            return Err(e);
+    let all_tags = [&data.tags, &data.tags_manual]
+        .iter()
+        .filter(|s| !s.is_empty())
+        .map(|s| s.as_str())
+        .collect::<Vec<_>>()
+        .join(",");
+
+    let tag_ids = if !all_tags.is_empty() {
+        match handle_tags(all_tags).await {
+            Ok(tag_ids) => tag_ids,
+            Err(e) => {
+                log!("Error handling tags: {:?}", e);
+                return Err(e);
+            }
         }
+    } else {
+        Vec::new()
     };
     log!("Tag ids: {:?}", tag_ids);
-    let all_people = data.people + "," + &*data.people_manual;
-    let person_ids = match handle_people(all_people).await {
-        Ok(person_ids) => person_ids,
-        Err(e) => {
-            log!("Error handling people: {:?}", e);
-            return Err(e);
+    let all_people = [&data.people, &data.people_manual]
+        .iter()
+        .filter(|s| !s.is_empty())
+        .map(|s| s.as_str())
+        .collect::<Vec<_>>()
+        .join(",");
+
+    let person_ids = if !all_people.is_empty() {
+        match handle_people(all_people).await {
+            Ok(person_ids) => person_ids,
+            Err(e) => {
+                log!("Error handling people: {:?}", e);
+                return Err(e);
+            }
         }
+    } else {
+        Vec::new() // or default empty Vec/appropriate fallback
     };
     let media_update = MediaUpdate {
         file_name: data.file,
