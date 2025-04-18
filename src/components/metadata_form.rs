@@ -213,7 +213,7 @@ pub fn VideoMetadataForm(
                 class=class_string style="cursor: pointer;"
                 >
 
-              <span class="pl-3 pr-1">{person_other.clone()}</span>
+                <button style="cursor: pointer;" type="button">{person_other.clone()}</button>
                 </div>
 
 
@@ -254,8 +254,7 @@ pub fn VideoMetadataForm(
                 }
                 class=class_string style="cursor: pointer;"
                 >
-
-              <span class="pl-3 pr-1">{tag_other.clone()}</span>
+                <button style="cursor: pointer;" type="button">{tag_other.clone()}</button>
                 </div>
 
 

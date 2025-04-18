@@ -148,6 +148,7 @@ pub async fn process_selected_media(ids: Vec<i32>) -> Result<(), ServerFnError> 
     //copy files
     if let Ok(file_paths) = file_paths {
         let prepare_files =
+        //TODO: Add config for destination
             copy_files_to_destination(&file_paths, "/mnt/nand/scratch/shoebox".to_string());
         if let Ok(prepare_files) = prepare_files {
             log!("Files prepared");
