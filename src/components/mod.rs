@@ -1,5 +1,6 @@
 pub mod alert;
 pub mod media_card;
+pub mod media_card_review;
 pub mod metadata_form;
 pub mod shadcn_alert;
 pub mod shadcn_button;

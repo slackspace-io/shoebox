@@ -1,4 +1,5 @@
 use crate::components::media_card::MediaCard;
+use crate::components::media_card_review::MediaCardReview;
 use crate::components::metadata_form::VideoMetadataForm;
 use crate::components::shadcn_button::{Button, ButtonVariant};
 use crate::components::shadcn_card::{
@@ -58,7 +59,7 @@ pub fn ReviewPage() -> impl IntoView {
             file.get(count.get()).map(|f| {
                 Either::Left(view! {
                     <div>
-                        <MediaCard media_web={f.clone()} tags=tags.get() people=people.get() editable=true />
+                        <MediaCardReview media_web={f.clone()} tags=tags.get() people=people.get() editable=true />
                     </div>
                 })
             })
