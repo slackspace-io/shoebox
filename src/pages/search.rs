@@ -148,6 +148,7 @@ pub async fn process_selected_media(ids: Vec<i32>) -> Result<(), ServerFnError> 
     log!("Server received IDs: {:?}", ids);
     //get filepaths
     let file_paths = get_file_paths_by_ids(ids);
+    log!("File paths: {:?}", file_paths);
     //copy files
     if let Ok(file_paths) = file_paths {
         let prepare_files = copy_files_to_destination(&file_paths, destination_path);
