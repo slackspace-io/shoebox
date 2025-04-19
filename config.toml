@@ -11,6 +11,7 @@ database_password = "shoebox"
 root_path = "/mnt/storage/tove/immich/auto-transcoded/"
 name = "videos"
 description = "Bmpcc transcoded videos"
+originals_path = "/mnt/storage/bmpcc/raw/"
 
 
 [immich]

@@ -83,10 +83,11 @@ pub fn App() -> impl IntoView {
 
 #[server]
 pub async fn get_files() -> Result<(), ServerFnError> {
-    use crate::filesystem::fs_watcher;
     use crate::filesystem::fs_watcher::scan_all;
+    use crate::filesystem::fs_watcher::scan_original_paths;
     log!("Getting files");
     let files = scan_all().await;
+    let _ = scan_original_paths().await;
     log!("Files: {:?}", files);
     Ok(())
 }

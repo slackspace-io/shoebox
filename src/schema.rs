@@ -7,6 +7,7 @@ diesel::table! {
         route -> Text,
         file_name -> Text,
         file_path -> Text,
+        original_path -> Nullable<Text>,
         media_type -> Text,
         usable -> Nullable<Bool>,
         highlight -> Nullable<Bool>,
@@ -51,4 +52,10 @@ diesel::joinable!(media_people -> people (person_id));
 diesel::joinable!(media_tags -> media (media_id));
 diesel::joinable!(media_tags -> tags (tag_id));
 
-diesel::allow_tables_to_appear_in_same_query!(media, media_people, media_tags, people, tags,);
+diesel::allow_tables_to_appear_in_same_query!(
+    media,
+    media_people,
+    media_tags,
+    people,
+    tags,
+);

@@ -44,6 +44,7 @@ pub struct PathConfig {
     pub root_path: String,
     pub name: String,
     pub description: String,
+    pub originals_path: Option<String>,
 }
 
 impl PathConfig {

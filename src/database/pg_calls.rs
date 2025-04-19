@@ -1,6 +1,6 @@
 use crate::database::pg_conn::pg_connection;
 use crate::lib_models::MediaWeb;
-use crate::models::{Media, MediaTag, NewMedia, Person, Tag};
+use crate::models::{Media, MediaOriginalPathUpdate, MediaTag, NewMedia, Person, Tag};
 use crate::schema::*;
 use diesel::associations::HasTable;
 use diesel::dsl::insert_into;
@@ -244,4 +244,37 @@ pub fn get_file_paths_by_ids(media_ids: Vec<i32>) -> Result<Vec<String>, diesel:
         .load::<String>(connection)?; // Load the results as a vector of Strings
 
     Ok(results)
+}
+
+pub fn update_media_original_path(
+    file_name_: &str,
+    root_path_: &str,
+    original_path_: String,
+) -> Result<(), diesel::result::Error> {
+    use crate::schema::media::dsl::*;
+    let conn = &mut pg_connection();
+
+    // Get the base name without extension
+    let base_name = file_name_
+        .rsplit_once('.')
+        .map(|(base, _)| base)
+        .unwrap_or(file_name_);
+
+    let update = MediaOriginalPathUpdate {
+        original_path: Some(original_path_),
+    };
+
+    // Use a more precise pattern that ensures we match the exact base name
+    diesel::update(media)
+        .filter(
+            file_name
+                .like(format!("{}.%", base_name))
+                .and(root_path.eq(root_path_))
+                // Exclude any files that start with ._
+                .and(file_name.not_like("._%.%")),
+        )
+        .set(&update)
+        .execute(conn)?;
+
+    Ok(())
 }

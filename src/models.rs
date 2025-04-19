@@ -7,7 +7,7 @@ use chrono::{DateTime, Utc};
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Queryable, Selectable, Debug, Serialize, Deserialize, Identifiable)]
+#[derive(Queryable, Identifiable, Debug, Selectable)]
 #[diesel(table_name = media)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct Media {
@@ -16,6 +16,7 @@ pub struct Media {
     pub route: String,
     pub file_name: String,
     pub file_path: String,
+    pub original_path: Option<String>,
     pub media_type: String,
     pub usable: Option<bool>,
     pub highlight: Option<bool>,
@@ -51,6 +52,13 @@ pub struct MediaUpdate {
     pub highlight: Option<bool>,
     pub reviewed: Option<bool>,
     pub description: String,
+}
+
+// Add a specific struct for updating original_path
+#[derive(AsChangeset, Debug, Selectable)]
+#[diesel(table_name = media)]
+pub struct MediaOriginalPathUpdate {
+    pub original_path: Option<String>,
 }
 
 #[derive(Queryable, Selectable, Debug, Insertable, Associations, Identifiable)]

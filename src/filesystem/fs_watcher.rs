@@ -1,8 +1,9 @@
-use crate::database::pg_calls::insert_new_media;
+use crate::database::pg_calls::{insert_new_media, update_media_original_path};
 use crate::filesystem::exif_parse::parse_exif;
 use crate::lib_models::{FileType, Metadata};
 use crate::models::NewMedia;
 use crate::settings::settings;
+use anyhow::Result;
 use chrono::DateTime;
 use leptos::logging::log;
 use std::fs;
@@ -138,4 +139,43 @@ pub async fn scan_files(dir: &str, route: &str, root_path: &str) -> Vec<FileType
     }
 
     files
+}
+
+pub async fn scan_original_paths() {
+    let settings = settings();
+    for path in &settings.paths {
+        if let Some(orig_path) = &path.originals_path {
+            let _ = update_original_paths(orig_path.as_str(), path.root_path.as_str()).await;
+
+            // Scan subdirectories
+            let dirs = find_dirs(orig_path.as_str());
+            for dir in dirs {
+                let _ = update_original_paths(dir.as_str(), path.root_path.as_str()).await;
+            }
+        }
+    }
+}
+
+pub async fn update_original_paths(dir: &str, root_path: &str) -> Result<()> {
+    log!("scanning original paths in: {}", dir);
+
+    if let Ok(entries) = fs::read_dir(dir) {
+        for entry in entries.filter_map(Result::ok) {
+            if entry.file_type().unwrap().is_dir() {
+                continue;
+            }
+
+            let path = entry.path();
+            if let Some(file_name) = path.file_name().map(|n| n.to_string_lossy().to_string()) {
+                // Update the database record that matches this filename and root_path
+                update_media_original_path(
+                    &file_name,
+                    root_path,
+                    path.to_string_lossy().to_string(),
+                )?;
+            }
+        }
+    }
+
+    Ok(())
 }
