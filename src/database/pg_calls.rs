@@ -280,3 +280,12 @@ pub fn update_media_original_path(
 
     Ok(())
 }
+
+pub fn reset_media_review_status(media_id: i32) -> QueryResult<usize> {
+    use crate::schema::media::dsl::*;
+    let connection = &mut pg_connection();
+    diesel::update(media)
+        .filter(id.eq(media_id))
+        .set(reviewed.eq(false))
+        .execute(connection)
+}

@@ -110,3 +110,8 @@ pub struct Person {
 pub struct NewPerson<'a> {
     pub name: &'a str,
 }
+
+#[derive(Debug, Clone)]
+pub struct ResetForReview {
+    media_id: i32,
+}

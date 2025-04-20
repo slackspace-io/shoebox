@@ -15,6 +15,7 @@ pub fn MediaCard(
     tags: Option<Vec<String>>,
     people: Option<Vec<String>>,
     editable: bool,
+    #[prop(optional)] children: Option<Children>, // Make children optional
 ) -> impl IntoView {
     let media_id = media_web.id.clone();
     let path = media_web.file_path.clone();
@@ -147,7 +148,7 @@ pub fn MediaCard(
                                     })
                                 }
                                 }
-
+                                        {children.map(|children| children())} // Render children only if provided
                                     </CardFooter>
                                 </Card>
                                 </div>

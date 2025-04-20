@@ -5,11 +5,56 @@ use crate::components::shadcn_card::{
 };
 use crate::lib_models::{MediaWeb, VideoMetadata};
 use leptos::attr::controls;
+use leptos::ev::MouseEvent;
 use leptos::html::{video, Video};
 use leptos::logging::log;
 use leptos::prelude::*;
 use lucide_leptos::{BellRing, Check};
 
+#[server]
+pub async fn reset_for_review(media_id: i32) -> Result<(), ServerFnError> {
+    use crate::database::pg_calls::reset_media_review_status;
+    match reset_media_review_status(media_id) {
+        Ok(_) => Ok(()),
+        Err(e) => Err(ServerFnError::new(format!(
+            "Failed to reset review status: {}",
+            e
+        ))),
+    }
+}
+
+#[component]
+pub fn MediaCardWithReset(
+    media_web: MediaWeb,
+    tags: Option<Vec<String>>,
+    people: Option<Vec<String>>,
+    editable: bool,
+) -> impl IntoView {
+    let reset_action = create_action(|input: &ResetForReview| reset_for_review(input.media_id));
+
+    let on_reset = Callback::new(move |_: MouseEvent| {
+        reset_action.dispatch(ResetForReview {
+            media_id: media_web.id,
+        });
+    });
+
+    let reset_button = view! {
+        <Button class="mt-2" onclick=on_reset>"Reset for Review"</Button>
+    };
+
+    view! {
+        <MediaCard
+            media_web=media_web.clone()
+            tags=tags
+            people=people
+            editable=editable
+        >
+            {reset_button}
+        </MediaCard>
+    }
+}
+
+// Update the BrowsePage component to use MediaCardWithReset
 #[component]
 pub fn BrowsePage() -> impl IntoView {
     //get files
@@ -36,11 +81,15 @@ pub fn BrowsePage() -> impl IntoView {
         {move || files.get().iter().next().map(|file| {
             view! {
                     {file.iter().map(|f| {
-
-                        view! {
-                            <MediaCard media_web = f.clone() tags=None people=None editable = false/>
-                        }
-                    }).collect::<Vec<_>>()}
+                                view! {
+                                    <MediaCardWithReset
+                                        media_web=f.clone()
+                                        tags=None
+                                        people=None
+                                        editable=false
+                                    />
+                                }
+                            }).collect::<Vec<_>>()}
             }
         })}
     </div>
