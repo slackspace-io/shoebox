@@ -19,77 +19,58 @@ pub fn MediaCardReview(
     let media_id = media_web.id.clone();
     let path = media_web.file_path.clone();
     let video_url = format!("{}/{}", media_web.route, media_web.relative_file_path());
-    println!("videl url {:?}", video_url);
     let file_name = media_web.file_name.clone();
     let file_name_no_ext = media_web.file_name_no_ext();
-    let description = Some(media_web.description.clone());
+    let description = media_web.description.clone();
     let review_people = people.clone();
     let review_tags = tags.clone();
-    let current_tags = match tags {
-        Some(tags) => tags.clone(),
-        None => media_web.tags.clone(),
-    };
-    let current_people = match people {
-        Some(people) => people,
-        None => media_web.people.clone(),
-    };
-    //    let current_tags = media_web.tags.clone();
-    //    let people = media_web.people.clone();
+    let current_tags = tags.clone().unwrap_or(media_web.tags.clone());
+    let current_people = people.clone().unwrap_or(media_web.people.clone());
     let media_type = media_web.media_type.clone();
     let reviewed = media_web.reviewed.clone();
     let created_at = media_web.created_at.clone();
     let uploaded_at = media_web.uploaded_at.clone();
     let highlight = media_web.highlight.clone();
-    let card_class_string = if highlight.expect("REASON") {
-        "w-fit place-content-center border-accent border-double"
+
+    let card_class_string = if let Some(highlight) = highlight {
+        if highlight {
+            "w-fit place-content-center border-accent border-double"
+        } else {
+            "w-fit place-content-center"
+        }
     } else {
         "w-fit place-content-center"
     };
 
     view! {
         <div>
-        <Card class=card_class_string >
-            <CardHeader>
-                <CardTitle>{file_name_no_ext}</CardTitle>
-                <CardDescription>{description}</CardDescription>
-            </CardHeader>
-            <CardContent class="grid gap-4">
-                <div class=" flex items-center space-x-4 rounded-md border p-2">
-                    <div class="flex-1 space-y-1">
-                    <VideoPlayer video_url=video_url/>
-                        <p class="text-sm text-muted-foreground ">
-                        </p>
+            <Card class=card_class_string>
+                <CardHeader>
+                    <CardTitle>{file_name_no_ext}</CardTitle>
+                    <CardDescription>{description}</CardDescription>
+                </CardHeader>
+                <CardContent class="grid gap-4">
+                    <div class="flex items-center space-x-4 rounded-md border p-2">
+                        <div class="flex-1 space-y-1">
+                            <VideoPlayer video_url=video_url />
+                            <p class="text-sm text-muted-foreground"></p>
+                        </div>
                     </div>
-
-                </div>
-
-
-
-
-
-
-                <div>
-
-                </div>
-            </CardContent>
-            <CardFooter>
-        {if editable {
-            Either::Left(view!{
-
-                        <div class="flex-row items-center">
-                        <VideoMetadataForm file={file_name.clone()} tags={review_tags} people={review_people} />
-
+                </CardContent>
+                <CardFooter>
+                    {if editable {
+                        Either::Left(view! {
+                            <div class="flex-row items-center">
+                                <VideoMetadataForm file={file_name.clone()} tags={review_tags} people={review_people} />
                             </div>
-            })
-            } else {
-            Either::Right(view!{
-                <div></div>
-            })
-        }
-        }
-
-            </CardFooter>
-        </Card>
+                        })
+                    } else {
+                        Either::Right(view! {
+                            <div></div>
+                        })
+                    }}
+                </CardFooter>
+            </Card>
         </div>
     }
 }

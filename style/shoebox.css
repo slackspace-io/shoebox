@@ -594,6 +594,10 @@ video {
   margin-right: 0.5rem;
 }
 
+.mt-2 {
+  margin-top: 0.5rem;
+}
+
 .inline {
   display: inline;
 }
