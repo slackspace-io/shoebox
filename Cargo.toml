@@ -14,30 +14,30 @@ edition = "2021"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-leptos = { version = "0.7.8" }
-leptos_router = { version = "0.7.8" }
-axum = { version = "0.7.9", optional = true }
+leptos = { version = "0.8.2" }
+leptos_router = { version = "0.8.2" }
+axum = { version = "0.8.4", optional = true }
 console_error_panic_hook = "0.1.7"
-leptos_axum = { version = "0.7.8", optional = true }
-leptos_meta = { version = "0.7.8" }
-tokio = { version = "1.44.2", features = ["full"], optional = true }
+leptos_axum = { version = "0.8.2", optional = true }
+leptos_meta = { version = "0.8.2" }
+tokio = { version = "1.45.0", features = ["full"], optional = true }
 tower = { version = "0.5.2", optional = true }
-tower-http = { version = "0.6.2", features = ["fs"], optional = true }
+tower-http = { version = "0.6.4", features = ["fs"], optional = true }
 wasm-bindgen = "0.2.100"
 tracing = { version = "0.1.41", optional = true }
 http = "1"
 serde = { version = "1.0.219", features = ["derive"] }
 gloo-timers = { version = "0.3.0", features = ["futures"] }
 tailwind_fuse = { version = "0.3.2", features = ["variant"] }
-leptos-style = "0.1.0"
-leptos-node-ref = "0.1.0"
-leptos-struct-component = "0.1.0"
-lucide-leptos = "1.1.0"
-chrono = { version = "0.4.40", features = ["serde"] }
-diesel = { version = "2.2.9", features = ["postgres", "chrono"], optional = true }
+leptos-style = "0.2.0"
+leptos-node-ref = "0.2.0"
+leptos-struct-component = "0.2.0"
+lucide-leptos = "1.2.0"
+chrono = { version = "0.4.41", features = ["serde"] }
+diesel = { version = "2.2.10", features = ["postgres", "chrono"], optional = true }
 dotenvy = "0.15.7"
 web-sys = "0.3.77"
-anyhow = "1.0.97"
+anyhow = "1.0.98"
 log = "0.4.27"
 nom-exif = "2.5.1"
 config = { version = "0.15.11", features = ["toml"] }
