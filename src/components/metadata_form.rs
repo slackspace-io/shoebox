@@ -301,9 +301,17 @@ pub fn VideoMetadataForm(
                 <label for="not_highlight">"No"</label>
             </div>
         </fieldset>
-        <select>
+        <div class="stars">
+            <label for="rating">"Stars: "</label>
+        <select name="data[rating]">
         <option value="0">"0"</option>
+        <option value="1">"1"</option>
+        <option value="2">"2"</option>
+        <option value="3">"3"</option>
+        <option value="4">"4"</option>
+        <option value="5">"5"</option>
         </select>
+        </div>
         </div>
         <div>
             <input type="hidden" name="data[file]" value=file   />
