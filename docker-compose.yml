@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: family-video-organizer
+    ports:
+      - "3000:3000"
+    environment:
+      - SERVER_HOST=0.0.0.0
+      - SERVER_PORT=3000
+      - DATABASE_URL=sqlite:/app/data/videos.db
+      - MEDIA_SOURCE_PATHS=/mnt/videos
+      - THUMBNAIL_PATH=/app/thumbnails
+      - EXPORT_BASE_PATH=/app/exports
+      - RUST_LOG=info
+    volumes:
+      # Mount media source directories (read-only)
+      - /path/to/your/videos:/mnt/videos:ro
+
+      # Mount export directory (read-write)
+      - /path/to/your/exports:/app/exports
+
+      # Mount data directory for persistence
+      - ./data:/app/data
+
+      # Mount thumbnails directory for persistence
+      - ./thumbnails:/app/thumbnails
+    restart: unless-stopped
+
+# Example with PostgreSQL instead of SQLite
+#
+# services:
+#   app:
+#     build:
+#       context: .
+#       dockerfile: Dockerfile
+#     container_name: family-video-organizer
+#     ports:
+#       - "3000:3000"
+#     environment:
+#       - SERVER_HOST=0.0.0.0
+#       - SERVER_PORT=3000
+#       - DATABASE_URL=postgres://postgres:postgres@db:5432/videos
+#       - MEDIA_SOURCE_PATHS=/mnt/videos
+#       - THUMBNAIL_PATH=/app/thumbnails
+#       - EXPORT_BASE_PATH=/app/exports
+#       - RUST_LOG=info
+#     volumes:
+#       # Mount media source directories (read-only)
+#       - /path/to/your/videos:/mnt/videos:ro
+#
+#       # Mount export directory (read-write)
+#       - /path/to/your/exports:/app/exports
+#
+#       # Mount thumbnails directory for persistence
+#       - ./thumbnails:/app/thumbnails
+#     depends_on:
+#       - db
+#     restart: unless-stopped
+#
+#   db:
+#     image: postgres:15-alpine
+#     container_name: family-video-organizer-db
+#     environment:
+#       - POSTGRES_USER=postgres
+#       - POSTGRES_PASSWORD=postgres
+#       - POSTGRES_DB=videos
+#     volumes:
+#       - postgres_data:/var/lib/postgresql/data
+#     restart: unless-stopped
+#
+# volumes:
+#   postgres_data:
