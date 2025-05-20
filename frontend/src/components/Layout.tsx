@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Flex, Heading, Link, Spacer, Button, useColorMode, useColorModeValue } from '@chakra-ui/react';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
-import { FaSun, FaMoon, FaVideo, FaFileExport } from 'react-icons/fa';
+import { FaSun, FaMoon, FaVideo, FaFileExport, FaTags, FaClipboardCheck } from 'react-icons/fa';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -31,7 +31,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <Flex align="center" mr={5}>
           <Heading as="h1" size="lg" letterSpacing="tight">
             <Link as={RouterLink} to="/" _hover={{ textDecoration: 'none' }}>
-              Family Video Organizer
+              Shoebox
             </Link>
           </Heading>
         </Flex>
@@ -53,6 +53,18 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </Link>
           <Link
             as={RouterLink}
+            to="/unreviewed"
+            mr={4}
+            display="flex"
+            alignItems="center"
+            fontWeight={location.pathname === '/unreviewed' ? 'bold' : 'normal'}
+            color={location.pathname === '/unreviewed' ? 'brand.500' : undefined}
+          >
+            <FaClipboardCheck style={{ marginRight: '8px' }} />
+            Unreviewed
+          </Link>
+          <Link
+            as={RouterLink}
             to="/export"
             mr={4}
             display="flex"
@@ -62,6 +74,18 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           >
             <FaFileExport style={{ marginRight: '8px' }} />
             Export
+          </Link>
+          <Link
+            as={RouterLink}
+            to="/manage"
+            mr={4}
+            display="flex"
+            alignItems="center"
+            fontWeight={location.pathname === '/manage' ? 'bold' : 'normal'}
+            color={location.pathname === '/manage' ? 'brand.500' : undefined}
+          >
+            <FaTags style={{ marginRight: '8px' }} />
+            Manage Tags & People
           </Link>
           <Button onClick={toggleColorMode} size="sm" ml={4}>
             {colorMode === 'light' ? <FaMoon /> : <FaSun />}

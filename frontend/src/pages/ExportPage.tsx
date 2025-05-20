@@ -289,12 +289,12 @@ const ExportPage: React.FC = () => {
                       <Td>
                         <Flex wrap="wrap" gap={1}>
                           {video.tags.slice(0, 3).map(tag => (
-                            <Badge key={tag} colorScheme="blue" fontSize="xs">
+                            <Badge key={tag} colorScheme="blue" fontSize="xs" color="white">
                               {tag}
                             </Badge>
                           ))}
                           {video.tags.length > 3 && (
-                            <Badge colorScheme="gray" fontSize="xs">
+                            <Badge colorScheme="gray" fontSize="xs" color="white">
                               +{video.tags.length - 3}
                             </Badge>
                           )}

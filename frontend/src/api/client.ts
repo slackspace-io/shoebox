@@ -59,6 +59,7 @@ export interface VideoSearchParams {
   rating?: number;
   limit?: number;
   offset?: number;
+  unreviewed?: boolean;
 }
 
 export interface Tag {
@@ -149,6 +150,17 @@ export const tagApi = {
   deleteUnusedTags: async (): Promise<void> => {
     await apiClient.delete('/tags/unused');
   },
+
+  // Create a new tag
+  createTag: async (name: string): Promise<Tag> => {
+    const response = await apiClient.post('/tags', { name });
+    return response.data;
+  },
+
+  // Delete a tag by ID
+  deleteTag: async (id: string): Promise<void> => {
+    await apiClient.delete(`/tags/${id}`);
+  },
 };
 
 export const personApi = {
@@ -167,6 +179,17 @@ export const personApi = {
   // Delete unused people
   deleteUnusedPeople: async (): Promise<void> => {
     await apiClient.delete('/people/unused');
+  },
+
+  // Create a new person
+  createPerson: async (name: string): Promise<Person> => {
+    const response = await apiClient.post('/people', { name });
+    return response.data;
+  },
+
+  // Delete a person by ID
+  deletePerson: async (id: string): Promise<void> => {
+    await apiClient.delete(`/people/${id}`);
   },
 };
 

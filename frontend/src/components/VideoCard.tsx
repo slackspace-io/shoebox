@@ -85,7 +85,7 @@ const VideoCard: React.FC<VideoCardProps> = ({ video }) => {
         height="180px"
         width="100%"
         objectFit="cover"
-        fallbackSrc="https://via.placeholder.com/300x180?text=No+Thumbnail"
+        fallbackSrc="/placeholder-thumbnail.jpg"
       />
 
       <Box p={4}>
@@ -106,12 +106,12 @@ const VideoCard: React.FC<VideoCardProps> = ({ video }) => {
         {video.tags.length > 0 && (
           <Flex mt={3} flexWrap="wrap" gap={2}>
             {video.tags.slice(0, 3).map((tag) => (
-              <Badge key={tag} colorScheme="blue" fontSize="xs">
+              <Badge key={tag} colorScheme="blue" fontSize="xs" color="white">
                 {tag}
               </Badge>
             ))}
             {video.tags.length > 3 && (
-              <Badge colorScheme="gray" fontSize="xs">
+              <Badge colorScheme="gray" fontSize="xs" color="white">
                 +{video.tags.length - 3} more
               </Badge>
             )}
@@ -121,12 +121,12 @@ const VideoCard: React.FC<VideoCardProps> = ({ video }) => {
         {video.people.length > 0 && (
           <Flex mt={2} flexWrap="wrap" gap={2}>
             {video.people.slice(0, 2).map((person) => (
-              <Badge key={person} colorScheme="green" fontSize="xs">
+              <Badge key={person} colorScheme="green" fontSize="xs" color="white">
                 {person}
               </Badge>
             ))}
             {video.people.length > 2 && (
-              <Badge colorScheme="gray" fontSize="xs">
+              <Badge colorScheme="gray" fontSize="xs" color="white">
                 +{video.people.length - 2} more
               </Badge>
             )}

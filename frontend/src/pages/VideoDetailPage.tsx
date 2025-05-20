@@ -29,6 +29,7 @@ import {
 import { FaEdit, FaSave, FaTrash, FaArrowLeft, FaStar, FaRegStar } from 'react-icons/fa';
 import ReactPlayer from 'react-player';
 import ReactSelect from 'react-select';
+import CreatableSelect from 'react-select/creatable';
 import { videoApi, tagApi, personApi, VideoWithMetadata, UpdateVideoDto } from '../api/client';
 
 interface SelectOption {
@@ -138,6 +139,9 @@ const VideoDetailPage: React.FC = () => {
         duration: 3000,
         isClosable: true,
       });
+
+      // Navigate back to the video detail page to ensure proper rendering
+      navigate(`/videos/${id}`);
     } catch (error) {
       console.error('Error updating video:', error);
       toast({
@@ -232,8 +236,8 @@ const VideoDetailPage: React.FC = () => {
       ...base,
       backgroundColor: state.isFocused
         ? useColorModeValue('blue.50', 'blue.900')
-        : base.backgroundColor,
-      color: useColorModeValue('black', 'white')
+        : useColorModeValue('white', 'gray.700'),
+      color: useColorModeValue('black', 'black')
     })
   };
 
@@ -354,21 +358,43 @@ const VideoDetailPage: React.FC = () => {
           <FormControl>
             <FormLabel>Tags</FormLabel>
             {isEditing ? (
-              <ReactSelect
+              <CreatableSelect
                 isMulti
                 options={tagOptions}
                 value={selectedTags}
                 onChange={(selected: any) => setSelectedTags(selected || [])}
-                placeholder="Select tags..."
+                placeholder="Select or create tags..."
                 styles={selectStyles}
                 isClearable
-                isCreatable
+                formatCreateLabel={(inputValue) => `Create tag "${inputValue}"`}
+                onCreateOption={async (inputValue) => {
+                  try {
+                    const newTag = await tagApi.createTag(inputValue);
+                    const newOption = { value: newTag.name, label: newTag.name };
+                    setTagOptions([...tagOptions, newOption]);
+                    setSelectedTags([...selectedTags, newOption]);
+                    toast({
+                      title: 'Tag created',
+                      status: 'success',
+                      duration: 2000,
+                      isClosable: true,
+                    });
+                  } catch (error) {
+                    console.error('Error creating tag:', error);
+                    toast({
+                      title: 'Error creating tag',
+                      status: 'error',
+                      duration: 3000,
+                      isClosable: true,
+                    });
+                  }
+                }}
               />
             ) : (
               <Flex wrap="wrap" gap={2}>
                 {video.tags.length > 0 ? (
                   video.tags.map((tag) => (
-                    <Badge key={tag} colorScheme="blue">
+                    <Badge key={tag} colorScheme="blue" color="white">
                       {tag}
                     </Badge>
                   ))
@@ -382,21 +408,43 @@ const VideoDetailPage: React.FC = () => {
           <FormControl>
             <FormLabel>People</FormLabel>
             {isEditing ? (
-              <ReactSelect
+              <CreatableSelect
                 isMulti
                 options={peopleOptions}
                 value={selectedPeople}
                 onChange={(selected: any) => setSelectedPeople(selected || [])}
-                placeholder="Select people..."
+                placeholder="Select or create people..."
                 styles={selectStyles}
                 isClearable
-                isCreatable
+                formatCreateLabel={(inputValue) => `Create person "${inputValue}"`}
+                onCreateOption={async (inputValue) => {
+                  try {
+                    const newPerson = await personApi.createPerson(inputValue);
+                    const newOption = { value: newPerson.name, label: newPerson.name };
+                    setPeopleOptions([...peopleOptions, newOption]);
+                    setSelectedPeople([...selectedPeople, newOption]);
+                    toast({
+                      title: 'Person created',
+                      status: 'success',
+                      duration: 2000,
+                      isClosable: true,
+                    });
+                  } catch (error) {
+                    console.error('Error creating person:', error);
+                    toast({
+                      title: 'Error creating person',
+                      status: 'error',
+                      duration: 3000,
+                      isClosable: true,
+                    });
+                  }
+                }}
               />
             ) : (
               <Flex wrap="wrap" gap={2}>
                 {video.people.length > 0 ? (
                   video.people.map((person) => (
-                    <Badge key={person} colorScheme="green">
+                    <Badge key={person} colorScheme="green" color="white">
                       {person}
                     </Badge>
                   ))

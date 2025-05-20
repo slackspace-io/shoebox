@@ -20,7 +20,7 @@ const theme = extendTheme({
     body: 'Inter, system-ui, sans-serif',
   },
   config: {
-    initialColorMode: 'light',
+    initialColorMode: 'dark',
     useSystemColorMode: true,
   },
 });

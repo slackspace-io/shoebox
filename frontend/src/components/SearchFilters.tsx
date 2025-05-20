@@ -8,7 +8,8 @@ import {
   useDisclosure,
   Collapse,
   SimpleGrid,
-  useColorModeValue
+  useColorModeValue,
+  Checkbox
 } from '@chakra-ui/react';
 import { FaFilter, FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import ReactSelect from 'react-select';
@@ -31,6 +32,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onFilterChange }) => {
   const [selectedTags, setSelectedTags] = useState<SelectOption[]>([]);
   const [selectedPeople, setSelectedPeople] = useState<SelectOption[]>([]);
   const [selectedRating, setSelectedRating] = useState<string>('');
+  const [isUnreviewed, setIsUnreviewed] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
 
   const bgColor = useColorModeValue('white', 'gray.800');
@@ -73,7 +75,8 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onFilterChange }) => {
     onFilterChange({
       tags: selectedTags.map(tag => tag.value),
       people: selectedPeople.map(person => person.value),
-      rating: selectedRating ? parseInt(selectedRating, 10) : undefined
+      rating: selectedRating ? parseInt(selectedRating, 10) : undefined,
+      unreviewed: isUnreviewed || undefined
     });
   };
 
@@ -82,10 +85,12 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onFilterChange }) => {
     setSelectedTags([]);
     setSelectedPeople([]);
     setSelectedRating('');
+    setIsUnreviewed(false);
     onFilterChange({
       tags: undefined,
       people: undefined,
-      rating: undefined
+      rating: undefined,
+      unreviewed: undefined
     });
   };
 
@@ -105,7 +110,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onFilterChange }) => {
       ...base,
       backgroundColor: state.isFocused
         ? useColorModeValue('blue.50', 'blue.900')
-        : base.backgroundColor,
+        : useColorModeValue('white', 'gray.700'),
       color: useColorModeValue('black', 'white')
     })
   };
@@ -166,6 +171,16 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onFilterChange }) => {
             </ChakraSelect>
           </Box>
         </SimpleGrid>
+
+        <Box mt={4}>
+          <Checkbox
+            isChecked={isUnreviewed}
+            onChange={(e) => setIsUnreviewed(e.target.checked)}
+            colorScheme="blue"
+          >
+            Show only unreviewed videos
+          </Checkbox>
+        </Box>
 
         <Flex mt={4} justify="flex-end" gap={2}>
           <Button variant="outline" onClick={resetFilters}>
