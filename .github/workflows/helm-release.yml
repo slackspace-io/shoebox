@@ -5,7 +5,7 @@ on:
     branches: [ main ]
     paths:
       - 'charts/**'
-    tags: [ 'chart-v*' ]
+      - '.github/workflows/helm-release.yml'
   pull_request:
     branches: [ main ]
     paths:
