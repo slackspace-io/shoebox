@@ -23,10 +23,10 @@ pub fn router(app_state: AppState) -> Router {
         .route("/", get(list_videos))
         .route("/", post(create_video))
         .route("/search", post(search_videos))
-        .route("/:id", get(get_video))
-        .route("/:id", put(update_video))
-        .route("/:id", delete(delete_video))
-        .route("/:id/stream", get(stream_video))
+        .route("/{id}", get(get_video))
+        .route("/{id}", put(update_video))
+        .route("/{id}", delete(delete_video))
+        .route("/{id}/stream", get(stream_video))
         .with_state(app_state)
 }
 

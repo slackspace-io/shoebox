@@ -9,11 +9,9 @@ import {
   TabPanel,
   VStack,
   HStack,
-  Text,
   Button,
   Input,
   FormControl,
-  FormLabel,
   useToast,
   Spinner,
   Badge,
@@ -52,7 +50,6 @@ const ManagementPage: React.FC = () => {
   const [itemToDelete, setItemToDelete] = useState<{ id: string; name: string; type: 'tag' | 'person' } | null>(null);
 
   const bgColor = useColorModeValue('white', 'gray.800');
-  const borderColor = useColorModeValue('gray.200', 'gray.700');
 
   // Load tags and people
   useEffect(() => {

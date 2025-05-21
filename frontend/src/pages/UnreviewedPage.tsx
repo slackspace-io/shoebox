@@ -15,7 +15,6 @@ import {
   IconButton,
   useToast,
   Spinner,
-  Badge,
   useColorModeValue
 } from '@chakra-ui/react';
 import { FaSave, FaArrowLeft, FaArrowRight, FaStar, FaRegStar } from 'react-icons/fa';

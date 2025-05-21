@@ -9,10 +9,17 @@ use crate::error::{AppError, Result};
 pub async fn init_db(config: &Config) -> Result<Pool<Sqlite>> {
     let db_url = &config.database.url;
 
+    // Extract the filename from the URL (remove 'sqlite:' prefix if present)
+    let db_filename = if db_url.starts_with("sqlite:") {
+        &db_url[7..]
+    } else {
+        db_url
+    };
+
     // Create database if it doesn't exist
-    if !Sqlite::database_exists(db_url).await.unwrap_or(false) {
+    if !Sqlite::database_exists(db_filename).await.unwrap_or(false) {
         info!("Creating database at {}", db_url);
-        Sqlite::create_database(db_url).await.map_err(|e| {
+        Sqlite::create_database(db_filename).await.map_err(|e| {
             AppError::Database(sqlx::Error::Configuration(
                 format!("Failed to create database: {}", e).into(),
             ))
@@ -39,7 +46,8 @@ pub async fn init_db(config: &Config) -> Result<Pool<Sqlite>> {
     let options = sqlx::sqlite::SqliteConnectOptions::new()
         .create_if_missing(true)
         .foreign_keys(true);
-    let pool = SqlitePool::connect_with(options.filename(db_url))
+
+    let pool = SqlitePool::connect_with(options.filename(db_filename))
         .await
         .map_err(AppError::Database)?;
 

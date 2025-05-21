@@ -1,7 +1,7 @@
 # Multi-stage build for Family Video Organizer
 
 # Stage 1: Build the frontend
-FROM node:18-alpine as frontend-builder
+FROM node:18-alpine AS frontend-builder
 WORKDIR /app/frontend
 
 # Copy frontend package.json and install dependencies
@@ -15,9 +15,8 @@ COPY frontend/ ./
 RUN npm run build
 
 # Stage 2: Build the Rust backend
-FROM rust:1.70-slim as backend-builder
+FROM rust:latest AS backend-builder
 WORKDIR /app
-
 # Install dependencies for building
 RUN apt-get update && apt-get install -y \
     pkg-config \
@@ -34,31 +33,21 @@ RUN apt-get update && apt-get install -y \
 # Copy Cargo.toml and Cargo.lock
 COPY Cargo.toml Cargo.lock ./
 
-# Create dummy src/main.rs to build dependencies
-RUN mkdir -p src && \
-    echo "fn main() {println!(\"dummy\")}" > src/main.rs && \
-    cargo build --release && \
-    rm -rf src
 
 # Copy actual source code
 COPY src/ src/
-#COPY migrations/ migrations/
+COPY migrations/ migrations/
 
 # Build the application
 RUN cargo build --release
 
 # Stage 3: Create the final image
-FROM debian:bullseye-slim
+FROM debian:bookworm-slim
 WORKDIR /app
 
 # Install runtime dependencies
 RUN apt-get update && apt-get install -y \
     libsqlite3-0 \
-    libavformat59 \
-    libavcodec59 \
-    libavutil56 \
-    libavfilter7 \
-    libswscale5 \
     ffmpeg \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*

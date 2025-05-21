@@ -15,8 +15,8 @@ pub fn router(app_state: AppState) -> Router {
         .route("/", post(create_tag))
         .route("/usage", get(get_tag_usage))
         .route("/cleanup", post(cleanup_unused_tags))
-        .route("/:id", get(get_tag))
-        .route("/:id", delete(delete_tag))
+        .route("/{id}", get(get_tag))
+        .route("/{id}", delete(delete_tag))
         .with_state(app_state)
 }
 

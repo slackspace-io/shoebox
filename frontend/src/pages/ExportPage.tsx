@@ -10,7 +10,6 @@ import {
   FormHelperText,
   Flex,
   VStack,
-  HStack,
   Checkbox,
   Spinner,
   useToast,
@@ -39,7 +38,7 @@ import {
   ModalBody,
   ModalCloseButton,
 } from '@chakra-ui/react';
-import { FaSearch, FaFileExport, FaCheck, FaTimes } from 'react-icons/fa';
+import { FaSearch, FaFileExport } from 'react-icons/fa';
 import { videoApi, exportApi, VideoWithMetadata } from '../api/client';
 import SearchFilters from '../components/SearchFilters';
 
@@ -55,7 +54,6 @@ const ExportPage: React.FC = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   const bgColor = useColorModeValue('white', 'gray.800');
-  const borderColor = useColorModeValue('gray.200', 'gray.700');
 
   // Load videos on component mount
   useEffect(() => {
@@ -199,7 +197,7 @@ const ExportPage: React.FC = () => {
       <Heading size="xl" mb={6}>Export Videos</Heading>
 
       <VStack spacing={6} align="stretch">
-        <Box p={4} borderWidth="1px" borderRadius="lg" bg={bgColor} borderColor={borderColor}>
+        <Box p={4} borderWidth="1px" borderRadius="lg" bg={bgColor} borderColor="gray.200">
           <Heading size="md" mb={4}>1. Select Videos</Heading>
 
           <Flex mb={6} direction={{ base: 'column', md: 'row' }} gap={4}>
@@ -315,7 +313,7 @@ const ExportPage: React.FC = () => {
           </Flex>
         </Box>
 
-        <Box p={4} borderWidth="1px" borderRadius="lg" bg={bgColor} borderColor={borderColor}>
+        <Box p={4} borderWidth="1px" borderRadius="lg" bg={bgColor} borderColor="gray.200">
           <Heading size="md" mb={4}>2. Configure Export</Heading>
 
           <FormControl isRequired>

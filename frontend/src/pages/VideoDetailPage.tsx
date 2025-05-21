@@ -28,7 +28,6 @@ import {
 } from '@chakra-ui/react';
 import { FaEdit, FaSave, FaTrash, FaArrowLeft, FaStar, FaRegStar } from 'react-icons/fa';
 import ReactPlayer from 'react-player';
-import ReactSelect from 'react-select';
 import CreatableSelect from 'react-select/creatable';
 import { videoApi, tagApi, personApi, VideoWithMetadata, UpdateVideoDto } from '../api/client';
 

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   Box,
   Heading,
-  Grid,
   Button,
   Flex,
   Input,
@@ -14,7 +13,6 @@ import {
   SimpleGrid
 } from '@chakra-ui/react';
 import { FaSearch, FaSync } from 'react-icons/fa';
-import { Link as RouterLink } from 'react-router-dom';
 import { videoApi, scanApi, VideoWithMetadata, VideoSearchParams } from '../api/client';
 import VideoCard from '../components/VideoCard';
 import SearchFilters from '../components/SearchFilters';

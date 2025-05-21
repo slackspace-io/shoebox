@@ -15,8 +15,8 @@ pub fn router(app_state: AppState) -> Router {
         .route("/", post(create_person))
         .route("/usage", get(get_person_usage))
         .route("/cleanup", post(cleanup_unused_people))
-        .route("/:id", get(get_person))
-        .route("/:id", delete(delete_person))
+        .route("/{id}", get(get_person))
+        .route("/{id}", delete(delete_person))
         .with_state(app_state)
 }
 
