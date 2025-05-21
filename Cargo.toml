@@ -1,8 +1,8 @@
 [package]
-name = "family_video_organizer"
+name = "shoebox"
 version = "0.1.0"
 edition = "2021"
-description = "A web application for organizing family videos"
+description = "A digital shoebox for organizing and preserving your videos"
 authors = ["Developer"]
 
 [dependencies]
@@ -43,4 +43,4 @@ chrono = { version = "0.4.41", features = ["serde"] }
 uuid = { version = "1.16.0", features = ["v4", "serde"] }
 
 # Static file serving
-tower-http = { version = "0.5.2", features = ["fs"] }
+tower-http = { version = "0.6.4", features = ["fs"] }

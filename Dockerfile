@@ -1,4 +1,4 @@
-# Multi-stage build for Family Video Organizer
+# Multi-stage build for Shoebox
 
 # Stage 1: Build the frontend
 FROM node:18-alpine AS frontend-builder
@@ -56,7 +56,7 @@ RUN apt-get update && apt-get install -y \
 COPY --from=frontend-builder /app/frontend/dist /app/frontend/dist
 
 # Copy the built backend from stage 2
-COPY --from=backend-builder /app/target/release/family_video_organizer /app/family_video_organizer
+COPY --from=backend-builder /app/target/release/shoebox /app/shoebox
 
 # Create directories for data
 RUN mkdir -p /app/data /app/thumbnails /app/exports
@@ -73,4 +73,4 @@ ENV FRONTEND_PATH=/app/frontend/dist
 EXPOSE 3000
 
 # Run the application
-CMD ["/app/family_video_organizer"]
+CMD ["/app/shoebox"]
