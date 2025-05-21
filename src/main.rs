@@ -1,67 +1,59 @@
-use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
-use http::StatusCode;
-use shoebox::database::pg_conn::pg_connection;
-use shoebox::settings::settings;
-mod immich;
-mod settings;
+mod config;
+mod error;
+mod models;
+mod routes;
+mod services;
+mod utils;
+mod db;
 
-pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
+use axum::{
+    routing::get,
+    Router,
+};
+use std::net::SocketAddr;
+use tokio::net::TcpListener;
+use tracing::info;
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-#[cfg(feature = "ssr")]
 #[tokio::main]
-async fn main() {
-    let settings = settings();
-    println!("{settings:?}");
-    // Print out our settings
-    let mut connection = pg_connection();
-    connection.run_pending_migrations(MIGRATIONS).unwrap();
+async fn main() -> anyhow::Result<()> {
+    // Load environment variables
+    dotenv::dotenv().ok();
 
-    //run migrations
-    use axum::routing::get_service;
-    use axum::Router;
-    use leptos::{logging::log, prelude::*};
-    use leptos_axum::{generate_route_list, LeptosRoutes};
-    use shoebox::app::*;
-    use tower_http::services::ServeDir;
-    let conf = get_configuration(None).unwrap();
-    let addr = conf.leptos_options.site_addr;
-    let leptos_options = conf.leptos_options;
-    // Generate the list of routes in your Leptos App
-    let routes = generate_route_list(App);
-    //run get_files from App
-    //let files = get_files().await.unwrap();
+    // Initialize tracing
+    tracing_subscriber::registry()
+        .with(tracing_subscriber::EnvFilter::new(
+            std::env::var("RUST_LOG").unwrap_or_else(|_| "info".into()),
+        ))
+        .with(tracing_subscriber::fmt::layer())
+        .init();
 
-    let mut app = Router::new();
-    for path in &settings.paths {
-        let route = format!("/{}", path.route(&path.root_path));
-        println!("Route {:?}", route);
-        let service = get_service(ServeDir::new(&path.root_path)).handle_error(|_| async {
-            (StatusCode::INTERNAL_SERVER_ERROR, "Internal Server Error")
-        });
-        app = app.nest_service(route.as_str(), service);
-    }
+    // Load configuration
+    let config = config::Config::load()?;
 
-    let app = app
-        .leptos_routes(&leptos_options, routes, {
-            let leptos_options = leptos_options.clone();
-            move || shell(leptos_options.clone())
-        })
-        .fallback(leptos_axum::file_and_error_handler(shell))
-        .with_state(leptos_options);
+    //log that db init will happen
+    info!("DB Init");
+    // Initialize database
+    let db_pool = db::init_db(&config).await?;
 
-    // run our app with hyper
-    // `axum::Server` is a re-export of `hyper::Server`
-    log!("listening on http://{}", &addr);
-    let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();
-    axum::serve(listener, app.into_make_service())
-        .await
-        .unwrap();
-    //connect to db
-}
+    // Create application state
+    let app_state = services::AppState {
+        db: db_pool,
+        config: config.clone(),
+    };
 
-#[cfg(not(feature = "ssr"))]
-pub fn main() {
-    // no client-side main function
-    // unless we want this to work with e.g., Trunk for pure client-side testing
-    // see lib.rs for hydration function instead
+    // Build our application with routes
+    let app = Router::new()
+        // API routes
+        .nest("/api", routes::api_router(app_state));
+
+    // Run the server
+    let addr = SocketAddr::from(([0, 0, 0, 0], config.server.port));
+    tracing::info!("Listening on {}", addr);
+
+    // Start the server
+    let listener = TcpListener::bind(addr).await?;
+    axum::serve(listener, app).await?;
+
+    Ok(())
 }

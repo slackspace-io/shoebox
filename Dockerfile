@@ -1,54 +1,86 @@
-# Get started with a build env with Rust nightly
-FROM rustlang/rust:nightly-bookworm as builder
+# Multi-stage build for Family Video Organizer
 
-# If you’re using stable, use this instead
-# FROM rust:1.74-bullseye as builder
+# Stage 1: Build the frontend
+FROM node:18-alpine as frontend-builder
+WORKDIR /app/frontend
 
-# Install cargo-binstall, which makes it easier to install other
-# cargo extensions like cargo-leptos
-RUN wget https://github.com/cargo-bins/cargo-binstall/releases/latest/download/cargo-binstall-x86_64-unknown-linux-musl.tgz
-RUN tar -xvf cargo-binstall-x86_64-unknown-linux-musl.tgz
-RUN cp cargo-binstall /usr/local/cargo/bin
+# Copy frontend package.json and install dependencies
+COPY frontend/package.json frontend/package-lock.json* ./
+RUN npm install
 
-# Install cargo-leptos
-RUN cargo binstall cargo-leptos -y
+# Copy frontend source code
+COPY frontend/ ./
 
-# Add the WASM target
-RUN rustup target add wasm32-unknown-unknown
+# Build the frontend
+RUN npm run build
 
-# Make an /app dir, which everything will eventually live in
-RUN mkdir -p /app
+# Stage 2: Build the Rust backend
+FROM rust:1.70-slim as backend-builder
 WORKDIR /app
-COPY . .
 
-# Build the app
-RUN cargo leptos build --release -vv
+# Install dependencies for building
+RUN apt-get update && apt-get install -y \
+    pkg-config \
+    libssl-dev \
+    libsqlite3-dev \
+    libavformat-dev \
+    libavcodec-dev \
+    libavutil-dev \
+    libavfilter-dev \
+    libswscale-dev \
+    ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
 
-FROM debian:bookworm-slim as runtime
-#use better runtime
+# Copy Cargo.toml and Cargo.lock
+COPY Cargo.toml Cargo.lock ./
+
+# Create dummy src/main.rs to build dependencies
+RUN mkdir -p src && \
+    echo "fn main() {println!(\"dummy\")}" > src/main.rs && \
+    cargo build --release && \
+    rm -rf src
+
+# Copy actual source code
+COPY src/ src/
+#COPY migrations/ migrations/
+
+# Build the application
+RUN cargo build --release
+
+# Stage 3: Create the final image
+FROM debian:bullseye-slim
 WORKDIR /app
-RUN apt-get update -y \
-  && apt-get install -y --no-install-recommends openssl ca-certificates libpq5 \
-  && apt-get autoremove -y \
-  && apt-get clean -y \
-  && rm -rf /var/lib/apt/lists/*
 
-# -- NB: update binary name from "leptos_start" to match your app name in Cargo.toml --
-# Copy the server binary to the /app directory
-COPY --from=builder /app/target/release/shoebox /app/
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y \
+    libsqlite3-0 \
+    libavformat59 \
+    libavcodec59 \
+    libavutil56 \
+    libavfilter7 \
+    libswscale5 \
+    ffmpeg \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 
-# /target/site contains our JS/WASM/CSS, etc.
-COPY --from=builder /app/target/site /app/site
+# Copy the built frontend from stage 1
+COPY --from=frontend-builder /app/frontend/dist /app/frontend/dist
 
-# Copy Cargo.toml if it’s needed at runtime
-COPY --from=builder /app/Cargo.toml /app/
+# Copy the built backend from stage 2
+COPY --from=backend-builder /app/target/release/family_video_organizer /app/family_video_organizer
 
-# Set any required env variables and
-ENV RUST_LOG="info"
-ENV LEPTOS_SITE_ADDR="0.0.0.0:8080"
-ENV LEPTOS_SITE_ROOT="site"
-EXPOSE 8080
+# Create directories for data
+RUN mkdir -p /app/data /app/thumbnails /app/exports
 
-# -- NB: update binary name from "leptos_start" to match your app name in Cargo.toml --
-# Run the server
-CMD ["/app/shoebox"]
+# Set environment variables
+ENV SERVER_HOST=0.0.0.0
+ENV SERVER_PORT=3000
+ENV DATABASE_URL=sqlite:/app/data/videos.db
+ENV THUMBNAIL_PATH=/app/thumbnails
+ENV EXPORT_BASE_PATH=/app/exports
+
+# Expose the port
+EXPOSE 3000
+
+# Run the application
+CMD ["/app/family_video_organizer"]

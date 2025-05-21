@@ -1,18 +1,47 @@
-name: Release Charts
+name: Release Helm Chart
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
     paths:
-      - "charts/**"
-      - ".github/workflows/helm-release.yml"
+      - 'charts/**'
+    tags: [ 'chart-v*' ]
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'charts/**'
+
 jobs:
+  lint-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: v3.10.0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Set up chart-testing
+        uses: helm/chart-testing-action@v2.3.1
+
+      - name: Run chart-testing (lint)
+        run: ct lint --target-branch ${{ github.event.repository.default_branch }} --charts charts/shoebox
+
+      - name: Run chart-testing (install)
+        run: ct install --target-branch ${{ github.event.repository.default_branch }} --charts charts/shoebox --helm-extra-set-args "--set persistence.data.enabled=false --set persistence.thumbnails.enabled=false --set persistence.exports.enabled=false --set persistence.media.enabled=false"
+
   release:
-    # depending on default permission settings for your org (contents being read-only or read-write for workloads), you will have to add permissions
-    # see: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#modifying-the-permissions-for-the-github_token
-    permissions:
-      contents: write
+    needs: lint-test
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -27,10 +56,12 @@ jobs:
 
       - name: Install Helm
         uses: azure/setup-helm@v3
+        with:
+          version: v3.10.0
 
       - name: Run chart-releaser
-        uses: helm/chart-releaser-action@v1.6.0
-        with:
-          pages_branch: main
+        uses: helm/chart-releaser-action@v1.5.0
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+        with:
+          charts_dir: charts

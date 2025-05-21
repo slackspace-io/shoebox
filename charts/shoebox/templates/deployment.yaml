@@ -1,50 +1,119 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Chart.Name }}
-  namespace: {{ .Release.Namespace }}
+  name: {{ include "shoebox.fullname" . }}
+  labels:
+    {{- include "shoebox.labels" . | nindent 4 }}
 spec:
+  {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
+  {{- end }}
   selector:
     matchLabels:
-      app.kubernetes.io/name: {{ .Chart.Name }}
-      app.kubernetes.io/instance: {{ .Release.Name }}
+      {{- include "shoebox.selectorLabels" . | nindent 6 }}
   template:
     metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       labels:
-        app.kubernetes.io/name: {{ .Chart.Name }}
-        app.kubernetes.io/instance: {{ .Release.Name }}
+        {{- include "shoebox.selectorLabels" . | nindent 8 }}
     spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "shoebox.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
-        - name: shoebox
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          ports:
-            - containerPort: {{ .Values.service.port }}
           env:
-            {{- range $key, $val := .Values.customEnv }}
-              {{- if $val.fromSecret.enabled }}
-            - name: {{ $key }}
-              valueFrom:
-                secretKeyRef:
-                  name: {{ $val.fromSecret.secretName }}
-                  key: {{ $val.fromSecret.key }}
-              {{- else }}
-            - name: {{ $key }}
-              value: {{ $val | quote }}
-              {{- end }}
-            {{- end }}
-          {{- if .Values.volumeMounts }}
+            - name: SERVER_HOST
+              value: {{ .Values.config.serverHost | quote }}
+            - name: SERVER_PORT
+              value: {{ .Values.config.serverPort | quote }}
+            - name: DATABASE_URL
+              value: {{ if .Values.postgresql.enabled }}postgres://{{ .Values.postgresql.postgresqlUsername }}:{{ .Values.postgresql.postgresqlPassword }}@{{ include "shoebox.fullname" . }}-postgresql:5432/{{ .Values.postgresql.postgresqlDatabase }}{{ else }}{{ .Values.config.databaseUrl }}{{ end }}
+            - name: MEDIA_SOURCE_PATHS
+              value: {{ .Values.config.mediaSourcePaths | quote }}
+            - name: THUMBNAIL_PATH
+              value: {{ .Values.config.thumbnailPath | quote }}
+            - name: EXPORT_BASE_PATH
+              value: {{ .Values.config.exportBasePath | quote }}
+            - name: RUST_LOG
+              value: {{ .Values.config.rustLog | quote }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
-            - name: config-volume
-              mountPath: /app/config
-            {{- toYaml .Values.volumeMounts | default "" | nindent 12 }}
-          {{- end }}
+            {{- if and .Values.persistence.data.enabled (not .Values.postgresql.enabled) }}
+            - name: data
+              mountPath: /app/data
+            {{- end }}
+            {{- if .Values.persistence.thumbnails.enabled }}
+            - name: thumbnails
+              mountPath: /app/thumbnails
+            {{- end }}
+            {{- if .Values.persistence.exports.enabled }}
+            - name: exports
+              mountPath: /app/exports
+            {{- end }}
+            {{- if .Values.persistence.media.enabled }}
+            - name: media
+              mountPath: /mnt/videos
+              readOnly: true
+            {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       volumes:
-        - name: config-volume
-          configMap:
-            name: {{ .Chart.Name }}-config
-        {{- if .Values.volumes }}
-        {{- toYaml .Values.volumes | default "" | nindent 8 }}
+        {{- if and .Values.persistence.data.enabled (not .Values.postgresql.enabled) }}
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ include "shoebox.fullname" . }}-data
         {{- end }}
-
+        {{- if .Values.persistence.thumbnails.enabled }}
+        - name: thumbnails
+          persistentVolumeClaim:
+            claimName: {{ include "shoebox.fullname" . }}-thumbnails
+        {{- end }}
+        {{- if .Values.persistence.exports.enabled }}
+        - name: exports
+          persistentVolumeClaim:
+            claimName: {{ include "shoebox.fullname" . }}-exports
+        {{- end }}
+        {{- if .Values.persistence.media.enabled }}
+        - name: media
+          persistentVolumeClaim:
+            {{- if .Values.persistence.media.existingClaim }}
+            claimName: {{ .Values.persistence.media.existingClaim }}
+            {{- else }}
+            claimName: {{ include "shoebox.fullname" . }}-media
+            {{- end }}
+        {{- end }}

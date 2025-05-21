@@ -1,42 +1,136 @@
+# Default values for shoebox.
+# This is a YAML-formatted file.
+
 replicaCount: 1
-namespace: shoebox
 
 image:
-  repository: ghcr.io/slackspace-io/shoebox  # Assuming this image is accessible as a placeholder
+  repository: shoebox
   pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
   tag: "latest"
 
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: false
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
 service:
-  annotations: { }
-  labels: { }
   type: ClusterIP
-  port: 8080
+  port: 3000
 
 ingress:
   enabled: false
-  labels: { }
-  ingressClassName: ""
-  paths:
-    - /
-  pathType: Prefix
-  extraPaths: [ ]
-  https: false
-  annotations: { }
-  tls: [ ]
+  className: ""
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
   hosts:
-    - test.shoebox.default # Placeholder domain
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
 
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
 
+nodeSelector: {}
 
+tolerations: []
+
+affinity: {}
+
+# Autoscaling configuration
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+# Application specific configuration
 config:
-  database:
-    database_ip: "127.0.0.1"
-    database_port: "5432"
-    database_name: "shoebox"
-    database_user: "shoebox"
-    database_password: "shoebox"
-  paths:
-    - root_path: "/mnt/some/place/with/videos/"
-      name: "videos"
-      description: "your cool videos"
+  serverHost: "0.0.0.0"
+  serverPort: 3000
+  databaseUrl: "sqlite:/app/data/videos.db"
+  mediaSourcePaths: "/mnt/videos"
+  thumbnailPath: "/app/thumbnails"
+  exportBasePath: "/app/exports"
+  rustLog: "info"
 
+# Persistence configuration
+persistence:
+  # Data directory for SQLite database
+  data:
+    enabled: true
+    size: 1Gi
+    storageClass: ""
+    accessMode: ReadWriteOnce
+
+  # Thumbnails directory
+  thumbnails:
+    enabled: true
+    size: 5Gi
+    storageClass: ""
+    accessMode: ReadWriteOnce
+
+  # Exports directory
+  exports:
+    enabled: true
+    size: 10Gi
+    storageClass: ""
+    accessMode: ReadWriteOnce
+
+  # Media source directory (read-only)
+  media:
+    enabled: true
+    # This should be a PV that points to your media storage
+    existingClaim: ""
+    # If no existing claim, create a PVC with these settings
+    size: 100Gi
+    storageClass: ""
+    accessMode: ReadOnlyMany
+
+# Optional PostgreSQL dependency
+postgresql:
+  enabled: false
+  # If enabled, the application will use PostgreSQL instead of SQLite
+  postgresqlUsername: postgres
+  postgresqlPassword: postgres
+  postgresqlDatabase: videos
+  persistence:
+    enabled: true
+    size: 8Gi

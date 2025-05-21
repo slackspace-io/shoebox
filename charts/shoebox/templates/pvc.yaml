@@ -1,0 +1,71 @@
+{{- if and .Values.persistence.data.enabled (not .Values.postgresql.enabled) }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "shoebox.fullname" . }}-data
+  labels:
+    {{- include "shoebox.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - {{ .Values.persistence.data.accessMode }}
+  resources:
+    requests:
+      storage: {{ .Values.persistence.data.size }}
+  {{- if .Values.persistence.data.storageClass }}
+  storageClassName: {{ .Values.persistence.data.storageClass }}
+  {{- end }}
+---
+{{- end }}
+{{- if .Values.persistence.thumbnails.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "shoebox.fullname" . }}-thumbnails
+  labels:
+    {{- include "shoebox.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - {{ .Values.persistence.thumbnails.accessMode }}
+  resources:
+    requests:
+      storage: {{ .Values.persistence.thumbnails.size }}
+  {{- if .Values.persistence.thumbnails.storageClass }}
+  storageClassName: {{ .Values.persistence.thumbnails.storageClass }}
+  {{- end }}
+---
+{{- end }}
+{{- if .Values.persistence.exports.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "shoebox.fullname" . }}-exports
+  labels:
+    {{- include "shoebox.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - {{ .Values.persistence.exports.accessMode }}
+  resources:
+    requests:
+      storage: {{ .Values.persistence.exports.size }}
+  {{- if .Values.persistence.exports.storageClass }}
+  storageClassName: {{ .Values.persistence.exports.storageClass }}
+  {{- end }}
+---
+{{- end }}
+{{- if and .Values.persistence.media.enabled (not .Values.persistence.media.existingClaim) }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "shoebox.fullname" . }}-media
+  labels:
+    {{- include "shoebox.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - {{ .Values.persistence.media.accessMode }}
+  resources:
+    requests:
+      storage: {{ .Values.persistence.media.size }}
+  {{- if .Values.persistence.media.storageClass }}
+  storageClassName: {{ .Values.persistence.media.storageClass }}
+  {{- end }}
+{{- end }}

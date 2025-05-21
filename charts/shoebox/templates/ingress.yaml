@@ -1,71 +1,48 @@
 {{- if .Values.ingress.enabled -}}
-{{- $paths := .Values.ingress.paths -}}
-{{- $extraPaths := .Values.ingress.extraPaths -}}
-{{- $pathType := .Values.ingress.pathType -}}
-{{- $servicePort := .Values.service.port -}}
-{{- $serviceName := .Chart.Name}}
+{{- $fullName := include "shoebox.fullname" . -}}
+{{- $svcPort := .Values.service.port -}}
+{{- if and .Values.ingress.className (not (semverCompare ">=1.18-0" .Capabilities.KubeVersion.GitVersion)) }}
+  {{- if not (hasKey .Values.ingress.annotations "kubernetes.io/ingress.class") }}
+  {{- $_ := set .Values.ingress.annotations "kubernetes.io/ingress.class" .Values.ingress.className}}
+  {{- end }}
+{{- end }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ .Chart.Name }}-ingress
-  namespace: {{ .Release.Namespace | quote }}
+  name: {{ $fullName }}
   labels:
-    {{- with .Values.ingress.labels }}
-      {{- toYaml . | nindent 4 }}
-    {{- end }}
+    {{- include "shoebox.labels" . | nindent 4 }}
   {{- with .Values.ingress.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
-  {{- with .Values.ingress.ingressClassName }}
-  ingressClassName: {{ . }}
+  {{- if .Values.ingress.className }}
+  ingressClassName: {{ .Values.ingress.className }}
+  {{- end }}
+  {{- if .Values.ingress.tls }}
+  tls:
+    {{- range .Values.ingress.tls }}
+    - hosts:
+        {{- range .hosts }}
+        - {{ . | quote }}
+        {{- end }}
+      secretName: {{ .secretName }}
+    {{- end }}
   {{- end }}
   rules:
-  {{- if .Values.ingress.hosts }}
-    {{- range $host := .Values.ingress.hosts }}
-    - host: {{ $host | quote }}
+    {{- range .Values.ingress.hosts }}
+    - host: {{ .host | quote }}
       http:
         paths:
-          {{- with $extraPaths }}
-          {{- toYaml . | nindent 10 }}
-          {{- end }}
-          {{- range $p := $paths }}
-          - path: {{ $p }}
-            pathType: {{ $pathType }}
+          {{- range .paths }}
+          - path: {{ .path }}
+            pathType: {{ .pathType }}
             backend:
               service:
-                name: {{ $serviceName }}-svc
+                name: {{ $fullName }}
                 port:
-                  {{- if kindIs "float64" $servicePort }}
-                  number: {{ $servicePort }}
-                  {{- else }}
-                  name: {{ $servicePort }}
-                  {{- end }}
-          {{- end -}}
-    {{- end -}}
-  {{- else }}
-    - http:
-        paths:
-          {{- with $extraPaths }}
-          {{- toYaml . | nindent 10 }}
+                  number: {{ $svcPort }}
           {{- end }}
-          {{- range $p := $paths }}
-          - path: {{ $p }}
-            pathType: {{ $pathType }}
-            backend:
-              service:
-                name: {{ .Chart.Name }}-svc
-                port:
-                  {{- if kindIs "float64" $servicePort }}
-                  number: {{ $servicePort }}
-                  {{- else }}
-                  name: {{ $servicePort }}
-                  {{- end }}
-          {{- end -}}
-  {{- end -}}
-  {{- with .Values.ingress.tls }}
-  tls:
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
+    {{- end }}
 {{- end }}
