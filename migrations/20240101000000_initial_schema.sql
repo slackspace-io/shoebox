@@ -1,4 +1,4 @@
--- Initial schema for family video organizer
+-- Initial schema for Shoebox - a digital shoebox for your videos
 -- Up migration
 
 -- Videos table

@@ -1,13 +1,14 @@
 apiVersion: v2
 name: shoebox
-description: A Helm chart for the Family Video Organizer application
+description: A Helm chart for the Shoebox application - a digital shoebox for your videos
 type: application
 version: 0.1.0
 appVersion: "1.0.0"
 keywords:
   - video
   - organizer
-  - family
+  - shoebox
+  - archive
 maintainers:
   - name: Shoebox Team
 dependencies:

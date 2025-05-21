@@ -63,7 +63,7 @@ pub async fn init_db(config: &Config) -> Result<Pool<Sqlite>> {
 
 fn create_initial_migration(migrations_dir: &Path) -> Result<()> {
     let migration_file = migrations_dir.join("20240101000000_initial_schema.sql");
-    let migration_content = r#"-- Initial schema for family video organizer
+    let migration_content = r#"-- Initial schema for Shoebox - a digital shoebox for your videos
 -- Up migration
 
 -- Videos table

@@ -5,7 +5,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: family-video-organizer
+    container_name: shoebox
     ports:
       - "3000:3000"
     environment:
@@ -37,7 +37,7 @@ services:
 #     build:
 #       context: .
 #       dockerfile: Dockerfile
-#     container_name: family-video-organizer
+#     container_name: shoebox
 #     ports:
 #       - "3000:3000"
 #     environment:
@@ -63,7 +63,7 @@ services:
 #
 #   db:
 #     image: postgres:15-alpine
-#     container_name: family-video-organizer-db
+#     container_name: shoebox-db
 #     environment:
 #       - POSTGRES_USER=postgres
 #       - POSTGRES_PASSWORD=postgres
