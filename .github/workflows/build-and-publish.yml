@@ -4,6 +4,10 @@ on:
   push:
     branches: [ main ]
     tags: [ 'v*' ]
+    paths-ignore:
+      - 'charts/**'
+      - '**.md'
+      - 'docs/**'
   pull_request:
     branches: [ main ]
 
