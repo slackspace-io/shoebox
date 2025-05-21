@@ -30,8 +30,22 @@ impl VideoService {
         }
     }
 
+    // Helper method to transform thumbnail paths to web-compatible paths
+    fn transform_thumbnail_path(&self, thumbnail_path: Option<String>) -> Option<String> {
+        thumbnail_path.map(|path| {
+            // Extract just the filename from the path
+            let path = std::path::Path::new(&path);
+            let filename = path.file_name()
+                .and_then(|name| name.to_str())
+                .unwrap_or("");
+
+            // Return a web-compatible path
+            format!("/app/thumbnails/{}", filename)
+        })
+    }
+
     pub async fn find_all(&self, limit: i64, offset: i64) -> Result<Vec<Video>> {
-        let videos = sqlx::query_as::<_, Video>(
+        let mut videos = sqlx::query_as::<_, Video>(
             "SELECT * FROM videos ORDER BY created_date DESC LIMIT ? OFFSET ?"
         )
         .bind(limit)
@@ -40,11 +54,16 @@ impl VideoService {
         .await
         .map_err(AppError::Database)?;
 
+        // Transform thumbnail paths
+        for video in &mut videos {
+            video.thumbnail_path = self.transform_thumbnail_path(video.thumbnail_path.clone());
+        }
+
         Ok(videos)
     }
 
     pub async fn find_by_id(&self, id: &str) -> Result<Video> {
-        let video = sqlx::query_as::<_, Video>("SELECT * FROM videos WHERE id = ?")
+        let mut video = sqlx::query_as::<_, Video>("SELECT * FROM videos WHERE id = ?")
             .bind(id)
             .fetch_one(&self.db)
             .await
@@ -53,11 +72,14 @@ impl VideoService {
                 _ => AppError::Database(e),
             })?;
 
+        // Transform thumbnail path
+        video.thumbnail_path = self.transform_thumbnail_path(video.thumbnail_path.clone());
+
         Ok(video)
     }
 
     pub async fn find_by_path(&self, path: &str) -> Result<Video> {
-        let video = sqlx::query_as::<_, Video>("SELECT * FROM videos WHERE file_path = ?")
+        let mut video = sqlx::query_as::<_, Video>("SELECT * FROM videos WHERE file_path = ?")
             .bind(path)
             .fetch_one(&self.db)
             .await
@@ -66,11 +88,14 @@ impl VideoService {
                 _ => AppError::Database(e),
             })?;
 
+        // Transform thumbnail path
+        video.thumbnail_path = self.transform_thumbnail_path(video.thumbnail_path.clone());
+
         Ok(video)
     }
 
     pub async fn find_with_metadata(&self, id: &str) -> Result<VideoWithMetadata> {
-        let video = self.find_by_id(id).await?;
+        let mut video = self.find_by_id(id).await?;
 
         // Get tags for this video
         let tags = sqlx::query_scalar::<_, String>(
@@ -93,6 +118,8 @@ impl VideoService {
         .fetch_all(&self.db)
         .await
         .map_err(AppError::Database)?;
+
+        // Note: find_by_id already transforms the thumbnail path
 
         Ok(VideoWithMetadata {
             video,
@@ -155,7 +182,7 @@ impl VideoService {
 
         tx.commit().await.map_err(AppError::Database)?;
 
-        // Return the created video
+        // Return the created video (find_by_id already transforms the thumbnail path)
         self.find_by_id(&id).await
     }
 
@@ -246,7 +273,7 @@ impl VideoService {
 
         tx.commit().await.map_err(AppError::Database)?;
 
-        // Return the updated video
+        // Return the updated video (find_by_id already transforms the thumbnail path)
         self.find_by_id(id).await
     }
 
@@ -365,7 +392,7 @@ impl VideoService {
         let mut results = Vec::new();
         for row in rows {
             let id: String = row.get("id");
-            let video = Video {
+            let mut video = Video {
                 id: id.clone(),
                 file_path: row.get("file_path"),
                 file_name: row.get("file_name"),
@@ -378,6 +405,9 @@ impl VideoService {
                 created_at: row.get("created_at"),
                 updated_at: row.get("updated_at"),
             };
+
+            // Transform thumbnail path
+            video.thumbnail_path = self.transform_thumbnail_path(video.thumbnail_path.clone());
 
             let tags_str: Option<String> = row.get("tags");
             let tags = tags_str

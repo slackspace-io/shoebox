@@ -59,6 +59,8 @@ async fn main() -> anyhow::Result<()> {
     let app = Router::new()
         // API routes
         .nest("/api", routes::api_router(app_state))
+        // Serve thumbnails from the thumbnails directory
+        .nest_service("/app/thumbnails", ServeDir::new(&config.media.thumbnail_path))
         // Fallback for serving static files and SPA client-side routing
         .fallback_service(ServeDir::new(&frontend_path).append_index_html_on_directories(true));
 

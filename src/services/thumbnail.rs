@@ -9,12 +9,16 @@ use crate::config::Config;
 
 pub struct ThumbnailService {
     thumbnail_dir: PathBuf,
+    web_path: String,
 }
 
 impl ThumbnailService {
     pub fn new(config: &Config) -> Self {
         let thumbnail_dir = PathBuf::from(&config.media.thumbnail_path);
-        Self { thumbnail_dir }
+        Self {
+            thumbnail_dir,
+            web_path: "/app/thumbnails".to_string()
+        }
     }
 
     pub async fn generate_thumbnail(&self, video_path: &str) -> Result<String> {
