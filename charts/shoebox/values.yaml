@@ -4,7 +4,7 @@
 replicaCount: 1
 
 image:
-  repository: shoebox
+  repository: ghcr.io/slackspace-io/shoebox
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: "main"
