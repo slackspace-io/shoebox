@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Flex, Heading, Link, Spacer, Button, useColorMode, useColorModeValue } from '@chakra-ui/react';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
-import { FaSun, FaMoon, FaVideo, FaFileExport, FaTags, FaClipboardCheck } from 'react-icons/fa';
+import { FaSun, FaMoon, FaVideo, FaFileExport, FaTags, FaClipboardCheck, FaCog } from 'react-icons/fa';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -86,6 +86,18 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           >
             <FaTags style={{ marginRight: '8px' }} />
             Manage Tags & People
+          </Link>
+          <Link
+            as={RouterLink}
+            to="/system"
+            mr={4}
+            display="flex"
+            alignItems="center"
+            fontWeight={location.pathname === '/system' ? 'bold' : 'normal'}
+            color={location.pathname === '/system' ? 'brand.500' : undefined}
+          >
+            <FaCog style={{ marginRight: '8px' }} />
+            System Info
           </Link>
           <Button onClick={toggleColorMode} size="sm" ml={4}>
             {colorMode === 'light' ? <FaMoon /> : <FaSun />}

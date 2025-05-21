@@ -3,6 +3,7 @@ mod tag;
 mod person;
 mod scan;
 mod export;
+mod system;
 
 use axum::{
     routing::{get, post, put, delete},
@@ -22,5 +23,7 @@ pub fn api_router(app_state: AppState) -> Router {
         // Scan routes
         .nest("/scan", scan::router(app_state.clone()))
         // Export routes
-        .nest("/export", export::router(app_state))
+        .nest("/export", export::router(app_state.clone()))
+        // System info routes
+        .nest("/system", system::router(app_state))
 }

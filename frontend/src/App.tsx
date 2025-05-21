@@ -7,6 +7,7 @@ import VideoDetailPage from './pages/VideoDetailPage';
 import ExportPage from './pages/ExportPage';
 import ManagementPage from './pages/ManagementPage';
 import UnreviewedPage from './pages/UnreviewedPage';
+import SystemInfoPage from './pages/SystemInfoPage';
 
 const App: React.FC = () => {
   return (
@@ -18,6 +19,7 @@ const App: React.FC = () => {
           <Route path="/unreviewed" element={<UnreviewedPage />} />
           <Route path="/export" element={<ExportPage />} />
           <Route path="/manage" element={<ManagementPage />} />
+          <Route path="/system" element={<SystemInfoPage />} />
         </Routes>
       </Layout>
     </Box>
