@@ -9,7 +9,7 @@ image:
   # Overrides the image tag whose default is the chart appVersion.
   # For production, use a specific version tag (e.g., v1.0.0)
   # For development, you can use main, latest, or a specific commit SHA
-  tag: "latest"
+  tag: "preview"
 
 imagePullSecrets: []
 # If the image is in a private repository, you need to create a secret with your registry credentials
