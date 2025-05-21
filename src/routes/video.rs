@@ -251,12 +251,9 @@ async fn stream_video(
         // This helps with MP4 files that have their metadata at the end
         additional_headers.push((header::ACCEPT_RANGES, "bytes".to_string()));
 
-        // If moov atom is not at the beginning, use a different approach
+        // If moov atom is not at the beginning, add headers to help browsers handle it
         if !has_moov_at_beginning {
-            // Use application/octet-stream content type to force download before playing
-            // This ensures the browser has the complete file before attempting to parse metadata
-            content_type = "application/octet-stream".to_string();
-
+            // Keep the content type as video/mp4 to ensure proper decoding in browsers
             // Add Cache-Control: no-store to prevent caching of problematic MP4
             additional_headers.push((header::CACHE_CONTROL, "no-store".to_string()));
 
@@ -268,6 +265,10 @@ async fn stream_video(
             if let Some(duration) = get_mp4_duration(&path) {
                 additional_headers.push(("X-Content-Duration".parse().unwrap(), duration.to_string()));
             }
+
+            // Add a header to indicate that the moov atom is at the end
+            // This can help some browsers handle the file better
+            additional_headers.push(("X-MP4-Has-Moov-At-Beginning".parse().unwrap(), "false".to_string()));
         } else {
             // For MP4 files with moov atom at the beginning, just add inline content disposition
             additional_headers.push((header::CONTENT_DISPOSITION, "inline".to_string()));

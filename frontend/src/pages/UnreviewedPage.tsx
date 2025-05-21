@@ -273,7 +273,7 @@ const UnreviewedPage: React.FC = () => {
               </Flex>
             ) : (
               <ReactPlayer
-                url={`http://localhost:3000/api/videos/${currentVideo.id}/stream`}
+                url={`/api/videos/${currentVideo.id}/stream`}
                 controls
                 width="100%"
                 height="auto"

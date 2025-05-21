@@ -298,7 +298,7 @@ const VideoDetailPage: React.FC = () => {
             borderColor={borderColor}
           >
             <ReactPlayer
-              url={`http://localhost:3000/api/videos/${video.id}/stream`}
+              url={`/api/videos/${video.id}/stream`}
               controls
               width="100%"
               height="auto"
