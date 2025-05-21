@@ -51,18 +51,17 @@ RUN cargo build --release
 FROM debian:bullseye-slim
 WORKDIR /app
 
-RUN apt search libavcodec
 # Install runtime dependencies
-#RUN apt-get update && apt-get install -y \
-#    libsqlite3-0 \
-#    libavformat59 \
-#    libavcodec57 \
-#    libavutil56 \
-#    libavfilter8 \
-#    libswscale6 \
-#    ffmpeg \
-#    ca-certificates \
-#    && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y \
+    libsqlite3-0 \
+    libavformat59 \
+    libavcodec59 \
+    libavutil56 \
+    libavfilter7 \
+    libswscale5 \
+    ffmpeg \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy the built frontend from stage 1
 COPY --from=frontend-builder /app/frontend/dist /app/frontend/dist
