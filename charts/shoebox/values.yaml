@@ -7,9 +7,15 @@ image:
   repository: ghcr.io/slackspace-io/shoebox
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "main"
+  # For production, use a specific version tag (e.g., v1.0.0)
+  # For development, you can use main, latest, or a specific commit SHA
+  tag: "latest"
 
 imagePullSecrets: []
+# If the image is in a private repository, you need to create a secret with your registry credentials
+# and specify it here. For example:
+# imagePullSecrets:
+#   - name: regcred
 nameOverride: ""
 fullnameOverride: ""
 
