@@ -6,13 +6,13 @@ WORKDIR /app/frontend
 
 # Copy frontend package.json and install dependencies
 COPY frontend/package.json frontend/package-lock.json* ./
-RUN npm install
+RUN yarn install
 
 # Copy frontend source code
 COPY frontend/ ./
 
 # Build the frontend
-RUN npm run build
+RUN yarn run build
 
 # Stage 2: Build the Rust backend
 FROM rust:latest AS backend-builder
