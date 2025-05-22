@@ -37,6 +37,7 @@ pub struct CreateVideoDto {
     pub file_size: Option<i64>,
     pub thumbnail_path: Option<String>,
     pub rating: Option<i32>,
+    pub duration: Option<i64>,
     pub tags: Vec<String>,
     pub people: Vec<String>,
 }

@@ -317,8 +317,10 @@ impl VideoService {
 
         // Add search conditions
         if let Some(search_query) = &params.query {
-            conditions.push("(v.title LIKE ? OR v.description LIKE ?)".to_string());
+            conditions.push("(v.title LIKE ? OR v.description LIKE ? OR t.name LIKE ? OR p.name LIKE ?)".to_string());
             let like_param = format!("%{}%", search_query);
+            query_params.push(like_param.clone());
+            query_params.push(like_param.clone());
             query_params.push(like_param.clone());
             query_params.push(like_param);
         }
@@ -381,11 +383,11 @@ impl VideoService {
                 "title" => query.push_str(&format!(" ORDER BY v.title {}", order)),
                 "rating" => query.push_str(&format!(" ORDER BY v.rating {}", order)),
                 "file_size" => query.push_str(&format!(" ORDER BY v.file_size {}", order)),
-                "created_date" => query.push_str(&format!(" ORDER BY v.created_date {}", order)),
+                "created_date" => query.push_str(&format!(" ORDER BY datetime(v.created_date) {}", order)),
                 _ => query.push_str(" ORDER BY v.created_date DESC"),
             }
         } else {
-            query.push_str(" ORDER BY v.created_date DESC");
+            query.push_str(" ORDER BY datetime(v.created_date) DESC");
         }
 
         if let Some(limit) = params.limit {

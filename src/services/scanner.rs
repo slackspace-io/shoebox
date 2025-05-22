@@ -4,6 +4,7 @@ use tokio::fs;
 use walkdir::WalkDir;
 use tracing::{info, warn, error};
 use anyhow::Result;
+use std::io::{Read, Seek, SeekFrom};
 
 use crate::error::AppError;
 use crate::models::{Video, CreateVideoDto};
@@ -13,6 +14,125 @@ use crate::services::thumbnail::ThumbnailService;
 pub struct ScannerService;
 
 impl ScannerService {
+    // Function to get the duration of an MP4 file (if possible)
+    fn get_mp4_duration(path: &PathBuf) -> Option<f64> {
+        // Try to open the file in blocking mode for quick analysis
+        let file = match std::fs::File::open(path) {
+            Ok(file) => file,
+            Err(_) => return None, // If we can't open the file, return None
+        };
+
+        // Read the file to find the moov atom and extract duration
+        let mut reader = std::io::BufReader::new(file);
+        let mut buffer = [0u8; 8]; // 8 bytes for atom size (4) and type (4)
+        let mut position = 0;
+
+        // We'll search the entire file for the moov atom
+        loop {
+            // Read atom header
+            match reader.read_exact(&mut buffer) {
+                Ok(_) => {},
+                Err(_) => break, // End of file or error
+            }
+
+            // Parse atom size (big-endian)
+            let size = ((buffer[0] as u32) << 24) |
+                      ((buffer[1] as u32) << 16) |
+                      ((buffer[2] as u32) << 8) |
+                      (buffer[3] as u32);
+
+            // Check if this is the moov atom
+            if &buffer[4..8] == b"moov" {
+                // Found moov atom, now look for mvhd atom inside it
+                let mut mvhd_buffer = vec![0u8; size as usize - 8];
+                if reader.read_exact(&mut mvhd_buffer).is_err() {
+                    break;
+                }
+
+                // Search for mvhd atom inside moov
+                let mut i = 0;
+                while i + 8 <= mvhd_buffer.len() {
+                    let atom_size = ((mvhd_buffer[i] as u32) << 24) |
+                                   ((mvhd_buffer[i+1] as u32) << 16) |
+                                   ((mvhd_buffer[i+2] as u32) << 8) |
+                                   (mvhd_buffer[i+3] as u32);
+
+                    if &mvhd_buffer[i+4..i+8] == b"mvhd" {
+                        // Found mvhd atom, extract duration
+                        // The format depends on the version (first byte after atom header)
+                        let version = mvhd_buffer[i+8];
+
+                        if version == 0 && i + 20 + 12 < mvhd_buffer.len() {
+                            // Version 0: 32-bit duration at offset 20
+                            let time_scale = ((mvhd_buffer[i+16] as u32) << 24) |
+                                            ((mvhd_buffer[i+17] as u32) << 16) |
+                                            ((mvhd_buffer[i+18] as u32) << 8) |
+                                            (mvhd_buffer[i+19] as u32);
+
+                            let duration = ((mvhd_buffer[i+20] as u32) << 24) |
+                                          ((mvhd_buffer[i+21] as u32) << 16) |
+                                          ((mvhd_buffer[i+22] as u32) << 8) |
+                                          (mvhd_buffer[i+23] as u32);
+
+                            if time_scale > 0 {
+                                return Some(duration as f64 / time_scale as f64);
+                            }
+                        } else if version == 1 && i + 28 + 12 < mvhd_buffer.len() {
+                            // Version 1: 64-bit duration at offset 28
+                            let time_scale = ((mvhd_buffer[i+24] as u32) << 24) |
+                                            ((mvhd_buffer[i+25] as u32) << 16) |
+                                            ((mvhd_buffer[i+26] as u32) << 8) |
+                                            (mvhd_buffer[i+27] as u32);
+
+                            let duration = ((mvhd_buffer[i+28] as u64) << 56) |
+                                          ((mvhd_buffer[i+29] as u64) << 48) |
+                                          ((mvhd_buffer[i+30] as u64) << 40) |
+                                          ((mvhd_buffer[i+31] as u64) << 32) |
+                                          ((mvhd_buffer[i+32] as u64) << 24) |
+                                          ((mvhd_buffer[i+33] as u64) << 16) |
+                                          ((mvhd_buffer[i+34] as u64) << 8) |
+                                          (mvhd_buffer[i+35] as u64);
+
+                            if time_scale > 0 {
+                                return Some(duration as f64 / time_scale as f64);
+                            }
+                        }
+
+                        break;
+                    }
+
+                    // Move to the next atom
+                    if atom_size > 0 {
+                        i += atom_size as usize;
+                    } else {
+                        break;
+                    }
+                }
+
+                break;
+            }
+
+            // Skip to the next atom
+            if size > 8 {
+                // Skip the rest of this atom (size - 8 bytes we already read)
+                let to_skip = size as u64 - 8;
+                match reader.seek(SeekFrom::Current(to_skip as i64)) {
+                    Ok(new_pos) => position = new_pos,
+                    Err(_) => break, // Error seeking
+                }
+            } else if size == 0 {
+                // Size 0 means the rest of the file, so we're done
+                break;
+            } else if size < 8 {
+                // Invalid size, something is wrong
+                break;
+            }
+        }
+
+        // If we get here, we couldn't find the duration
+        None
+    }
+
     pub async fn scan_directories(
         paths: &[String],
         video_service: &VideoService,
@@ -77,6 +197,32 @@ impl ScannerService {
 
                 // Create video record
                 let file_name_clone = file_name.clone();
+
+                // Extract duration for video files
+                let duration = if let Some(ext) = std::path::Path::new(&file_path).extension() {
+                    let ext = ext.to_string_lossy().to_lowercase();
+                    if ext == "mp4" {
+                        Self::get_mp4_duration(&std::path::PathBuf::from(&file_path))
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                };
+
+                // Extract duration for video files
+                let duration = if let Some(ext) = std::path::Path::new(&file_path).extension() {
+                    let ext = ext.to_string_lossy().to_lowercase();
+                    if ext == "mp4" {
+                        Self::get_mp4_duration(&std::path::PathBuf::from(&file_path))
+                            .map(|d| d as i64)
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                };
+
                 let create_dto = CreateVideoDto {
                     file_path,
                     file_name,
@@ -86,6 +232,7 @@ impl ScannerService {
                     file_size: Some(metadata.len() as i64),
                     thumbnail_path,
                     rating: None,
+                    duration,
                     tags: Vec::new(),
                     people: Vec::new(),
                 };
