@@ -222,7 +222,7 @@ const UnreviewedPage: React.FC = () => {
       backgroundColor: state.isFocused
         ? useColorModeValue('blue.50', 'blue.900')
         : useColorModeValue('white', 'gray.700'),
-      color: useColorModeValue('black', 'white')
+      color: useColorModeValue('black', 'black')
     })
   };
 
