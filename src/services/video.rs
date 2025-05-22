@@ -300,7 +300,7 @@ impl VideoService {
     }
 
     pub async fn search(&self, params: VideoSearchParams) -> Result<Vec<VideoWithMetadata>> {
-        let mut conditions = Vec::new();
+        let mut conditions = Vec::<String>::new();
         let mut query_params = Vec::new();
 
         // Base query
@@ -317,7 +317,7 @@ impl VideoService {
 
         // Add search conditions
         if let Some(search_query) = &params.query {
-            conditions.push("(v.title LIKE ? OR v.description LIKE ?)");
+            conditions.push("(v.title LIKE ? OR v.description LIKE ?)".to_string());
             let like_param = format!("%{}%", search_query);
             query_params.push(like_param.clone());
             query_params.push(like_param);
@@ -325,35 +325,55 @@ impl VideoService {
 
         if let Some(tags) = &params.tags {
             if !tags.is_empty() {
-                conditions.push("v.id IN (
+                let placeholders = vec!["?"; tags.len()].join(",");
+                let condition = format!("v.id IN (
                     SELECT video_id FROM video_tags
                     JOIN tags ON video_tags.tag_id = tags.id
-                    WHERE tags.name IN (?)
+                    WHERE tags.name IN ({})
                     GROUP BY video_id
                     HAVING COUNT(DISTINCT tags.name) = ?
-                )");
-                query_params.push(tags.join(","));
+                )", placeholders);
+
+                conditions.push(condition);
+
+                // Add each tag as a separate parameter
+                for tag in tags {
+                    query_params.push(tag.clone());
+                }
+
                 query_params.push(tags.len().to_string());
             }
         }
 
         if let Some(people) = &params.people {
             if !people.is_empty() {
-                conditions.push("v.id IN (
+                let placeholders = vec!["?"; people.len()].join(",");
+                let condition = format!("v.id IN (
                     SELECT video_id FROM video_people
                     JOIN people ON video_people.person_id = people.id
-                    WHERE people.name IN (?)
+                    WHERE people.name IN ({})
                     GROUP BY video_id
                     HAVING COUNT(DISTINCT people.name) = ?
-                )");
-                query_params.push(people.join(","));
+                )", placeholders);
+
+                conditions.push(condition);
+
+                // Add each person as a separate parameter
+                for person in people {
+                    query_params.push(person.clone());
+                }
+
                 query_params.push(people.len().to_string());
             }
         }
 
         if let Some(rating) = params.rating {
-            conditions.push("v.rating = ?");
+            conditions.push("v.rating = ?".to_string());
             query_params.push(rating.to_string());
+        }
+
+        if let Some(true) = params.unreviewed {
+            conditions.push("(v.rating IS NULL AND v.description IS NULL AND NOT EXISTS (SELECT 1 FROM video_tags WHERE video_id = v.id) AND NOT EXISTS (SELECT 1 FROM video_people WHERE video_id = v.id))".to_string());
         }
 
         // Add WHERE clause if conditions exist
@@ -362,8 +382,25 @@ impl VideoService {
             query.push_str(&conditions.join(" AND "));
         }
 
-        // Add GROUP BY, ORDER BY, LIMIT, OFFSET
-        query.push_str(" GROUP BY v.id ORDER BY v.created_date DESC");
+        // Add GROUP BY clause
+        query.push_str(" GROUP BY v.id");
+
+        // Add ORDER BY clause
+        if let Some(sort_by) = &params.sort_by {
+            let order = params.sort_order.as_deref().unwrap_or("ASC");
+            let order = if order.to_uppercase() == "DESC" { "DESC" } else { "ASC" };
+
+            match sort_by.as_str() {
+                "duration" => query.push_str(&format!(" ORDER BY v.duration {}", order)),
+                "title" => query.push_str(&format!(" ORDER BY v.title {}", order)),
+                "rating" => query.push_str(&format!(" ORDER BY v.rating {}", order)),
+                "file_size" => query.push_str(&format!(" ORDER BY v.file_size {}", order)),
+                "created_date" => query.push_str(&format!(" ORDER BY v.created_date {}", order)),
+                _ => query.push_str(" ORDER BY v.created_date DESC"),
+            }
+        } else {
+            query.push_str(" ORDER BY v.created_date DESC");
+        }
 
         if let Some(limit) = params.limit {
             query.push_str(" LIMIT ?");
@@ -402,6 +439,7 @@ impl VideoService {
                 file_size: row.get("file_size"),
                 thumbnail_path: row.get("thumbnail_path"),
                 rating: row.get("rating"),
+                duration: row.get("duration"),
                 created_at: row.get("created_at"),
                 updated_at: row.get("updated_at"),
             };

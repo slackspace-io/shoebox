@@ -1,6 +1,6 @@
 use axum::{
     extract::{Path, State},
-    routing::{get, post, delete},
+    routing::{get, post, delete, put},
     Json, Router,
 };
 
@@ -16,6 +16,7 @@ pub fn router(app_state: AppState) -> Router {
         .route("/usage", get(get_tag_usage))
         .route("/cleanup", post(cleanup_unused_tags))
         .route("/{id}", get(get_tag))
+        .route("/{id}", put(update_tag))
         .route("/{id}", delete(delete_tag))
         .with_state(app_state)
 }
@@ -41,6 +42,16 @@ async fn create_tag(
 ) -> Result<Json<crate::models::Tag>> {
     let tag_service = TagService::new(state.db.clone());
     let tag = tag_service.create(create_dto).await?;
+    Ok(Json(tag))
+}
+
+async fn update_tag(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+    Json(new_name): Json<String>,
+) -> Result<Json<crate::models::Tag>> {
+    let tag_service = TagService::new(state.db.clone());
+    let tag = tag_service.update(&id, &new_name).await?;
     Ok(Json(tag))
 }
 

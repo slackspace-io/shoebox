@@ -109,6 +109,40 @@ impl TagService {
         Ok(tag)
     }
 
+    pub async fn update(&self, id: &str, new_name: &str) -> Result<Tag> {
+        // Check if tag exists
+        let tag = self.find_by_id(id).await?;
+
+        // Check if the new name already exists
+        let existing = sqlx::query_as::<_, Tag>("SELECT * FROM tags WHERE name = ? AND id != ?")
+            .bind(new_name)
+            .bind(id)
+            .fetch_optional(&self.db)
+            .await
+            .map_err(AppError::Database)?;
+
+        if existing.is_some() {
+            return Err(AppError::BadRequest(format!(
+                "Tag with name '{}' already exists",
+                new_name
+            )));
+        }
+
+        // Update tag
+        sqlx::query("UPDATE tags SET name = ? WHERE id = ?")
+            .bind(new_name)
+            .bind(id)
+            .execute(&self.db)
+            .await
+            .map_err(AppError::Database)?;
+
+        info!("Updated tag: {} -> {} ({})", tag.name, new_name, id);
+
+        // Return updated tag
+        let updated_tag = self.find_by_id(id).await?;
+        Ok(updated_tag)
+    }
+
     pub async fn delete(&self, id: &str) -> Result<()> {
         // Check if tag exists
         let tag = self.find_by_id(id).await?;

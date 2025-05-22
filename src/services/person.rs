@@ -109,6 +109,40 @@ impl PersonService {
         Ok(person)
     }
 
+    pub async fn update(&self, id: &str, new_name: &str) -> Result<Person> {
+        // Check if person exists
+        let person = self.find_by_id(id).await?;
+
+        // Check if the new name already exists
+        let existing = sqlx::query_as::<_, Person>("SELECT * FROM people WHERE name = ? AND id != ?")
+            .bind(new_name)
+            .bind(id)
+            .fetch_optional(&self.db)
+            .await
+            .map_err(AppError::Database)?;
+
+        if existing.is_some() {
+            return Err(AppError::BadRequest(format!(
+                "Person with name '{}' already exists",
+                new_name
+            )));
+        }
+
+        // Update person
+        sqlx::query("UPDATE people SET name = ? WHERE id = ?")
+            .bind(new_name)
+            .bind(id)
+            .execute(&self.db)
+            .await
+            .map_err(AppError::Database)?;
+
+        info!("Updated person: {} -> {} ({})", person.name, new_name, id);
+
+        // Return updated person
+        let updated_person = self.find_by_id(id).await?;
+        Ok(updated_person)
+    }
+
     pub async fn delete(&self, id: &str) -> Result<()> {
         // Check if person exists
         let person = self.find_by_id(id).await?;

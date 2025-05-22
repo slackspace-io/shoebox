@@ -1,6 +1,6 @@
 use axum::{
     extract::{Path, State},
-    routing::{get, post, delete},
+    routing::{get, post, delete, put},
     Json, Router,
 };
 
@@ -16,6 +16,7 @@ pub fn router(app_state: AppState) -> Router {
         .route("/usage", get(get_person_usage))
         .route("/cleanup", post(cleanup_unused_people))
         .route("/{id}", get(get_person))
+        .route("/{id}", put(update_person))
         .route("/{id}", delete(delete_person))
         .with_state(app_state)
 }
@@ -41,6 +42,16 @@ async fn create_person(
 ) -> Result<Json<crate::models::Person>> {
     let person_service = PersonService::new(state.db.clone());
     let person = person_service.create(create_dto).await?;
+    Ok(Json(person))
+}
+
+async fn update_person(
+    State(state): State<AppState>,
+    Path(id): Path<String>,
+    Json(new_name): Json<String>,
+) -> Result<Json<crate::models::Person>> {
+    let person_service = PersonService::new(state.db.clone());
+    let person = person_service.update(&id, &new_name).await?;
     Ok(Json(person))
 }
 

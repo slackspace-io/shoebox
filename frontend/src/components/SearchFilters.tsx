@@ -33,6 +33,8 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onFilterChange }) => {
   const [selectedPeople, setSelectedPeople] = useState<SelectOption[]>([]);
   const [selectedRating, setSelectedRating] = useState<string>('');
   const [isUnreviewed, setIsUnreviewed] = useState<boolean>(false);
+  const [sortBy, setSortBy] = useState<string>('');
+  const [sortOrder, setSortOrder] = useState<string>('DESC');
   const [loading, setLoading] = useState(true);
 
   const bgColor = useColorModeValue('white', 'gray.800');
@@ -76,7 +78,9 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onFilterChange }) => {
       tags: selectedTags.map(tag => tag.value),
       people: selectedPeople.map(person => person.value),
       rating: selectedRating ? parseInt(selectedRating, 10) : undefined,
-      unreviewed: isUnreviewed || undefined
+      unreviewed: isUnreviewed || undefined,
+      sort_by: sortBy || undefined,
+      sort_order: sortOrder || undefined
     });
   };
 
@@ -86,11 +90,15 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onFilterChange }) => {
     setSelectedPeople([]);
     setSelectedRating('');
     setIsUnreviewed(false);
+    setSortBy('');
+    setSortOrder('DESC');
     onFilterChange({
       tags: undefined,
       people: undefined,
       rating: undefined,
-      unreviewed: undefined
+      unreviewed: undefined,
+      sort_by: undefined,
+      sort_order: undefined
     });
   };
 
@@ -168,6 +176,35 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onFilterChange }) => {
               <option value="3">3 stars</option>
               <option value="4">4 stars</option>
               <option value="5">5 stars</option>
+            </ChakraSelect>
+          </Box>
+        </SimpleGrid>
+
+        <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4} mt={4}>
+          <Box>
+            <Heading size="sm" mb={2}>Sort By</Heading>
+            <ChakraSelect
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              placeholder="Default (Created Date)"
+            >
+              <option value="">Default (Created Date)</option>
+              <option value="duration">Duration</option>
+              <option value="title">Title</option>
+              <option value="rating">Rating</option>
+              <option value="file_size">File Size</option>
+              <option value="created_date">Created Date</option>
+            </ChakraSelect>
+          </Box>
+
+          <Box>
+            <Heading size="sm" mb={2}>Sort Order</Heading>
+            <ChakraSelect
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value)}
+            >
+              <option value="ASC">Ascending</option>
+              <option value="DESC">Descending</option>
             </ChakraSelect>
           </Box>
         </SimpleGrid>

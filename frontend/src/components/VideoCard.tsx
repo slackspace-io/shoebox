@@ -40,8 +40,28 @@ const VideoCard: React.FC<VideoCardProps> = ({ video }) => {
   // Format date
   const formatDate = (dateString?: string): string => {
     if (!dateString) return 'Unknown date';
-    const date = new Date(dateString);
-    return date.toLocaleDateString();
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return 'Unknown date';
+      return date.toLocaleDateString();
+    } catch (e) {
+      return 'Unknown date';
+    }
+  };
+
+  // Format duration
+  const formatDuration = (seconds?: number): string => {
+    if (!seconds) return '';
+
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const remainingSeconds = seconds % 60;
+
+    if (hours > 0) {
+      return `${hours}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+    } else {
+      return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+    }
   };
 
   // Render rating stars
@@ -99,9 +119,10 @@ const VideoCard: React.FC<VideoCardProps> = ({ video }) => {
           {formatDate(video.created_date)}
         </Text>
 
-        <Text fontSize="sm" color="gray.500" noOfLines={1}>
-          {formatFileSize(video.file_size)}
-        </Text>
+        <Flex fontSize="sm" color="gray.500" noOfLines={1} justifyContent="space-between">
+          <Text>{formatFileSize(video.file_size)}</Text>
+          {video.duration && <Text>{formatDuration(video.duration)}</Text>}
+        </Flex>
 
         {video.tags.length > 0 && (
           <Flex mt={3} flexWrap="wrap" gap={2}>

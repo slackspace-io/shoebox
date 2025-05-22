@@ -14,6 +14,7 @@ pub struct Video {
     pub file_size: Option<i64>,
     pub thumbnail_path: Option<String>,
     pub rating: Option<i32>,
+    pub duration: Option<i64>,
     pub created_at: String,
     pub updated_at: String,
 }
@@ -57,6 +58,9 @@ pub struct VideoSearchParams {
     pub rating: Option<i32>,
     pub limit: Option<i64>,
     pub offset: Option<i64>,
+    pub unreviewed: Option<bool>,
+    pub sort_by: Option<String>,
+    pub sort_order: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -78,6 +82,7 @@ impl Video {
             file_size: None,
             thumbnail_path: None,
             rating: None,
+            duration: None,
             created_at: now.clone(),
             updated_at: now,
         }

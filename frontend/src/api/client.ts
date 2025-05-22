@@ -22,6 +22,7 @@ export interface Video {
   file_size?: number;
   thumbnail_path?: string;
   rating?: number;
+  duration?: number;
   created_at: string;
   updated_at: string;
 }
@@ -60,6 +61,8 @@ export interface VideoSearchParams {
   limit?: number;
   offset?: number;
   unreviewed?: boolean;
+  sort_by?: string;
+  sort_order?: string;
 }
 
 export interface Tag {
