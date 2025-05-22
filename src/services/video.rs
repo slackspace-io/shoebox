@@ -136,8 +136,8 @@ impl VideoService {
 
         // Insert video
         sqlx::query(
-            "INSERT INTO videos (id, file_path, file_name, title, description, created_date, file_size, thumbnail_path, rating, created_at, updated_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+            "INSERT INTO videos (id, file_path, file_name, title, description, created_date, file_size, thumbnail_path, rating, original_file_path, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
         )
         .bind(&id)
         .bind(&dto.file_path)
@@ -148,6 +148,7 @@ impl VideoService {
         .bind(&dto.file_size)
         .bind(&dto.thumbnail_path)
         .bind(&dto.rating)
+        .bind(&dto.original_file_path)
         .bind(&now)
         .bind(&now)
         .execute(&mut *tx)
@@ -428,6 +429,7 @@ impl VideoService {
                 thumbnail_path: row.get("thumbnail_path"),
                 rating: row.get("rating"),
                 duration: row.get("duration"),
+                original_file_path: row.get("original_file_path"),
                 created_at: row.get("created_at"),
                 updated_at: row.get("updated_at"),
             };

@@ -25,7 +25,7 @@ async fn serve_media(
     headers: HeaderMap,
 ) -> Result<Response> {
     // Construct the full path to the media file
-    let base_path = PathBuf::from(&state.config.media.source_paths[0]);
+    let base_path = PathBuf::from(&state.config.media.source_paths[0].path);
     let file_path = base_path.join(&path);
 
     // Check if the file exists

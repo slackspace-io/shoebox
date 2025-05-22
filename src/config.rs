@@ -22,8 +22,15 @@ pub struct DatabaseConfig {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct MediaPathConfig {
+    pub path: String,
+    pub original_path: Option<String>,
+    pub original_extension: Option<String>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct MediaConfig {
-    pub source_paths: Vec<String>,
+    pub source_paths: Vec<MediaPathConfig>,
     pub export_base_path: String,
     pub thumbnail_path: String,
 }
@@ -59,10 +66,40 @@ impl Config {
     }
 }
 
-fn parse_comma_separated_paths(env_var: &str) -> Vec<String> {
+fn parse_comma_separated_paths(env_var: &str) -> Vec<MediaPathConfig> {
     env::var(env_var)
         .unwrap_or_else(|_| "./media".to_string())
         .split(',')
         .map(|s| s.trim().to_string())
+        .map(|path_config| {
+            // Check if the path contains configuration options
+            if path_config.contains(';') {
+                let parts: Vec<&str> = path_config.split(';').collect();
+                let path = parts[0].to_string();
+
+                // Parse original_path if provided
+                let original_path = parts.get(1)
+                    .filter(|&p| !p.is_empty())
+                    .map(|p| p.to_string());
+
+                // Parse original_extension if provided
+                let original_extension = parts.get(2)
+                    .filter(|&e| !e.is_empty())
+                    .map(|e| e.to_string());
+
+                MediaPathConfig {
+                    path,
+                    original_path,
+                    original_extension,
+                }
+            } else {
+                // Simple path without additional configuration
+                MediaPathConfig {
+                    path: path_config,
+                    original_path: None,
+                    original_extension: None,
+                }
+            }
+        })
         .collect()
 }

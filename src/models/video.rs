@@ -15,6 +15,7 @@ pub struct Video {
     pub thumbnail_path: Option<String>,
     pub rating: Option<i32>,
     pub duration: Option<i64>,
+    pub original_file_path: Option<String>,
     pub created_at: String,
     pub updated_at: String,
 }
@@ -38,6 +39,7 @@ pub struct CreateVideoDto {
     pub thumbnail_path: Option<String>,
     pub rating: Option<i32>,
     pub duration: Option<i64>,
+    pub original_file_path: Option<String>,
     pub tags: Vec<String>,
     pub people: Vec<String>,
 }
@@ -84,6 +86,7 @@ impl Video {
             thumbnail_path: None,
             rating: None,
             duration: None,
+            original_file_path: None,
             created_at: now.clone(),
             updated_at: now,
         }

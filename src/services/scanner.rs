@@ -134,15 +134,15 @@ impl ScannerService {
     }
 
     pub async fn scan_directories(
-        paths: &[String],
+        path_configs: &[crate::config::MediaPathConfig],
         video_service: &VideoService,
         thumbnail_service: &ThumbnailService,
     ) -> Result<Vec<Video>, AppError> {
         let mut new_videos = Vec::new();
 
-        for path in paths {
-            info!("Scanning directory: {}", path);
-            let path = Path::new(path);
+        for path_config in path_configs {
+            info!("Scanning directory: {}", path_config.path);
+            let path = Path::new(&path_config.path);
 
             if !path.exists() {
                 warn!("Path does not exist: {}", path.display());
@@ -203,6 +203,7 @@ impl ScannerService {
                     let ext = ext.to_string_lossy().to_lowercase();
                     if ext == "mp4" {
                         Self::get_mp4_duration(&std::path::PathBuf::from(&file_path))
+                            .map(|d| d as i64)
                     } else {
                         None
                     }
@@ -210,12 +211,28 @@ impl ScannerService {
                     None
                 };
 
-                // Extract duration for video files
-                let duration = if let Some(ext) = std::path::Path::new(&file_path).extension() {
-                    let ext = ext.to_string_lossy().to_lowercase();
-                    if ext == "mp4" {
-                        Self::get_mp4_duration(&std::path::PathBuf::from(&file_path))
-                            .map(|d| d as i64)
+                // Check for original file if original_path and original_extension are specified
+                let original_file_path = if let (Some(original_path), Some(original_extension)) =
+                    (&path_config.original_path, &path_config.original_extension) {
+
+                    // Get the file name without extension
+                    let file_stem = std::path::Path::new(&file_name)
+                        .file_stem()
+                        .map(|s| s.to_string_lossy().to_string());
+
+                    if let Some(stem) = file_stem {
+                        // Construct the path to the original file
+                        let original_file = format!("{}/{}.{}", original_path, stem, original_extension);
+                        let original_path_buf = std::path::Path::new(&original_file);
+
+                        // Check if the original file exists
+                        if original_path_buf.exists() {
+                            info!("Found original file: {}", original_file);
+                            Some(original_file)
+                        } else {
+                            info!("Original file not found: {}", original_file);
+                            None
+                        }
                     } else {
                         None
                     }
@@ -235,6 +252,7 @@ impl ScannerService {
                     duration,
                     tags: Vec::new(),
                     people: Vec::new(),
+                    original_file_path,
                 };
 
                 match video_service.create(create_dto).await {
