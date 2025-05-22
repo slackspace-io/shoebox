@@ -325,45 +325,31 @@ impl VideoService {
 
         if let Some(tags) = &params.tags {
             if !tags.is_empty() {
-                let placeholders = vec!["?"; tags.len()].join(",");
-                let condition = format!("v.id IN (
-                    SELECT video_id FROM video_tags
-                    JOIN tags ON video_tags.tag_id = tags.id
-                    WHERE tags.name IN ({})
-                    GROUP BY video_id
-                    HAVING COUNT(DISTINCT tags.name) = ?
-                )", placeholders);
-
-                conditions.push(condition);
-
-                // Add each tag as a separate parameter
+                // For each tag, we need a separate subquery to ensure ALL tags are present
                 for tag in tags {
+                    let condition = format!("v.id IN (
+                        SELECT video_id FROM video_tags
+                        JOIN tags ON video_tags.tag_id = tags.id
+                        WHERE tags.name = ?
+                    )");
+                    conditions.push(condition);
                     query_params.push(tag.clone());
                 }
-
-                query_params.push(tags.len().to_string());
             }
         }
 
         if let Some(people) = &params.people {
             if !people.is_empty() {
-                let placeholders = vec!["?"; people.len()].join(",");
-                let condition = format!("v.id IN (
-                    SELECT video_id FROM video_people
-                    JOIN people ON video_people.person_id = people.id
-                    WHERE people.name IN ({})
-                    GROUP BY video_id
-                    HAVING COUNT(DISTINCT people.name) = ?
-                )", placeholders);
-
-                conditions.push(condition);
-
-                // Add each person as a separate parameter
+                // For each person, we need a separate subquery to ensure ALL people are present
                 for person in people {
+                    let condition = format!("v.id IN (
+                        SELECT video_id FROM video_people
+                        JOIN people ON video_people.person_id = people.id
+                        WHERE people.name = ?
+                    )");
+                    conditions.push(condition);
                     query_params.push(person.clone());
                 }
-
-                query_params.push(people.len().to_string());
             }
         }
 

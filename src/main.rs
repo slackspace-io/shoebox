@@ -13,7 +13,7 @@ use axum::{
 use std::net::SocketAddr;
 use std::path::PathBuf;
 use tokio::net::TcpListener;
-use tower_http::services::ServeDir;
+use tower_http::services::{ServeDir, ServeFile};
 use tracing::info;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -63,8 +63,8 @@ async fn main() -> anyhow::Result<()> {
         .nest_service("/app/thumbnails", ServeDir::new(&config.media.thumbnail_path))
         // Serve media files from the media directory with custom handler
         .nest("/media", routes::media::router(app_state))
-        // Fallback for serving static files and SPA client-side routing
-        .fallback_service(ServeDir::new(&frontend_path).append_index_html_on_directories(true));
+        // Serve static files from the frontend directory
+        .fallback_service(ServeDir::new(&frontend_path).fallback(ServeFile::new(format!("{}/index.html", frontend_path))));
 
     // Run the server
     let addr = SocketAddr::from(([0, 0, 0, 0], config.server.port));
