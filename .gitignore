@@ -36,3 +36,9 @@ rust-project.json
 
 
 /charts/shoebox/.myvalues.yaml
+/thumbnails/
+/media/
+/data.db
+/data.db-shm
+/data.db-wal
+/charts/shoebox/charts/postgresql-16.7.4.tgz
