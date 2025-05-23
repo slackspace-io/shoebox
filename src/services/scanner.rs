@@ -6,6 +6,8 @@ use tracing::{info, warn, error};
 use anyhow::Result;
 use std::io::{Read, Seek, SeekFrom};
 use std::process::Command;
+use tokio::task;
+use std::sync::Arc;
 
 use crate::error::AppError;
 use crate::models::{Video, CreateVideoDto};
@@ -287,11 +289,12 @@ impl ScannerService {
 
     pub async fn scan_directories(
         path_configs: &[crate::config::MediaPathConfig],
-        video_service: &VideoService,
-        thumbnail_service: &ThumbnailService,
+        video_service: VideoService,
+        thumbnail_service: ThumbnailService,
     ) -> Result<(Vec<Video>, Vec<Video>), AppError> {
-        let mut new_videos = Vec::new();
-        let mut updated_videos = Vec::new();
+        // Wrap services in Arc for sharing across tasks
+        let video_service = Arc::new(video_service);
+        let thumbnail_service = Arc::new(thumbnail_service);
 
         // Create a single map to store all original file paths
         // This allows us to find original files regardless of which subdirectory they're in
@@ -345,6 +348,12 @@ impl ScannerService {
             }
         }
 
+        // Create a vector to hold all the tasks
+        let mut tasks = Vec::new();
+        let all_original_files_arc = Arc::new(all_original_files);
+        let new_videos_arc = Arc::new(tokio::sync::Mutex::new(Vec::new()));
+        let updated_videos_arc = Arc::new(tokio::sync::Mutex::new(Vec::new()));
+
         for path_config in path_configs {
             info!("Scanning directory: {}", path_config.path);
             let path = Path::new(&path_config.path);
@@ -362,141 +371,173 @@ impl ScannerService {
                 }
             };
 
+            // Process files in parallel
             for entry in entries {
                 let file_path = entry.path().to_string_lossy().to_string();
                 let file_name = entry.file_name().to_string_lossy().to_string();
 
-                // Get file metadata
-                let metadata = match fs::metadata(&file_path).await {
-                    Ok(m) => m,
-                    Err(e) => {
-                        error!("Error getting metadata for {}: {}", file_path, e);
-                        continue;
-                    }
-                };
+                // Clone Arc pointers for the async task
+                let video_service = video_service.clone();
+                let thumbnail_service = thumbnail_service.clone();
+                let all_original_files = all_original_files_arc.clone();
+                let new_videos = new_videos_arc.clone();
+                let updated_videos = updated_videos_arc.clone();
+                let path_config = path_config.clone();
 
-                // Get created date - only use video metadata as filesystem metadata is not accurate
-                info!("Extracting creation date from video metadata");
-                let created_date = Self::get_video_creation_date(&file_path);
+                // Spawn a task to process this file
+                let task = task::spawn(async move {
+                    // Get file metadata
+                    let metadata = match fs::metadata(&file_path).await {
+                        Ok(m) => m,
+                        Err(e) => {
+                            error!("Error getting metadata for {}: {}", file_path, e);
+                            return;
+                        }
+                    };
 
-                // Generate thumbnail
-                let thumbnail_path = match thumbnail_service.generate_thumbnail(&file_path).await {
-                    Ok(path) => Some(path),
-                    Err(e) => {
-                        error!("Error generating thumbnail for {}: {}", file_path, e);
-                        None
-                    }
-                };
+                    // Get created date - only use video metadata as filesystem metadata is not accurate
+                    info!("Extracting creation date from video metadata");
+                    let created_date = Self::get_video_creation_date(&file_path);
 
-                // Extract duration for video files
-                let duration = if let Some(ext) = std::path::Path::new(&file_path).extension() {
-                    let ext = ext.to_string_lossy().to_lowercase();
-                    if Self::is_supported_video_format(&ext) {
-                        // Use ffprobe to get duration for all supported video formats
-                        Self::get_video_duration(&file_path)
-                            .or_else(|| {
-                                // Fallback to MP4 specific method for MP4 files
-                                if ext == "mp4" {
-                                    Self::get_mp4_duration(&std::path::PathBuf::from(&file_path))
-                                        .map(|d| d as i64)
-                                } else {
-                                    None
-                                }
-                            })
-                    } else {
-                        None
-                    }
-                } else {
-                    None
-                };
+                    // Generate thumbnail
+                    let thumbnail_path = match thumbnail_service.generate_thumbnail(&file_path).await {
+                        Ok(path) => Some(path),
+                        Err(e) => {
+                            error!("Error generating thumbnail for {}: {}", file_path, e);
+                            None
+                        }
+                    };
 
-                // Check for original file if original_path is specified
-                let original_file_path = if let Some(original_path) = &path_config.original_path {
-                    // Get the file name without extension
-                    let file_stem = std::path::Path::new(&file_name)
-                        .file_stem()
-                        .map(|s| s.to_string_lossy().to_string());
-
-                    if let Some(stem) = file_stem {
-                        // Look up the file stem in our pre-built map
-                        if let Some(original_file) = all_original_files.get(&stem) {
-                            info!("Found original file: {}", original_file);
-                            Some(original_file.clone())
+                    // Extract duration for video files
+                    let duration = if let Some(ext) = std::path::Path::new(&file_path).extension() {
+                        let ext = ext.to_string_lossy().to_lowercase();
+                        if Self::is_supported_video_format(&ext) {
+                            // Use ffprobe to get duration for all supported video formats
+                            Self::get_video_duration(&file_path)
+                                .or_else(|| {
+                                    // Fallback to MP4 specific method for MP4 files
+                                    if ext == "mp4" {
+                                        Self::get_mp4_duration(&std::path::PathBuf::from(&file_path))
+                                            .map(|d| d as i64)
+                                    } else {
+                                        None
+                                    }
+                                })
                         } else {
-                            // If not found in the map, we couldn't find the original file
-                            let extension_info = if let Some(ext) = &path_config.original_extension {
-                                format!(" with extension '{}'", ext)
-                            } else {
-                                "".to_string()
-                            };
-                            info!("Original file not found for stem: '{}'{} in path: '{}'",
-                                  stem, extension_info, original_path);
                             None
                         }
                     } else {
                         None
-                    }
-                } else {
-                    None
-                };
+                    };
 
-                // Check if video already exists in database
-                match video_service.find_by_path(&file_path).await {
-                    Ok(existing_video) => {
-                        // Update existing video with new metadata
-                        info!("Updating existing video: {}", file_path);
-                        match video_service.update_technical_metadata(
-                            &existing_video.id,
-                            Some(metadata.len() as i64),
-                            duration,
-                            created_date,
-                            thumbnail_path,
-                            original_file_path
-                        ).await {
-                            Ok(updated_video) => {
-                                updated_videos.push(updated_video);
-                            },
-                            Err(e) => {
-                                error!("Error updating video metadata: {}", e);
+                    // Check for original file if original_path is specified
+                    let original_file_path = if let Some(original_path) = &path_config.original_path {
+                        // Get the file name without extension
+                        let file_stem = std::path::Path::new(&file_name)
+                            .file_stem()
+                            .map(|s| s.to_string_lossy().to_string());
+
+                        if let Some(stem) = file_stem {
+                            // Look up the file stem in our pre-built map
+                            if let Some(original_file) = all_original_files.get(&stem) {
+                                info!("Found original file: {}", original_file);
+                                Some(original_file.clone())
+                            } else {
+                                // If not found in the map, we couldn't find the original file
+                                let extension_info = if let Some(ext) = &path_config.original_extension {
+                                    format!(" with extension '{}'", ext)
+                                } else {
+                                    "".to_string()
+                                };
+                                info!("Original file not found for stem: '{}'{} in path: '{}'",
+                                      stem, extension_info, original_path);
+                                None
                             }
+                        } else {
+                            None
                         }
-                        continue;
-                    },
-                    Err(_) => {
-                        // Video doesn't exist, continue with creation
+                    } else {
+                        None
+                    };
+
+                    // Check if video already exists in database
+                    match video_service.find_by_path(&file_path).await {
+                        Ok(existing_video) => {
+                            // Update existing video with new metadata
+                            info!("Updating existing video: {}", file_path);
+                            match video_service.update_technical_metadata(
+                                &existing_video.id,
+                                Some(metadata.len() as i64),
+                                duration,
+                                created_date,
+                                thumbnail_path,
+                                original_file_path
+                            ).await {
+                                Ok(updated_video) => {
+                                    let mut updated_videos_guard = updated_videos.lock().await;
+                                    updated_videos_guard.push(updated_video);
+                                },
+                                Err(e) => {
+                                    error!("Error updating video metadata: {}", e);
+                                }
+                            }
+                            return;
+                        },
+                        Err(_) => {
+                            // Video doesn't exist, continue with creation
+                        }
+                    };
+
+                    info!("Found new video: {}", file_path);
+
+                    // Create video record
+                    let file_name_clone = file_name.clone();
+
+                    let create_dto = CreateVideoDto {
+                        file_path,
+                        file_name,
+                        title: Some(file_name_clone),
+                        description: None,
+                        created_date,
+                        file_size: Some(metadata.len() as i64),
+                        thumbnail_path,
+                        rating: None,
+                        duration,
+                        tags: Vec::new(),
+                        people: Vec::new(),
+                        original_file_path,
+                    };
+
+                    match video_service.create(create_dto).await {
+                        Ok(video) => {
+                            let mut new_videos_guard = new_videos.lock().await;
+                            new_videos_guard.push(video);
+                        },
+                        Err(e) => {
+                            error!("Error creating video record: {}", e);
+                        }
                     }
-                };
+                });
 
-                info!("Found new video: {}", file_path);
-
-                // Create video record
-                let file_name_clone = file_name.clone();
-
-                let create_dto = CreateVideoDto {
-                    file_path,
-                    file_name,
-                    title: Some(file_name_clone),
-                    description: None,
-                    created_date,
-                    file_size: Some(metadata.len() as i64),
-                    thumbnail_path,
-                    rating: None,
-                    duration,
-                    tags: Vec::new(),
-                    people: Vec::new(),
-                    original_file_path,
-                };
-
-                match video_service.create(create_dto).await {
-                    Ok(video) => {
-                        new_videos.push(video);
-                    },
-                    Err(e) => {
-                        error!("Error creating video record: {}", e);
-                    }
-                }
+                tasks.push(task);
             }
         }
+
+        // Wait for all tasks to complete
+        for task in tasks {
+            let _ = task.await;
+        }
+
+        // Collect results
+        let new_videos = {
+            let guard = new_videos_arc.lock().await;
+            guard.clone()
+        };
+
+        let updated_videos = {
+            let guard = updated_videos_arc.lock().await;
+            guard.clone()
+        };
 
         info!("Scan complete. Found {} new videos and updated {} existing videos", new_videos.len(), updated_videos.len());
         Ok((new_videos, updated_videos))

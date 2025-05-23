@@ -42,6 +42,7 @@ async fn main() -> anyhow::Result<()> {
     let app_state = services::AppState {
         db: db_pool,
         config: config.clone(),
+        scan_status: std::sync::Arc::new(tokio::sync::RwLock::new(services::ScanStatus::default())),
     };
 
     // Determine the path to the frontend dist directory

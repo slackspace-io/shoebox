@@ -1,7 +1,8 @@
 import React from 'react';
-import { Box, Flex, Heading, Link, Spacer, Button, useColorMode, useColorModeValue } from '@chakra-ui/react';
+import { Box, Flex, Heading, Link, Spacer, Button, useColorMode, useColorModeValue, Alert, AlertIcon, AlertTitle, AlertDescription, Spinner } from '@chakra-ui/react';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { FaSun, FaMoon, FaVideo, FaFileExport, FaTags, FaClipboardCheck, FaCog } from 'react-icons/fa';
+import { useScanContext } from '../contexts/ScanContext';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -12,6 +13,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
+  const { scanStatus } = useScanContext();
 
   return (
     <Box>
@@ -104,6 +106,21 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </Button>
         </Flex>
       </Flex>
+
+      {scanStatus.inProgress && (
+        <Alert status="info" variant="solid">
+          <AlertIcon />
+          <Flex align="center">
+            <Spinner size="sm" mr={2} />
+            <AlertTitle>Scan in progress</AlertTitle>
+            <AlertDescription ml={2}>
+              {scanStatus.newVideosCount > 0 || scanStatus.updatedVideosCount > 0 ?
+                `Found ${scanStatus.newVideosCount} new videos and updated ${scanStatus.updatedVideosCount} videos so far.` :
+                'Scanning for videos...'}
+            </AlertDescription>
+          </Flex>
+        </Alert>
+      )}
 
       <Box as="main" p={4}>
         {children}

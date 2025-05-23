@@ -16,6 +16,7 @@ import { FaSearch, FaSync } from 'react-icons/fa';
 import { videoApi, scanApi, VideoWithMetadata, VideoSearchParams } from '../api/client';
 import VideoCard from '../components/VideoCard';
 import SearchFilters from '../components/SearchFilters';
+import { useScanContext } from '../contexts/ScanContext';
 
 const HomePage: React.FC = () => {
   const [videos, setVideos] = useState<VideoWithMetadata[]>([]);
@@ -27,29 +28,48 @@ const HomePage: React.FC = () => {
     offset: 0
   });
   const toast = useToast();
+  const { scanStatus, checkScanStatus } = useScanContext();
+
+  // Function to fetch videos
+  const fetchVideos = async () => {
+    setLoading(true);
+    try {
+      const results = await videoApi.searchVideos(searchParams);
+      setVideos(results);
+    } catch (error) {
+      console.error('Error fetching videos:', error);
+      toast({
+        title: 'Error fetching videos',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Load videos on component mount and when search params change
   useEffect(() => {
-    const fetchVideos = async () => {
-      setLoading(true);
-      try {
-        const results = await videoApi.searchVideos(searchParams);
-        setVideos(results);
-      } catch (error) {
-        console.error('Error fetching videos:', error);
-        toast({
-          title: 'Error fetching videos',
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchVideos();
   }, [searchParams, toast]);
+
+  // Refresh videos when scan completes
+  useEffect(() => {
+    // If scan was in progress but is now complete, refresh the videos
+    if (!scanStatus.inProgress && scanStatus.newVideosCount > 0) {
+      fetchVideos();
+
+      // Show a toast notification about the completed scan
+      toast({
+        title: 'Scan complete',
+        description: `Found ${scanStatus.newVideosCount} new videos and updated ${scanStatus.updatedVideosCount} videos.`,
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  }, [scanStatus.inProgress]);
 
   // Handle search input change
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -85,24 +105,25 @@ const HomePage: React.FC = () => {
   const handleScan = async () => {
     setScanning(true);
     try {
-      const result = await scanApi.scanDirectories();
+      await scanApi.scanDirectories();
+
+      // Check scan status immediately after starting the scan
+      await checkScanStatus();
+
       toast({
-        title: 'Scan complete',
-        description: `Found ${result.new_videos_count} new videos`,
-        status: 'success',
+        title: 'Scan started',
+        description: 'The scan has been started in the background. You can continue using the application.',
+        status: 'info',
         duration: 5000,
         isClosable: true,
       });
 
-      // Refresh videos list if new videos were found
-      if (result.new_videos_count > 0) {
-        const results = await videoApi.searchVideos(searchParams);
-        setVideos(results);
-      }
+      // We'll refresh the videos list automatically when the scan completes
+      // via the scan status polling mechanism
     } catch (error) {
-      console.error('Error scanning directories:', error);
+      console.error('Error starting scan:', error);
       toast({
-        title: 'Error scanning directories',
+        title: 'Error starting scan',
         status: 'error',
         duration: 3000,
         isClosable: true,
