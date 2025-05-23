@@ -33,7 +33,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onFilterChange }) => {
   const [selectedPeople, setSelectedPeople] = useState<SelectOption[]>([]);
   const [selectedRating, setSelectedRating] = useState<string>('');
   const [isUnreviewed, setIsUnreviewed] = useState<boolean>(false);
-  const [sortBy, setSortBy] = useState<string>('');
+  const [sortBy, setSortBy] = useState<string>('created_date');
   const [sortOrder, setSortOrder] = useState<string>('DESC');
   const [loading, setLoading] = useState(true);
 
@@ -90,15 +90,15 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onFilterChange }) => {
     setSelectedPeople([]);
     setSelectedRating('');
     setIsUnreviewed(false);
-    setSortBy('');
+    setSortBy('created_date');
     setSortOrder('DESC');
     onFilterChange({
       tags: undefined,
       people: undefined,
       rating: undefined,
       unreviewed: undefined,
-      sort_by: undefined,
-      sort_order: undefined
+      sort_by: 'created_date',
+      sort_order: 'DESC'
     });
   };
 
@@ -188,12 +188,11 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onFilterChange }) => {
               onChange={(e) => setSortBy(e.target.value)}
               placeholder="Default (Created Date)"
             >
-              <option value="">Default (Created Date)</option>
+              <option value="created_date">Created Date</option>
               <option value="duration">Duration</option>
               <option value="title">Title</option>
               <option value="rating">Rating</option>
               <option value="file_size">File Size</option>
-              <option value="created_date">Created Date</option>
             </ChakraSelect>
           </Box>
 
