@@ -11,6 +11,11 @@ on:
     paths:
       - 'charts/**'
 
+
+concurrency:
+  group: "shoebox-helm"
+  cancel-in-progress: true
+
 jobs:
   lint-test:
     runs-on: ubuntu-latest

@@ -18,6 +18,10 @@ on:
   schedule:
     - cron: '42 19 * * 1'
 
+concurrency:
+  group: "shoebox-clippy"
+  cancel-in-progress: true
+
 jobs:
   rust-clippy-analyze:
     name: Run rust-clippy analyzing
