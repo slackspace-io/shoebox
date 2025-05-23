@@ -2,7 +2,7 @@ apiVersion: v2
 name: shoebox
 description: A Helm chart for the Shoebox application - a digital shoebox for your videos
 type: application
-version: 0.0.12
+version: 0.0.13
 appVersion: "main"
 keywords:
   - video

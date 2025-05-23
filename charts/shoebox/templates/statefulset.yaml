@@ -1,10 +1,11 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: {{ include "shoebox.fullname" . }}
   labels:
     {{- include "shoebox.labels" . | nindent 4 }}
 spec:
+  serviceName: {{ include "shoebox.fullname" . }}
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
