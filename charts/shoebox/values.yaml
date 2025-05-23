@@ -100,9 +100,13 @@ config:
         path: /mnt/videos
         originalPath: /home/user/videos
         originalExtension: mp4
+        # Optional: specify an existing claim for this source's originalPath
+        # originalExistingClaim: "existing-claim-name"
       - name: gopro
         path: /mnt/other-videos
         originalPath: /media/external/videos
+        # Optional: specify an existing claim for this source's originalPath
+        # originalExistingClaim: "existing-claim-name"
   thumbnailPath: "/app/thumbnails"
   exportBasePath: "/app/exports"
   rustLog: "info"
@@ -134,6 +138,17 @@ persistence:
   media:
     enabled: true
     # This should be a PV that points to your media storage
+    existingClaim: ""
+    # If no existing claim, create a PVC with these settings
+    size: 100Gi
+    storageClass: ""
+    accessMode: ReadOnlyMany
+
+  # Original media source directory (read-only)
+  # This is used for the originalPath in mediaSourcePaths
+  originalMedia:
+    enabled: true
+    # This should be a PV that points to your original media storage
     existingClaim: ""
     # If no existing claim, create a PVC with these settings
     size: 100Gi
