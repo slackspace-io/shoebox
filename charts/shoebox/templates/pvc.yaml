@@ -1,4 +1,4 @@
-{{- if and .Values.persistence.data.enabled (not .Values.postgresql.enabled) }}
+{{- if and .Values.persistence.data.enabled (not .Values.postgresql.enabled) (not .Values.persistence.data.existingClaim) }}
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -16,7 +16,7 @@ spec:
   {{- end }}
 ---
 {{- end }}
-{{- if .Values.persistence.thumbnails.enabled }}
+{{- if and .Values.persistence.thumbnails.enabled (not .Values.persistence.thumbnails.existingClaim) }}
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:

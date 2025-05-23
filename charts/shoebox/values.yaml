@@ -119,6 +119,8 @@ persistence:
     size: 1Gi
     storageClass: ""
     accessMode: ReadWriteOnce
+    existingClaim: ""
+    readOnly: false
 
   # Thumbnails directory
   thumbnails:
@@ -126,6 +128,8 @@ persistence:
     size: 5Gi
     storageClass: ""
     accessMode: ReadWriteOnce
+    existingClaim: ""
+    readOnly: false
 
   # Exports directory
   exports:
@@ -133,12 +137,15 @@ persistence:
     size: 10Gi
     storageClass: ""
     accessMode: ReadWriteOnce
+    existingClaim: ""
+    readOnly: false
 
   # Media source directory (read-only)
   media:
     enabled: true
     # This should be a PV that points to your media storage
     existingClaim: ""
+    readOnly: true
     # If no existing claim, create a PVC with these settings
     size: 100Gi
     storageClass: ""

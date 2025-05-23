@@ -66,25 +66,38 @@ spec:
             {{- if and .Values.persistence.data.enabled (not .Values.postgresql.enabled) }}
             - name: data
               mountPath: /app/data
+              {{- if .Values.persistence.data.readOnly }}
+              readOnly: true
+              {{- end }}
             {{- end }}
             {{- if .Values.persistence.thumbnails.enabled }}
             - name: thumbnails
               mountPath: /app/thumbnails
+              {{- if .Values.persistence.thumbnails.readOnly }}
+              readOnly: true
+              {{- end }}
             {{- end }}
             {{- if .Values.persistence.exports.enabled }}
             - name: exports
               mountPath: /app/exports
+              {{- if .Values.persistence.exports.readOnly }}
+              readOnly: true
+              {{- end }}
             {{- end }}
             {{- if .Values.persistence.media.enabled }}
             {{- if kindIs "string" .Values.config.mediaSourcePaths }}
             - name: media
               mountPath: /mnt/videos
+              {{- if .Values.persistence.media.readOnly }}
               readOnly: true
+              {{- end }}
             {{- else }}
             {{- range .Values.config.mediaSourcePaths.sources }}
             - name: media-{{ .name | lower }}
               mountPath: {{ .path }}
+              {{- if $.Values.persistence.media.readOnly }}
               readOnly: true
+              {{- end }}
             {{- end }}
             {{- end }}
             {{- end }}
@@ -92,13 +105,17 @@ spec:
             {{- if kindIs "string" .Values.config.mediaSourcePaths }}
             - name: original-media
               mountPath: /home/user/videos
+              {{- if .Values.persistence.media.readOnly }}
               readOnly: true
+              {{- end }}
             {{- else }}
             {{- range .Values.config.mediaSourcePaths.sources }}
             {{- if .originalPath }}
             - name: original-media-{{ .name | lower }}
               mountPath: {{ .originalPath }}
+              {{- if $.Values.persistence.media.readOnly }}
               readOnly: true
+              {{- end }}
             {{- end }}
             {{- end }}
             {{- end }}
@@ -119,12 +136,20 @@ spec:
         {{- if and .Values.persistence.data.enabled (not .Values.postgresql.enabled) }}
         - name: data
           persistentVolumeClaim:
+            {{- if .Values.persistence.data.existingClaim }}
+            claimName: {{ .Values.persistence.data.existingClaim }}
+            {{- else }}
             claimName: {{ include "shoebox.fullname" . }}-data
+            {{- end }}
         {{- end }}
         {{- if .Values.persistence.thumbnails.enabled }}
         - name: thumbnails
           persistentVolumeClaim:
+            {{- if .Values.persistence.thumbnails.existingClaim }}
+            claimName: {{ .Values.persistence.thumbnails.existingClaim }}
+            {{- else }}
             claimName: {{ include "shoebox.fullname" . }}-thumbnails
+            {{- end }}
         {{- end }}
         {{- if .Values.persistence.exports.enabled }}
         - name: exports
