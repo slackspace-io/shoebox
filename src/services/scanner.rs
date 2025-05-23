@@ -15,66 +15,158 @@ use crate::services::thumbnail::ThumbnailService;
 pub struct ScannerService;
 
 impl ScannerService {
-    // Extract creation date from video file using FFmpeg
+    // Extract creation date from video file using FFprobe (part of FFmpeg suite)
     fn get_video_creation_date(path: &str) -> Option<String> {
         info!("Attempting to extract creation date from video metadata for: {}", path);
 
-        let output = match Command::new("ffmpeg")
-            .arg("-i")
-            .arg(path)
-            .arg("-show_entries")
-            .arg("format_tags=creation_time")
+        // Try multiple metadata tags that might contain creation date information
+        // Different video formats store this information in different tags
+        let possible_tags = [
+            "creation_time",           // Common in MP4
+            "com.apple.quicktime.creationdate", // Common in MOV
+            "date",                    // Generic date tag
+            "com.apple.quicktime.createdate", // Alternative MOV tag
+        ];
+
+        for tag in possible_tags.iter() {
+            // Use ffprobe instead of ffmpeg for metadata extraction
+            let output = match Command::new("ffprobe")
+                .arg("-v")
+                .arg("error")
+                .arg("-show_entries")
+                .arg(format!("format_tags={}", tag))
+                .arg("-of")
+                .arg("default=noprint_wrappers=1:nokey=1")
+                .arg(path)
+                .output() {
+                    Ok(output) => output,
+                    Err(e) => {
+                        error!("Failed to execute FFprobe for metadata extraction (tag: {}): {}", tag, e);
+                        continue; // Try next tag
+                    }
+                };
+
+            if !output.status.success() {
+                let stderr = String::from_utf8_lossy(&output.stderr);
+                if !stderr.is_empty() {
+                    error!("FFprobe metadata extraction error (tag: {}): {}", tag, stderr);
+                }
+                continue; // Try next tag
+            }
+
+            let stdout = String::from_utf8_lossy(&output.stdout);
+            let creation_time = stdout.trim();
+
+            if creation_time.is_empty() {
+                info!("No {} found in video metadata", tag);
+                continue; // Try next tag
+            }
+
+            info!("Found {} tag with value: {}", tag, creation_time);
+
+            // Try multiple date formats
+            let date_formats = [
+                "%Y-%m-%dT%H:%M:%S%.fZ",  // ISO 8601 with fractional seconds
+                "%Y-%m-%d %H:%M:%S",      // Simple date time format
+                "%Y:%m:%d %H:%M:%S",      // EXIF date format (common in photos/videos)
+                "%Y-%m-%dT%H:%M:%S%z",    // ISO 8601 with timezone
+                "%Y-%m-%d",               // Just date
+            ];
+
+            for format in date_formats.iter() {
+                match chrono::NaiveDateTime::parse_from_str(creation_time, format) {
+                    Ok(dt) => {
+                        let datetime = chrono::DateTime::<chrono::Utc>::from_naive_utc_and_offset(dt, chrono::Utc);
+                        info!("Extracted creation date from video metadata (tag: {}, format: {}): {}",
+                              tag, format, datetime.to_rfc3339());
+                        return Some(datetime.to_rfc3339());
+                    },
+                    Err(_) => {
+                        // Try next format
+                    }
+                }
+
+                // Also try parsing as DateTime which handles timezone information
+                match chrono::DateTime::parse_from_str(creation_time, format) {
+                    Ok(dt) => {
+                        let utc_time = dt.with_timezone(&chrono::Utc);
+                        info!("Extracted creation date from video metadata (tag: {}, format: {}): {}",
+                              tag, format, utc_time.to_rfc3339());
+                        return Some(utc_time.to_rfc3339());
+                    },
+                    Err(_) => {
+                        // Try next format
+                    }
+                }
+            }
+
+            // If we got here, we found a tag but couldn't parse the date
+            error!("Found {} tag but couldn't parse date value: {}", tag, creation_time);
+        }
+
+        // If we got here, we couldn't find any usable creation date
+        info!("No usable creation date found in video metadata");
+        None
+    }
+
+    // Check if a file extension is a supported video format
+    fn is_supported_video_format(ext: &str) -> bool {
+        // List of supported video formats
+        ["mp4", "mov", "mkv", "avi", "wmv", "flv", "webm"].contains(&ext)
+    }
+
+    // Get video duration using FFprobe
+    fn get_video_duration(path: &str) -> Option<i64> {
+        info!("Attempting to extract duration from video: {}", path);
+
+        let output = match Command::new("ffprobe")
             .arg("-v")
-            .arg("quiet")
+            .arg("error")
+            .arg("-show_entries")
+            .arg("format=duration")
             .arg("-of")
-            .arg("csv=p=0")
+            .arg("default=noprint_wrappers=1:nokey=1")
+            .arg(path)
             .output() {
                 Ok(output) => output,
                 Err(e) => {
-                    error!("Failed to execute FFmpeg for metadata extraction: {}", e);
+                    error!("Failed to execute FFprobe for duration extraction: {}", e);
                     return None;
                 }
             };
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
-            error!("FFmpeg metadata extraction error: {}", stderr);
+            if !stderr.is_empty() {
+                error!("FFprobe duration extraction error: {}", stderr);
+            }
             return None;
         }
 
         let stdout = String::from_utf8_lossy(&output.stdout);
-        let creation_time = stdout.trim();
+        let duration_str = stdout.trim();
 
-        if creation_time.is_empty() {
-            info!("No creation_time found in video metadata");
+        if duration_str.is_empty() {
+            info!("No duration found in video metadata");
             return None;
         }
 
-        // Parse the creation time into a DateTime and format it as RFC3339
-        match chrono::DateTime::parse_from_str(creation_time, "%Y-%m-%dT%H:%M:%S%.fZ") {
-            Ok(dt) => {
-                let utc_time = dt.with_timezone(&chrono::Utc);
-                info!("Extracted creation date from video metadata: {}", utc_time.to_rfc3339());
-                Some(utc_time.to_rfc3339())
+        // Parse the duration string to a float and convert to milliseconds
+        match duration_str.parse::<f64>() {
+            Ok(duration_seconds) => {
+                let duration_ms = (duration_seconds * 1000.0) as i64;
+                info!("Extracted duration from video: {} seconds ({} ms)", duration_seconds, duration_ms);
+                Some(duration_ms)
             },
             Err(e) => {
-                // Try an alternative format if the first one fails
-                match chrono::DateTime::parse_from_str(creation_time, "%Y-%m-%d %H:%M:%S") {
-                    Ok(dt) => {
-                        let utc_time = dt.with_timezone(&chrono::Utc);
-                        info!("Extracted creation date from video metadata (alt format): {}", utc_time.to_rfc3339());
-                        Some(utc_time.to_rfc3339())
-                    },
-                    Err(_) => {
-                        error!("Failed to parse creation time '{}': {}", creation_time, e);
-                        None
-                    }
-                }
+                error!("Failed to parse duration '{}': {}", duration_str, e);
+                None
             }
         }
     }
 
     // Function to get the duration of an MP4 file (if possible)
+    // This is a fallback method for MP4 files when ffprobe fails
     fn get_mp4_duration(path: &PathBuf) -> Option<f64> {
         // Try to open the file in blocking mode for quick analysis
         let file = match std::fs::File::open(path) {
@@ -201,8 +293,9 @@ impl ScannerService {
         let mut new_videos = Vec::new();
         let mut updated_videos = Vec::new();
 
-        // Create a map to store original file paths for each path_config
-        let mut original_files_map: std::collections::HashMap<String, std::collections::HashMap<String, String>> = std::collections::HashMap::new();
+        // Create a single map to store all original file paths
+        // This allows us to find original files regardless of which subdirectory they're in
+        let mut all_original_files: std::collections::HashMap<String, String> = std::collections::HashMap::new();
 
         // Pre-scan all original directories to build the map
         for path_config in path_configs {
@@ -215,26 +308,40 @@ impl ScannerService {
                     continue;
                 }
 
-                // Create a map for this original path
-                let mut file_map = std::collections::HashMap::new();
+                let mut files_count = 0;
 
                 // Walk through all files in the original directory and its subdirectories
                 for entry in WalkDir::new(original_path_obj).follow_links(true).into_iter().filter_map(|e| e.ok()) {
                     let path = entry.path();
 
                     if path.is_file() {
-                        if let Some(file_stem) = path.file_stem() {
-                            let file_stem_str = file_stem.to_string_lossy().to_string();
-                            let full_path = path.to_string_lossy().to_string();
+                        // Check if we should filter by extension
+                        let should_include = if let Some(original_extension) = &path_config.original_extension {
+                            if let Some(ext) = path.extension() {
+                                ext.to_string_lossy().to_lowercase() == original_extension.to_lowercase()
+                            } else {
+                                false
+                            }
+                        } else {
+                            // If no extension specified, include all files
+                            true
+                        };
 
-                            // Store the full path with the file stem as the key
-                            file_map.insert(file_stem_str, full_path);
+                        if should_include {
+                            if let Some(file_stem) = path.file_stem() {
+                                let file_stem_str = file_stem.to_string_lossy().to_string();
+                                let full_path = path.to_string_lossy().to_string();
+
+                                // Store the full path with the file stem as the key
+                                // If there are multiple files with the same stem, the last one found will be used
+                                all_original_files.insert(file_stem_str, full_path);
+                                files_count += 1;
+                            }
                         }
                     }
                 }
 
-                info!("Found {} original files in {}", file_map.len(), original_path);
-                original_files_map.insert(original_path.clone(), file_map);
+                info!("Found {} original files in {} and its subdirectories", files_count, original_path);
             }
         }
 
@@ -273,7 +380,8 @@ impl ScannerService {
                     Ok(time) => {
                         let datetime: chrono::DateTime<chrono::Utc> = time.into();
                         info!("Created date from file metadata: {}", datetime.to_rfc3339());
-                        Some(datetime.to_rfc3339())
+                        Self::get_video_creation_date(&file_path)
+//                        Some(datetime.to_rfc3339())
                     },
                     Err(_) => {
                         info!("No created_date found in file metadata, trying to extract from video metadata");
@@ -294,9 +402,18 @@ impl ScannerService {
                 // Extract duration for video files
                 let duration = if let Some(ext) = std::path::Path::new(&file_path).extension() {
                     let ext = ext.to_string_lossy().to_lowercase();
-                    if ext == "mp4" {
-                        Self::get_mp4_duration(&std::path::PathBuf::from(&file_path))
-                            .map(|d| d as i64)
+                    if Self::is_supported_video_format(&ext) {
+                        // Use ffprobe to get duration for all supported video formats
+                        Self::get_video_duration(&file_path)
+                            .or_else(|| {
+                                // Fallback to MP4 specific method for MP4 files
+                                if ext == "mp4" {
+                                    Self::get_mp4_duration(&std::path::PathBuf::from(&file_path))
+                                        .map(|d| d as i64)
+                                } else {
+                                    None
+                                }
+                            })
                     } else {
                         None
                     }
@@ -312,29 +429,19 @@ impl ScannerService {
                         .map(|s| s.to_string_lossy().to_string());
 
                     if let Some(stem) = file_stem {
-                        // Determine the extension to use
-                        let extension = if let Some(original_extension) = &path_config.original_extension {
-                            // Use the specified original extension
-                            original_extension.clone()
-                        } else {
-                            // Use the extension from the scan path
-                            std::path::Path::new(&file_path)
-                                .extension()
-                                .and_then(|ext| ext.to_str())
-                                .unwrap_or("mp4")
-                                .to_string()
-                        };
-
-                        // Construct the path to the original file
-                        let original_file = format!("{}/{}.{}", original_path, stem, extension);
-                        let original_path_buf = std::path::Path::new(&original_file);
-
-                        // Check if the original file exists
-                        if original_path_buf.exists() {
+                        // Look up the file stem in our pre-built map
+                        if let Some(original_file) = all_original_files.get(&stem) {
                             info!("Found original file: {}", original_file);
-                            Some(original_file)
+                            Some(original_file.clone())
                         } else {
-                            info!("Original file not found: {}", original_file);
+                            // If not found in the map, we couldn't find the original file
+                            let extension_info = if let Some(ext) = &path_config.original_extension {
+                                format!(" with extension '{}'", ext)
+                            } else {
+                                "".to_string()
+                            };
+                            info!("Original file not found for stem: '{}'{} in path: '{}'",
+                                  stem, extension_info, original_path);
                             None
                         }
                     } else {
