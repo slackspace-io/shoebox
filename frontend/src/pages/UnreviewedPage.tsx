@@ -70,7 +70,9 @@ const UnreviewedPage: React.FC = () => {
         const searchParams: VideoSearchParams = {
           unreviewed: true,
           limit: 100,
-          offset: 0
+          offset: 0,
+          sort_by: 'created_date',
+          sort_order: 'ASC'
         };
         const results = await videoApi.searchVideos(searchParams);
         setVideos(results);
