@@ -52,25 +52,8 @@ spec:
   {{- end }}
 ---
 {{- end }}
-{{- if and .Values.persistence.media.enabled (not .Values.persistence.media.existingClaim) }}
-{{- if kindIs "string" .Values.config.mediaSourcePaths }}
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: {{ include "shoebox.fullname" . }}-media
-  labels:
-    {{- include "shoebox.labels" . | nindent 4 }}
-spec:
-  accessModes:
-    - {{ .Values.persistence.media.accessMode }}
-  resources:
-    requests:
-      storage: {{ .Values.persistence.media.size }}
-  {{- if .Values.persistence.media.storageClass }}
-  storageClassName: {{ .Values.persistence.media.storageClass }}
-  {{- end }}
-{{- else }}
 {{- range .Values.config.mediaSourcePaths.sources }}
+{{- if not .pathExistingClaim }}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -80,36 +63,16 @@ metadata:
     {{- include "shoebox.labels" $ | nindent 4 }}
 spec:
   accessModes:
-    - {{ $.Values.persistence.media.accessMode }}
+    - ReadOnlyMany
   resources:
     requests:
-      storage: {{ $.Values.persistence.media.size }}
-  {{- if $.Values.persistence.media.storageClass }}
-  storageClassName: {{ $.Values.persistence.media.storageClass }}
+      storage: 100Gi
+  {{- if .storageClass }}
+  storageClassName: {{ .storageClass }}
   {{- end }}
-{{- end }}
 {{- end }}
 {{- end }}
 
-{{- if .Values.persistence.media.enabled }}
-{{- if kindIs "string" .Values.config.mediaSourcePaths }}
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: {{ include "shoebox.fullname" . }}-original-media
-  labels:
-    {{- include "shoebox.labels" . | nindent 4 }}
-spec:
-  accessModes:
-    - {{ .Values.persistence.media.accessMode }}
-  resources:
-    requests:
-      storage: {{ .Values.persistence.media.size }}
-  {{- if .Values.persistence.media.storageClass }}
-  storageClassName: {{ .Values.persistence.media.storageClass }}
-  {{- end }}
-{{- else }}
 {{- range .Values.config.mediaSourcePaths.sources }}
 {{- if and .originalPath (not .originalExistingClaim) }}
 ---
@@ -121,14 +84,12 @@ metadata:
     {{- include "shoebox.labels" $ | nindent 4 }}
 spec:
   accessModes:
-    - {{ $.Values.persistence.media.accessMode }}
+    - ReadOnlyMany
   resources:
     requests:
-      storage: {{ $.Values.persistence.media.size }}
-  {{- if $.Values.persistence.media.storageClass }}
-  storageClassName: {{ $.Values.persistence.media.storageClass }}
+      storage: 100Gi
+  {{- if .storageClass }}
+  storageClassName: {{ .storageClass }}
   {{- end }}
-{{- end }}
-{{- end }}
 {{- end }}
 {{- end }}

@@ -85,40 +85,20 @@ spec:
               readOnly: true
               {{- end }}
             {{- end }}
-            {{- if .Values.persistence.media.enabled }}
-            {{- if kindIs "string" .Values.config.mediaSourcePaths }}
-            - name: media
-              mountPath: /mnt/videos
-              {{- if .Values.persistence.media.readOnly }}
-              readOnly: true
-              {{- end }}
-            {{- else }}
             {{- range .Values.config.mediaSourcePaths.sources }}
             - name: media-{{ .name | lower }}
               mountPath: {{ .path }}
-              {{- if $.Values.persistence.media.readOnly }}
+              {{- if or (not (hasKey . "readOnly")) .readOnly }}
               readOnly: true
               {{- end }}
             {{- end }}
-            {{- end }}
-            {{- end }}
-            {{- if .Values.persistence.media.enabled }}
-            {{- if kindIs "string" .Values.config.mediaSourcePaths }}
-            - name: original-media
-              mountPath: /home/user/videos
-              {{- if .Values.persistence.media.readOnly }}
-              readOnly: true
-              {{- end }}
-            {{- else }}
             {{- range .Values.config.mediaSourcePaths.sources }}
             {{- if .originalPath }}
             - name: original-media-{{ .name | lower }}
               mountPath: {{ .originalPath }}
-              {{- if $.Values.persistence.media.readOnly }}
+              {{- if or (not (hasKey . "readOnly")) .readOnly }}
               readOnly: true
               {{- end }}
-            {{- end }}
-            {{- end }}
             {{- end }}
             {{- end }}
       {{- with .Values.nodeSelector }}
@@ -161,33 +141,15 @@ spec:
             claimName: {{ include "shoebox.fullname" . }}-exports
             {{- end }}
         {{- end }}
-        {{- if .Values.persistence.media.enabled }}
-        {{- if kindIs "string" .Values.config.mediaSourcePaths }}
-        - name: media
-          persistentVolumeClaim:
-            {{- if .Values.persistence.media.existingClaim }}
-            claimName: {{ .Values.persistence.media.existingClaim }}
-            {{- else }}
-            claimName: {{ include "shoebox.fullname" . }}-media
-            {{- end }}
-        {{- else }}
         {{- range .Values.config.mediaSourcePaths.sources }}
         - name: media-{{ .name | lower }}
           persistentVolumeClaim:
-            {{- if $.Values.persistence.media.existingClaim }}
-            claimName: {{ $.Values.persistence.media.existingClaim }}-{{ .name | lower }}
+            {{- if .pathExistingClaim }}
+            claimName: {{ .pathExistingClaim }}
             {{- else }}
             claimName: {{ include "shoebox.fullname" $ }}-media-{{ .name | lower }}
             {{- end }}
         {{- end }}
-        {{- end }}
-        {{- end }}
-        {{- if .Values.persistence.media.enabled }}
-        {{- if kindIs "string" .Values.config.mediaSourcePaths }}
-        - name: original-media
-          persistentVolumeClaim:
-            claimName: {{ include "shoebox.fullname" . }}-original-media
-        {{- else }}
         {{- range .Values.config.mediaSourcePaths.sources }}
         {{- if .originalPath }}
         - name: original-media-{{ .name | lower }}
@@ -197,7 +159,5 @@ spec:
             {{- else }}
             claimName: {{ include "shoebox.fullname" $ }}-original-media-{{ .name | lower }}
             {{- end }}
-        {{- end }}
-        {{- end }}
         {{- end }}
         {{- end }}

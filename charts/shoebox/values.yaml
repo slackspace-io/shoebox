@@ -98,12 +98,20 @@ config:
     sources:
       - name: bmpcc
         path: /mnt/videos
+        # Optional: specify an existing claim for this source's path
+        # pathExistingClaim: "existing-claim-name"
+        # Optional: specify if this path should be mounted as read-only
+        # readOnly: true
         originalPath: /home/user/videos
         originalExtension: mp4
         # Optional: specify an existing claim for this source's originalPath
         # originalExistingClaim: "existing-claim-name"
       - name: gopro
         path: /mnt/other-videos
+        # Optional: specify an existing claim for this source's path
+        # pathExistingClaim: "existing-claim-name"
+        # Optional: specify if this path should be mounted as read-only
+        # readOnly: true
         originalPath: /media/external/videos
         # Optional: specify an existing claim for this source's originalPath
         # originalExistingClaim: "existing-claim-name"
@@ -138,16 +146,6 @@ persistence:
     existingClaim: ""
     readOnly: false
 
-  # Media source directory (read-only)
-  media:
-    enabled: true
-    # This should be a PV that points to your media storage
-    existingClaim: ""
-    readOnly: true
-    # If no existing claim, create a PVC with these settings
-    size: 100Gi
-    storageClass: ""
-    accessMode: ReadOnlyMany
 
 
 # Optional PostgreSQL dependency
