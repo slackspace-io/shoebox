@@ -15,9 +15,18 @@ import {
   IconButton,
   useToast,
   Spinner,
-  useColorModeValue
+  useColorModeValue,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
+  Code,
+  useDisclosure
 } from '@chakra-ui/react';
-import { FaSave, FaArrowLeft, FaArrowRight, FaStar, FaRegStar } from 'react-icons/fa';
+import { FaSave, FaArrowLeft, FaArrowRight, FaStar, FaRegStar, FaBug } from 'react-icons/fa';
 import ReactPlayer from 'react-player';
 import CreatableSelect from 'react-select/creatable';
 import { videoApi, tagApi, personApi, VideoWithMetadata, UpdateVideoDto, VideoSearchParams } from '../api/client';
@@ -30,12 +39,14 @@ interface SelectOption {
 const UnreviewedPage: React.FC = () => {
   const navigate = useNavigate();
   const toast = useToast();
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   const [videos, setVideos] = useState<VideoWithMetadata[]>([]);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [loadingNextVideo, setLoadingNextVideo] = useState(false);
+  const [rawDatabaseValues, setRawDatabaseValues] = useState<string>('');
 
   // Form state
   const [title, setTitle] = useState('');
@@ -187,6 +198,27 @@ const UnreviewedPage: React.FC = () => {
     setRating(newRating === rating ? undefined : newRating);
   };
 
+  // Handle showing debug information
+  const handleShowDebug = async () => {
+    if (videos.length === 0 || currentVideoIndex >= videos.length) return;
+
+    const currentVideo = videos[currentVideoIndex];
+    try {
+      // Fetch the latest data from the server
+      const videoData = await videoApi.getVideo(currentVideo.id);
+      setRawDatabaseValues(JSON.stringify(videoData, null, 2));
+      onOpen();
+    } catch (error) {
+      console.error('Error fetching video data:', error);
+      toast({
+        title: 'Error fetching video data',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
   // Render rating stars
   const renderRatingStars = () => {
     const stars = [];
@@ -294,6 +326,16 @@ const UnreviewedPage: React.FC = () => {
                 Created: {new Date(currentVideo.created_date).toLocaleDateString()}
               </Text>
             )}
+            <Button
+              leftIcon={<FaBug />}
+              size="sm"
+              mt={2}
+              colorScheme="gray"
+              variant="outline"
+              onClick={handleShowDebug}
+            >
+              Debug
+            </Button>
           </Box>
         </Box>
 
@@ -407,6 +449,27 @@ const UnreviewedPage: React.FC = () => {
           </Button>
         </VStack>
       </Flex>
+
+      {/* Debug Modal */}
+      <Modal isOpen={isOpen} onClose={onClose} size="xl">
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Raw Database Values</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <Box overflowX="auto">
+              <Code display="block" whiteSpace="pre" p={4} borderRadius="md">
+                {rawDatabaseValues}
+              </Code>
+            </Box>
+          </ModalBody>
+          <ModalFooter>
+            <Button colorScheme="blue" mr={3} onClick={onClose}>
+              Close
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </Box>
   );
 };

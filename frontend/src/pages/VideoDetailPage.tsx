@@ -24,9 +24,10 @@ import {
   ModalFooter,
   ModalBody,
   ModalCloseButton,
+  Code,
   useColorModeValue
 } from '@chakra-ui/react';
-import { FaEdit, FaSave, FaTrash, FaArrowLeft, FaStar, FaRegStar } from 'react-icons/fa';
+import { FaEdit, FaSave, FaTrash, FaArrowLeft, FaStar, FaRegStar, FaBug } from 'react-icons/fa';
 import ReactPlayer from 'react-player';
 import CreatableSelect from 'react-select/creatable';
 import { videoApi, tagApi, personApi, VideoWithMetadata, UpdateVideoDto } from '../api/client';
@@ -41,12 +42,14 @@ const VideoDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isOpen: isDebugOpen, onOpen: onDebugOpen, onClose: onDebugClose } = useDisclosure();
 
   const [video, setVideo] = useState<VideoWithMetadata | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [rawDatabaseValues, setRawDatabaseValues] = useState<string>('');
 
   // Form state
   const [title, setTitle] = useState('');
@@ -200,6 +203,26 @@ const VideoDetailPage: React.FC = () => {
     setRating(newRating === rating ? undefined : newRating);
   };
 
+  // Handle showing debug information
+  const handleShowDebug = async () => {
+    if (!id) return;
+
+    try {
+      // Fetch the latest data from the server
+      const videoData = await videoApi.getVideo(id);
+      setRawDatabaseValues(JSON.stringify(videoData, null, 2));
+      onDebugOpen();
+    } catch (error) {
+      console.error('Error fetching video data:', error);
+      toast({
+        title: 'Error fetching video data',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
   // Render rating stars
   const renderRatingStars = (editable = false) => {
     const stars = [];
@@ -318,6 +341,16 @@ const VideoDetailPage: React.FC = () => {
                 Created: {new Date(video.created_date).toLocaleDateString()}
               </Text>
             )}
+            <Button
+              leftIcon={<FaBug />}
+              size="sm"
+              mt={2}
+              colorScheme="gray"
+              variant="outline"
+              onClick={handleShowDebug}
+            >
+              Debug
+            </Button>
           </Box>
         </Box>
 
@@ -475,6 +508,33 @@ const VideoDetailPage: React.FC = () => {
               isLoading={deleting}
             >
               Delete
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Debug Modal */}
+      <Modal isOpen={isDebugOpen} onClose={() => {
+        setRawDatabaseValues('');
+        onDebugClose();
+      }} size="xl">
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Raw Database Values</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <Box overflowX="auto">
+              <Code display="block" whiteSpace="pre" p={4} borderRadius="md">
+                {rawDatabaseValues}
+              </Code>
+            </Box>
+          </ModalBody>
+          <ModalFooter>
+            <Button colorScheme="blue" mr={3} onClick={() => {
+              setRawDatabaseValues('');
+              onDebugClose();
+            }}>
+              Close
             </Button>
           </ModalFooter>
         </ModalContent>
