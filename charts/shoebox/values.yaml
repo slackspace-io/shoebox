@@ -146,8 +146,6 @@ persistence:
     existingClaim: ""
     readOnly: false
 
-
-
 # Optional PostgreSQL dependency
 postgresql:
   enabled: false
