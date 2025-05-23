@@ -251,6 +251,7 @@ impl ScannerService {
                             &existing_video.id,
                             Some(metadata.len() as i64),
                             duration,
+                            created_date,
                             thumbnail_path,
                             original_file_path
                         ).await {

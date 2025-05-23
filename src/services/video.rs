@@ -278,7 +278,7 @@ impl VideoService {
         self.find_by_id(id).await
     }
 
-    pub async fn update_technical_metadata(&self, id: &str, file_size: Option<i64>, duration: Option<i64>, thumbnail_path: Option<String>, original_file_path: Option<String>) -> Result<Video> {
+    pub async fn update_technical_metadata(&self, id: &str, file_size: Option<i64>, duration: Option<i64>, created_date: Option<String>, thumbnail_path: Option<String>, original_file_path: Option<String>) -> Result<Video> {
         let mut tx = self.db.begin().await.map_err(AppError::Database)?;
 
         // Check if video exists
@@ -297,6 +297,11 @@ impl VideoService {
         if let Some(dur) = duration {
             query.push_str(", duration = ?");
             params.push(dur.to_string());
+        }
+
+        if let Some(date) = &created_date {
+            query.push_str(", created_date = ?");
+            params.push(date.clone());
         }
 
         if let Some(thumb) = &thumbnail_path {
