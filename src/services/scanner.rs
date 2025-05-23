@@ -175,6 +175,7 @@ impl ScannerService {
                 let created_date = match metadata.created() {
                     Ok(time) => {
                         let datetime: chrono::DateTime<chrono::Utc> = time.into();
+                        info!("Created date: {}", datetime.to_rfc3339());
                         Some(datetime.to_rfc3339())
                     },
                     Err(_) => None,
