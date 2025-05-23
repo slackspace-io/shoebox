@@ -178,7 +178,10 @@ impl ScannerService {
                         info!("Created date: {}", datetime.to_rfc3339());
                         Some(datetime.to_rfc3339())
                     },
-                    Err(_) => None,
+                    Err(_) => {
+                        info!("No created_date found");
+                        None
+                    },
                 };
 
                 // Generate thumbnail
