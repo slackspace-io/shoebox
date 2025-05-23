@@ -91,7 +91,7 @@ spec:
 {{- end }}
 {{- end }}
 
-{{- if and .Values.persistence.originalMedia.enabled (not .Values.persistence.originalMedia.existingClaim) }}
+{{- if .Values.persistence.media.enabled }}
 {{- if kindIs "string" .Values.config.mediaSourcePaths }}
 ---
 apiVersion: v1
@@ -102,12 +102,12 @@ metadata:
     {{- include "shoebox.labels" . | nindent 4 }}
 spec:
   accessModes:
-    - {{ .Values.persistence.originalMedia.accessMode }}
+    - {{ .Values.persistence.media.accessMode }}
   resources:
     requests:
-      storage: {{ .Values.persistence.originalMedia.size }}
-  {{- if .Values.persistence.originalMedia.storageClass }}
-  storageClassName: {{ .Values.persistence.originalMedia.storageClass }}
+      storage: {{ .Values.persistence.media.size }}
+  {{- if .Values.persistence.media.storageClass }}
+  storageClassName: {{ .Values.persistence.media.storageClass }}
   {{- end }}
 {{- else }}
 {{- range .Values.config.mediaSourcePaths.sources }}
@@ -121,12 +121,12 @@ metadata:
     {{- include "shoebox.labels" $ | nindent 4 }}
 spec:
   accessModes:
-    - {{ $.Values.persistence.originalMedia.accessMode }}
+    - {{ $.Values.persistence.media.accessMode }}
   resources:
     requests:
-      storage: {{ $.Values.persistence.originalMedia.size }}
-  {{- if $.Values.persistence.originalMedia.storageClass }}
-  storageClassName: {{ $.Values.persistence.originalMedia.storageClass }}
+      storage: {{ $.Values.persistence.media.size }}
+  {{- if $.Values.persistence.media.storageClass }}
+  storageClassName: {{ $.Values.persistence.media.storageClass }}
   {{- end }}
 {{- end }}
 {{- end }}

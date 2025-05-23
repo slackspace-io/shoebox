@@ -144,16 +144,6 @@ persistence:
     storageClass: ""
     accessMode: ReadOnlyMany
 
-  # Original media source directory (read-only)
-  # This is used for the originalPath in mediaSourcePaths
-  originalMedia:
-    enabled: true
-    # This should be a PV that points to your original media storage
-    existingClaim: ""
-    # If no existing claim, create a PVC with these settings
-    size: 100Gi
-    storageClass: ""
-    accessMode: ReadOnlyMany
 
 # Optional PostgreSQL dependency
 postgresql:

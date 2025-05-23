@@ -88,7 +88,7 @@ spec:
             {{- end }}
             {{- end }}
             {{- end }}
-            {{- if .Values.persistence.originalMedia.enabled }}
+            {{- if .Values.persistence.media.enabled }}
             {{- if kindIs "string" .Values.config.mediaSourcePaths }}
             - name: original-media
               mountPath: /home/user/videos
@@ -156,15 +156,11 @@ spec:
         {{- end }}
         {{- end }}
         {{- end }}
-        {{- if .Values.persistence.originalMedia.enabled }}
+        {{- if .Values.persistence.media.enabled }}
         {{- if kindIs "string" .Values.config.mediaSourcePaths }}
         - name: original-media
           persistentVolumeClaim:
-            {{- if .Values.persistence.originalMedia.existingClaim }}
-            claimName: {{ .Values.persistence.originalMedia.existingClaim }}
-            {{- else }}
             claimName: {{ include "shoebox.fullname" . }}-original-media
-            {{- end }}
         {{- else }}
         {{- range .Values.config.mediaSourcePaths.sources }}
         {{- if .originalPath }}
@@ -172,8 +168,6 @@ spec:
           persistentVolumeClaim:
             {{- if .originalExistingClaim }}
             claimName: {{ .originalExistingClaim }}
-            {{- else if $.Values.persistence.originalMedia.existingClaim }}
-            claimName: {{ $.Values.persistence.originalMedia.existingClaim }}-{{ .name | lower }}
             {{- else }}
             claimName: {{ include "shoebox.fullname" $ }}-original-media-{{ .name | lower }}
             {{- end }}
