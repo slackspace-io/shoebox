@@ -5,6 +5,7 @@ use walkdir::WalkDir;
 use tracing::{info, warn, error};
 use anyhow::Result;
 use std::io::{Read, Seek, SeekFrom};
+use std::process::Command;
 
 use crate::error::AppError;
 use crate::models::{Video, CreateVideoDto};
@@ -14,6 +15,65 @@ use crate::services::thumbnail::ThumbnailService;
 pub struct ScannerService;
 
 impl ScannerService {
+    // Extract creation date from video file using FFmpeg
+    fn get_video_creation_date(path: &str) -> Option<String> {
+        info!("Attempting to extract creation date from video metadata for: {}", path);
+
+        let output = match Command::new("ffmpeg")
+            .arg("-i")
+            .arg(path)
+            .arg("-show_entries")
+            .arg("format_tags=creation_time")
+            .arg("-v")
+            .arg("quiet")
+            .arg("-of")
+            .arg("csv=p=0")
+            .output() {
+                Ok(output) => output,
+                Err(e) => {
+                    error!("Failed to execute FFmpeg for metadata extraction: {}", e);
+                    return None;
+                }
+            };
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            error!("FFmpeg metadata extraction error: {}", stderr);
+            return None;
+        }
+
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        let creation_time = stdout.trim();
+
+        if creation_time.is_empty() {
+            info!("No creation_time found in video metadata");
+            return None;
+        }
+
+        // Parse the creation time into a DateTime and format it as RFC3339
+        match chrono::DateTime::parse_from_str(creation_time, "%Y-%m-%dT%H:%M:%S%.fZ") {
+            Ok(dt) => {
+                let utc_time = dt.with_timezone(&chrono::Utc);
+                info!("Extracted creation date from video metadata: {}", utc_time.to_rfc3339());
+                Some(utc_time.to_rfc3339())
+            },
+            Err(e) => {
+                // Try an alternative format if the first one fails
+                match chrono::DateTime::parse_from_str(creation_time, "%Y-%m-%d %H:%M:%S") {
+                    Ok(dt) => {
+                        let utc_time = dt.with_timezone(&chrono::Utc);
+                        info!("Extracted creation date from video metadata (alt format): {}", utc_time.to_rfc3339());
+                        Some(utc_time.to_rfc3339())
+                    },
+                    Err(_) => {
+                        error!("Failed to parse creation time '{}': {}", creation_time, e);
+                        None
+                    }
+                }
+            }
+        }
+    }
+
     // Function to get the duration of an MP4 file (if possible)
     fn get_mp4_duration(path: &PathBuf) -> Option<f64> {
         // Try to open the file in blocking mode for quick analysis
@@ -141,6 +201,43 @@ impl ScannerService {
         let mut new_videos = Vec::new();
         let mut updated_videos = Vec::new();
 
+        // Create a map to store original file paths for each path_config
+        let mut original_files_map: std::collections::HashMap<String, std::collections::HashMap<String, String>> = std::collections::HashMap::new();
+
+        // Pre-scan all original directories to build the map
+        for path_config in path_configs {
+            if let Some(original_path) = &path_config.original_path {
+                info!("Pre-scanning original directory: {}", original_path);
+                let original_path_obj = Path::new(original_path);
+
+                if !original_path_obj.exists() {
+                    warn!("Original path does not exist: {}", original_path);
+                    continue;
+                }
+
+                // Create a map for this original path
+                let mut file_map = std::collections::HashMap::new();
+
+                // Walk through all files in the original directory and its subdirectories
+                for entry in WalkDir::new(original_path_obj).follow_links(true).into_iter().filter_map(|e| e.ok()) {
+                    let path = entry.path();
+
+                    if path.is_file() {
+                        if let Some(file_stem) = path.file_stem() {
+                            let file_stem_str = file_stem.to_string_lossy().to_string();
+                            let full_path = path.to_string_lossy().to_string();
+
+                            // Store the full path with the file stem as the key
+                            file_map.insert(file_stem_str, full_path);
+                        }
+                    }
+                }
+
+                info!("Found {} original files in {}", file_map.len(), original_path);
+                original_files_map.insert(original_path.clone(), file_map);
+            }
+        }
+
         for path_config in path_configs {
             info!("Scanning directory: {}", path_config.path);
             let path = Path::new(&path_config.path);
@@ -175,12 +272,13 @@ impl ScannerService {
                 let created_date = match metadata.created() {
                     Ok(time) => {
                         let datetime: chrono::DateTime<chrono::Utc> = time.into();
-                        info!("Created date: {}", datetime.to_rfc3339());
+                        info!("Created date from file metadata: {}", datetime.to_rfc3339());
                         Some(datetime.to_rfc3339())
                     },
                     Err(_) => {
-                        info!("No created_date found");
-                        None
+                        info!("No created_date found in file metadata, trying to extract from video metadata");
+                        // Try to extract creation date from video metadata as a fallback
+                        Self::get_video_creation_date(&file_path)
                     },
                 };
 
