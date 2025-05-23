@@ -202,18 +202,29 @@ impl ScannerService {
                     None
                 };
 
-                // Check for original file if original_path and original_extension are specified
-                let original_file_path = if let (Some(original_path), Some(original_extension)) =
-                    (&path_config.original_path, &path_config.original_extension) {
-
+                // Check for original file if original_path is specified
+                let original_file_path = if let Some(original_path) = &path_config.original_path {
                     // Get the file name without extension
                     let file_stem = std::path::Path::new(&file_name)
                         .file_stem()
                         .map(|s| s.to_string_lossy().to_string());
 
                     if let Some(stem) = file_stem {
+                        // Determine the extension to use
+                        let extension = if let Some(original_extension) = &path_config.original_extension {
+                            // Use the specified original extension
+                            original_extension.clone()
+                        } else {
+                            // Use the extension from the scan path
+                            std::path::Path::new(&file_path)
+                                .extension()
+                                .and_then(|ext| ext.to_str())
+                                .unwrap_or("mp4")
+                                .to_string()
+                        };
+
                         // Construct the path to the original file
-                        let original_file = format!("{}/{}.{}", original_path, stem, original_extension);
+                        let original_file = format!("{}/{}.{}", original_path, stem, extension);
                         let original_path_buf = std::path::Path::new(&original_file);
 
                         // Check if the original file exists

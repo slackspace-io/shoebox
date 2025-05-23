@@ -92,7 +92,17 @@ config:
   serverHost: "0.0.0.0"
   serverPort: 3000
   databaseUrl: "sqlite:/app/data/videos.db"
-  mediaSourcePaths: "/mnt/videos"
+  # Media source paths configuration
+  # You can configure multiple media sources with different settings
+  mediaSourcePaths:
+    sources:
+      - name: bmpcc
+        path: /mnt/videos
+        originalPath: /home/user/videos
+        originalExtension: mp4
+      - name: gopro
+        path: /mnt/other-videos
+        originalPath: /media/external/videos
   thumbnailPath: "/app/thumbnails"
   exportBasePath: "/app/exports"
   rustLog: "info"

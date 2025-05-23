@@ -64,7 +64,7 @@ The following table lists the configurable parameters of the Shoebox chart and t
 | `config.serverHost` | Host to bind the server | `0.0.0.0` |
 | `config.serverPort` | Port to bind the server | `3000` |
 | `config.databaseUrl` | Database URL (SQLite) | `sqlite:/app/data/videos.db` |
-| `config.mediaSourcePaths` | Paths to scan for videos | `/mnt/videos` |
+| `config.mediaSourcePaths` | Paths to scan for videos (supports named sections, see docs) | `/mnt/videos` |
 | `config.thumbnailPath` | Path to store thumbnails | `/app/thumbnails` |
 | `config.exportBasePath` | Path for exported files | `/app/exports` |
 | `config.rustLog` | Rust log level | `info` |
