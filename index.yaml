@@ -3,6 +3,27 @@ entries:
   shoebox:
   - apiVersion: v2
     appVersion: main
+    created: "2025-05-23T17:08:59.22465589Z"
+    dependencies:
+    - condition: postgresql.enabled
+      name: postgresql
+      repository: https://charts.bitnami.com/bitnami
+      version: 16.7.4
+    description: A Helm chart for the Shoebox application - a digital shoebox for
+      your videos
+    digest: 46340e1ce131f3d177d1f6e6d9f744241bb8a0f3fe9725ad7beaa6ab98fccbe5
+    keywords:
+    - video
+    - organizer
+    - shoebox
+    - archive
+    name: shoebox
+    type: application
+    urls:
+    - https://github.com/slackspace-io/shoebox/releases/download/shoebox-0.0.12/shoebox-0.0.12.tgz
+    version: 0.0.12
+  - apiVersion: v2
+    appVersion: main
     created: "2025-05-23T15:49:25.973099765Z"
     dependencies:
     - condition: postgresql.enabled
@@ -131,4 +152,4 @@ entries:
     urls:
     - https://github.com/slackspace-io/shoebox/releases/download/shoebox-helm-0.0.1/shoebox-helm-0.0.1.tgz
     version: 0.0.1
-generated: "2025-05-23T15:49:25.973116807Z"
+generated: "2025-05-23T17:08:59.224675276Z"
