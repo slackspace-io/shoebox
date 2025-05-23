@@ -75,6 +75,12 @@ jobs:
         with:
           version: v3.10.0
 
+      - name: Update Helm repositories
+        run: helm repo update
+
+      - name: Set up chart-testing
+        uses: helm/chart-testing-action@v2.3.1
+
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.6.0
         with:
