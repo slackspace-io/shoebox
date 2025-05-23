@@ -15,6 +15,8 @@ pub fn router(app_state: AppState) -> Router {
 struct ScanResponse {
     new_videos_count: usize,
     new_videos: Vec<crate::models::Video>,
+    updated_videos_count: usize,
+    updated_videos: Vec<crate::models::Video>,
 }
 
 async fn scan_directories(State(state): State<AppState>) -> Result<Json<ScanResponse>> {
@@ -31,7 +33,7 @@ async fn scan_directories(State(state): State<AppState>) -> Result<Json<ScanResp
     let source_paths = state.config.media.source_paths.clone();
 
     // Scan directories
-    let new_videos = ScannerService::scan_directories(
+    let (new_videos, updated_videos) = ScannerService::scan_directories(
         &source_paths,
         &video_service,
         &thumbnail_service,
@@ -40,6 +42,8 @@ async fn scan_directories(State(state): State<AppState>) -> Result<Json<ScanResp
     let response = ScanResponse {
         new_videos_count: new_videos.len(),
         new_videos,
+        updated_videos_count: updated_videos.len(),
+        updated_videos,
     };
 
     Ok(Json(response))

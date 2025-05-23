@@ -137,8 +137,9 @@ impl ScannerService {
         path_configs: &[crate::config::MediaPathConfig],
         video_service: &VideoService,
         thumbnail_service: &ThumbnailService,
-    ) -> Result<Vec<Video>, AppError> {
+    ) -> Result<(Vec<Video>, Vec<Video>), AppError> {
         let mut new_videos = Vec::new();
+        let mut updated_videos = Vec::new();
 
         for path_config in path_configs {
             info!("Scanning directory: {}", path_config.path);
@@ -160,13 +161,6 @@ impl ScannerService {
             for entry in entries {
                 let file_path = entry.path().to_string_lossy().to_string();
                 let file_name = entry.file_name().to_string_lossy().to_string();
-
-                // Check if video already exists in database
-                if video_service.find_by_path(&file_path).await.is_ok() {
-                    continue;
-                }
-
-                info!("Found new video: {}", file_path);
 
                 // Get file metadata
                 let metadata = match fs::metadata(&file_path).await {
@@ -194,9 +188,6 @@ impl ScannerService {
                         None
                     }
                 };
-
-                // Create video record
-                let file_name_clone = file_name.clone();
 
                 // Extract duration for video files
                 let duration = if let Some(ext) = std::path::Path::new(&file_path).extension() {
@@ -240,6 +231,37 @@ impl ScannerService {
                     None
                 };
 
+                // Check if video already exists in database
+                match video_service.find_by_path(&file_path).await {
+                    Ok(existing_video) => {
+                        // Update existing video with new metadata
+                        info!("Updating existing video: {}", file_path);
+                        match video_service.update_technical_metadata(
+                            &existing_video.id,
+                            Some(metadata.len() as i64),
+                            duration,
+                            thumbnail_path,
+                            original_file_path
+                        ).await {
+                            Ok(updated_video) => {
+                                updated_videos.push(updated_video);
+                            },
+                            Err(e) => {
+                                error!("Error updating video metadata: {}", e);
+                            }
+                        }
+                        continue;
+                    },
+                    Err(_) => {
+                        // Video doesn't exist, continue with creation
+                    }
+                };
+
+                info!("Found new video: {}", file_path);
+
+                // Create video record
+                let file_name_clone = file_name.clone();
+
                 let create_dto = CreateVideoDto {
                     file_path,
                     file_name,
@@ -266,8 +288,8 @@ impl ScannerService {
             }
         }
 
-        info!("Scan complete. Found {} new videos", new_videos.len());
-        Ok(new_videos)
+        info!("Scan complete. Found {} new videos and updated {} existing videos", new_videos.len(), updated_videos.len());
+        Ok((new_videos, updated_videos))
     }
 
     fn get_video_files(dir: &Path) -> Result<Vec<walkdir::DirEntry>> {

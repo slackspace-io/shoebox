@@ -278,6 +278,56 @@ impl VideoService {
         self.find_by_id(id).await
     }
 
+    pub async fn update_technical_metadata(&self, id: &str, file_size: Option<i64>, duration: Option<i64>, thumbnail_path: Option<String>, original_file_path: Option<String>) -> Result<Video> {
+        let mut tx = self.db.begin().await.map_err(AppError::Database)?;
+
+        // Check if video exists
+        let video = self.find_by_id(id).await?;
+        let now = chrono::Utc::now().to_rfc3339();
+
+        // Update video fields
+        let mut query = "UPDATE videos SET updated_at = ?".to_string();
+        let mut params: Vec<String> = vec![now.clone()];
+
+        if let Some(size) = file_size {
+            query.push_str(", file_size = ?");
+            params.push(size.to_string());
+        }
+
+        if let Some(dur) = duration {
+            query.push_str(", duration = ?");
+            params.push(dur.to_string());
+        }
+
+        if let Some(thumb) = &thumbnail_path {
+            query.push_str(", thumbnail_path = ?");
+            params.push(thumb.clone());
+        }
+
+        if let Some(orig) = &original_file_path {
+            query.push_str(", original_file_path = ?");
+            params.push(orig.clone());
+        }
+
+        query.push_str(" WHERE id = ?");
+        params.push(id.to_string());
+
+        let mut query_builder = sqlx::query(&query);
+        for param in params {
+            query_builder = query_builder.bind(param);
+        }
+
+        query_builder
+            .execute(&mut *tx)
+            .await
+            .map_err(AppError::Database)?;
+
+        tx.commit().await.map_err(AppError::Database)?;
+
+        // Return the updated video (find_by_id already transforms the thumbnail path)
+        self.find_by_id(id).await
+    }
+
     pub async fn delete(&self, id: &str) -> Result<()> {
         let video = self.find_by_id(id).await?;
 

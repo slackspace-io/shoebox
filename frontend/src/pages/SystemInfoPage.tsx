@@ -83,7 +83,7 @@ const SystemInfoPage: React.FC = () => {
 
       toast({
         title: 'Library Rescanned',
-        description: `Successfully rescanned library. Found ${data.new_videos_count} new videos.`,
+        description: `Successfully rescanned library. Found ${data.new_videos_count} new videos and updated ${data.updated_videos_count} existing videos.`,
         status: 'success',
         duration: 5000,
         isClosable: true,
