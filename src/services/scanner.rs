@@ -194,7 +194,7 @@ impl ScannerService {
             }
 
             // Parse atom size (big-endian)
-            let size = ((buffer[0] as u32) << 24) |
+            let size = ((buffer[0] as u32) << 2) |
                       ((buffer[1] as u32) << 16) |
                       ((buffer[2] as u32) << 8) |
                       (buffer[3] as u32);
@@ -295,6 +295,7 @@ impl ScannerService {
         path_configs: &[crate::config::MediaPathConfig],
         video_service: VideoService,
         thumbnail_service: ThumbnailService,
+        config: &crate::config::Config,
     ) -> Result<(Arc<tokio::sync::Mutex<Vec<Video>>>, Arc<tokio::sync::Mutex<Vec<Video>>>, Vec<tokio::task::JoinHandle<()>>), AppError> {
         // Wrap services in Arc for sharing across tasks
         let video_service = Arc::new(video_service);
@@ -302,7 +303,7 @@ impl ScannerService {
 
         // Create a semaphore to limit concurrent tasks
         // This prevents resource exhaustion when scanning large directories
-        let max_concurrent_tasks = 4; // Fixed number of concurrent tasks
+        let max_concurrent_tasks = config.media.max_concurrent_tasks;
         info!("Limiting concurrent processing tasks to {}", max_concurrent_tasks);
         let semaphore = Arc::new(Semaphore::new(max_concurrent_tasks));
 

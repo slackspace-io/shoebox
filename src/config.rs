@@ -55,6 +55,8 @@ pub struct MediaConfig {
     pub export_base_path: String,
     #[serde(rename = "thumbnailPath")]
     pub thumbnail_path: String,
+    #[serde(rename = "maxConcurrentTasks")]
+    pub max_concurrent_tasks: usize,
 }
 
 impl MediaConfig {
@@ -108,6 +110,10 @@ impl Config {
                     .unwrap_or_else(|_| "./exports".to_string()),
                 thumbnail_path: env::var("THUMBNAIL_PATH")
                     .unwrap_or_else(|_| "./thumbnails".to_string()),
+                max_concurrent_tasks: env::var("MAX_CONCURRENT_TASKS")
+                    .unwrap_or_else(|_| "4".to_string())
+                    .parse()
+                    .unwrap_or(4),
             },
         };
 

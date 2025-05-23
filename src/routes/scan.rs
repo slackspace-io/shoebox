@@ -71,6 +71,7 @@ async fn start_scan(State(state): State<AppState>) -> Result<Json<ScanResponse>>
             &source_paths,
             video_service,
             thumbnail_service,
+            &config,
         ).await {
             Ok((new_videos_arc, updated_videos_arc, tasks)) => {
                 // Spawn another task to wait for all processing tasks to complete

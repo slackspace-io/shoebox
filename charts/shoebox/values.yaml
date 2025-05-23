@@ -120,6 +120,8 @@ config:
   thumbnailPath: "/app/thumbnails"
   exportBasePath: "/app/exports"
   rustLog: "info"
+  # Maximum number of concurrent tasks for scanning
+  maxConcurrentTasks: 4
 
 # Persistence configuration
 persistence:

@@ -51,6 +51,8 @@ spec:
               value: {{ .Values.config.exportBasePath | quote }}
             - name: RUST_LOG
               value: {{ .Values.config.rustLog | quote }}
+            - name: MAX_CONCURRENT_TASKS
+              value: {{ .Values.config.maxConcurrentTasks | default "4" | quote }}
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}
