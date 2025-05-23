@@ -60,3 +60,21 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{/*
+Convert structured mediaSourcePaths to string format
+*/}}
+{{- define "shoebox.mediaSourcePathsString" -}}
+{{- $paths := list -}}
+{{- range .Values.config.mediaSourcePaths.sources -}}
+  {{- $path := printf "%s:%s" .name .path -}}
+  {{- if .originalPath -}}
+    {{- $path = printf "%s;%s" $path .originalPath -}}
+    {{- if .originalExtension -}}
+      {{- $path = printf "%s;%s" $path .originalExtension -}}
+    {{- end -}}
+  {{- end -}}
+  {{- $paths = append $paths $path -}}
+{{- end -}}
+{{- join "," $paths -}}
+{{- end }}

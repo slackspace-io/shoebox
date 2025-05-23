@@ -41,7 +41,7 @@ spec:
             - name: DATABASE_URL
               value: {{ if .Values.postgresql.enabled }}postgres://{{ .Values.postgresql.postgresqlUsername }}:{{ .Values.postgresql.postgresqlPassword }}@{{ include "shoebox.fullname" . }}-postgresql:5432/{{ .Values.postgresql.postgresqlDatabase }}{{ else }}{{ .Values.config.databaseUrl }}{{ end }}
             - name: MEDIA_SOURCE_PATHS
-              value: {{ .Values.config.mediaSourcePaths | quote }}
+              value: {{ if kindIs "string" .Values.config.mediaSourcePaths }}{{ .Values.config.mediaSourcePaths | quote }}{{ else }}{{ include "shoebox.mediaSourcePathsString" . }}{{ end }}
             - name: THUMBNAIL_PATH
               value: {{ .Values.config.thumbnailPath | quote }}
             - name: EXPORT_BASE_PATH
@@ -76,9 +76,17 @@ spec:
               mountPath: /app/exports
             {{- end }}
             {{- if .Values.persistence.media.enabled }}
+            {{- if kindIs "string" .Values.config.mediaSourcePaths }}
             - name: media
               mountPath: /mnt/videos
               readOnly: true
+            {{- else }}
+            {{- range .Values.config.mediaSourcePaths.sources }}
+            - name: media-{{ .name | lower }}
+              mountPath: {{ .path }}
+              readOnly: true
+            {{- end }}
+            {{- end }}
             {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
@@ -111,6 +119,9 @@ spec:
             {{- else }}
             claimName: {{ include "shoebox.fullname" . }}-exports
             {{- end }}
+        {{- end }}
+        {{- if .Values.persistence.media.enabled }}
+        {{- if kindIs "string" .Values.config.mediaSourcePaths }}
         - name: media
           persistentVolumeClaim:
             {{- if .Values.persistence.media.existingClaim }}
@@ -118,4 +129,15 @@ spec:
             {{- else }}
             claimName: {{ include "shoebox.fullname" . }}-media
             {{- end }}
+        {{- else }}
+        {{- range .Values.config.mediaSourcePaths.sources }}
+        - name: media-{{ .name | lower }}
+          persistentVolumeClaim:
+            {{- if $.Values.persistence.media.existingClaim }}
+            claimName: {{ $.Values.persistence.media.existingClaim }}-{{ .name | lower }}
+            {{- else }}
+            claimName: {{ include "shoebox.fullname" $ }}-media-{{ .name | lower }}
+            {{- end }}
+        {{- end }}
+        {{- end }}
         {{- end }}

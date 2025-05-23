@@ -53,6 +53,7 @@ spec:
 ---
 {{- end }}
 {{- if and .Values.persistence.media.enabled (not .Values.persistence.media.existingClaim) }}
+{{- if kindIs "string" .Values.config.mediaSourcePaths }}
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -68,4 +69,24 @@ spec:
   {{- if .Values.persistence.media.storageClass }}
   storageClassName: {{ .Values.persistence.media.storageClass }}
   {{- end }}
+{{- else }}
+{{- range .Values.config.mediaSourcePaths.sources }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "shoebox.fullname" $ }}-media-{{ .name | lower }}
+  labels:
+    {{- include "shoebox.labels" $ | nindent 4 }}
+spec:
+  accessModes:
+    - {{ $.Values.persistence.media.accessMode }}
+  resources:
+    requests:
+      storage: {{ $.Values.persistence.media.size }}
+  {{- if $.Values.persistence.media.storageClass }}
+  storageClassName: {{ $.Values.persistence.media.storageClass }}
+  {{- end }}
+{{- end }}
+{{- end }}
 {{- end }}
