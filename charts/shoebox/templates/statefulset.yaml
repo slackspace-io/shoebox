@@ -85,6 +85,7 @@ spec:
               readOnly: true
               {{- end }}
             {{- end }}
+            {{- if .Values.config.mediaSourcePaths.enabled }}
             {{- range .Values.config.mediaSourcePaths.sources }}
             - name: media-{{ .name | lower }}
               mountPath: {{ .path }}
@@ -99,6 +100,7 @@ spec:
               {{- if or (not (hasKey . "readOnly")) .readOnly }}
               readOnly: true
               {{- end }}
+            {{- end }}
             {{- end }}
             {{- end }}
       {{- with .Values.nodeSelector }}
@@ -141,6 +143,7 @@ spec:
             claimName: {{ include "shoebox.fullname" . }}-exports
             {{- end }}
         {{- end }}
+        {{- if .Values.config.mediaSourcePaths.enabled }}
         {{- range .Values.config.mediaSourcePaths.sources }}
         - name: media-{{ .name | lower }}
           persistentVolumeClaim:
@@ -159,5 +162,6 @@ spec:
             {{- else }}
             claimName: {{ include "shoebox.fullname" $ }}-original-media-{{ .name | lower }}
             {{- end }}
+        {{- end }}
         {{- end }}
         {{- end }}

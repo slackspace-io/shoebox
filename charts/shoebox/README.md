@@ -64,7 +64,8 @@ The following table lists the configurable parameters of the Shoebox chart and t
 | `config.serverHost` | Host to bind the server | `0.0.0.0` |
 | `config.serverPort` | Port to bind the server | `3000` |
 | `config.databaseUrl` | Database URL (SQLite) | `sqlite:/app/data/videos.db` |
-| `config.mediaSourcePaths` | Paths to scan for videos (supports named sections, see docs) | `/mnt/videos` |
+| `config.mediaSourcePaths.enabled` | Enable media source paths | `true` |
+| `config.mediaSourcePaths.sources` | List of media source paths to scan for videos | See values.yaml |
 | `config.thumbnailPath` | Path to store thumbnails | `/app/thumbnails` |
 | `config.exportBasePath` | Path for exported files | `/app/exports` |
 | `config.rustLog` | Rust log level | `info` |
@@ -79,9 +80,9 @@ The following table lists the configurable parameters of the Shoebox chart and t
 | `persistence.thumbnails.size` | Size of thumbnails PVC | `5Gi` |
 | `persistence.exports.enabled` | Enable persistence for exports | `true` |
 | `persistence.exports.size` | Size of exports PVC | `10Gi` |
-| `persistence.media.enabled` | Enable persistence for media | `true` |
-| `persistence.media.existingClaim` | Use existing PVC for media | `""` |
-| `persistence.media.size` | Size of media PVC | `100Gi` |
+| `config.mediaSourcePaths.enabled` | Enable media source paths | `true` |
+| `config.mediaSourcePaths.sources[].pathExistingClaim` | Use existing PVC for media source path | `""` |
+| `config.mediaSourcePaths.sources[].originalExistingClaim` | Use existing PVC for original media source path | `""` |
 
 ### PostgreSQL Configuration
 
@@ -124,7 +125,7 @@ helm install shoebox . \
   --set persistence.data.enabled=false \
   --set persistence.thumbnails.enabled=false \
   --set persistence.exports.enabled=false \
-  --set persistence.media.enabled=false
+  --set config.mediaSourcePaths.enabled=false
 ```
 
 ## Upgrading

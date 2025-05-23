@@ -65,6 +65,7 @@ Create the name of the service account to use
 Convert structured mediaSourcePaths to string format
 */}}
 {{- define "shoebox.mediaSourcePathsString" -}}
+{{- if .Values.config.mediaSourcePaths.enabled -}}
 {{- $paths := list -}}
 {{- range .Values.config.mediaSourcePaths.sources -}}
   {{- $path := printf "%s:%s" .name .path -}}
@@ -77,4 +78,7 @@ Convert structured mediaSourcePaths to string format
   {{- $paths = append $paths $path -}}
 {{- end -}}
 {{- join "," $paths -}}
+{{- else -}}
+{{- "" -}}
+{{- end -}}
 {{- end }}

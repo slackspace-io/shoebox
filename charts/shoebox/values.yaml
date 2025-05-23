@@ -95,6 +95,8 @@ config:
   # Media source paths configuration
   # You can configure multiple media sources with different settings
   mediaSourcePaths:
+    # Set to false to disable all media source paths
+    enabled: true
     sources:
       - name: bmpcc
         path: /mnt/videos

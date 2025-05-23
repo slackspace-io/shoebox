@@ -52,6 +52,7 @@ spec:
   {{- end }}
 ---
 {{- end }}
+{{- if .Values.config.mediaSourcePaths.enabled }}
 {{- range .Values.config.mediaSourcePaths.sources }}
 {{- if not .pathExistingClaim }}
 ---
@@ -72,7 +73,9 @@ spec:
   {{- end }}
 {{- end }}
 {{- end }}
+{{- end }}
 
+{{- if .Values.config.mediaSourcePaths.enabled }}
 {{- range .Values.config.mediaSourcePaths.sources }}
 {{- if and .originalPath (not .originalExistingClaim) }}
 ---
@@ -91,5 +94,6 @@ spec:
   {{- if .storageClass }}
   storageClassName: {{ .storageClass }}
   {{- end }}
+{{- end }}
 {{- end }}
 {{- end }}
