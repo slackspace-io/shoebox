@@ -34,7 +34,7 @@ spec:
   {{- end }}
 ---
 {{- end }}
-{{- if .Values.persistence.exports.enabled }}
+{{- if and .Values.persistence.exports.enabled (not .Values.persistence.exports.existingClaim) }}
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:

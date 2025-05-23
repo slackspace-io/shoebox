@@ -119,7 +119,6 @@ persistence:
     size: 1Gi
     storageClass: ""
     accessMode: ReadWriteOnce
-    existingClaim: ""
     readOnly: false
 
   # Thumbnails directory
@@ -128,7 +127,6 @@ persistence:
     size: 5Gi
     storageClass: ""
     accessMode: ReadWriteOnce
-    existingClaim: ""
     readOnly: false
 
   # Exports directory
