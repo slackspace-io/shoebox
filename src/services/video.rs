@@ -317,6 +317,8 @@ impl VideoService {
         query.push_str(" WHERE id = ?");
         params.push(id.to_string());
 
+        info!("Executing query: {} with params: {:?}", query, params);
+
         let mut query_builder = sqlx::query(&query);
         for param in params {
             query_builder = query_builder.bind(param);
