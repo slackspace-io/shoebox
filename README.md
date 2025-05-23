@@ -45,7 +45,57 @@ While other services focus on viewing and sharing, Shoebox focuses on organizati
 
 ## Getting Started
 
-*Detailed installation and usage instructions will be provided as the project matures.*
+### Prerequisites
+
+- [Rust](https://www.rust-lang.org/tools/install) (for backend development)
+- [Node.js](https://nodejs.org/) and [Yarn](https://yarnpkg.com/) (for frontend development)
+- [FFmpeg](https://ffmpeg.org/download.html) (for video processing)
+- [Docker](https://docs.docker.com/get-docker/) (optional, for containerized deployment)
+
+### Running the Frontend (Development)
+
+```bash
+# Navigate to the frontend directory
+cd frontend
+
+# Install dependencies
+yarn install
+
+# Start the development server
+yarn dev
+```
+
+The frontend development server will be available at http://localhost:5173.
+
+### Running the Backend (Development)
+
+```bash
+# Run the backend server
+cargo run
+```
+
+The backend server will be available at http://localhost:3000.
+
+### Running with Docker
+
+1. Edit the `docker-compose.yml` file to configure your media source paths:
+
+```yaml
+volumes:
+  # Mount media source directories (read-only)
+  - /path/to/your/videos:/mnt/videos:ro
+
+  # Mount export directory (read-write)
+  - /path/to/your/exports:/app/exports
+```
+
+2. Start the application:
+
+```bash
+docker-compose up -d
+```
+
+The application will be available at http://localhost:3000.
 
 ## Contributing
 
@@ -53,4 +103,4 @@ As this project is in active development, contributions are welcome but the code
 
 ## License
 
-*License information to be added*
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
