@@ -27,7 +27,7 @@ impl ExportService {
 
     pub async fn export_videos(&self, request: ExportRequest) -> Result<String> {
         // Create export directory with timestamp and project name
-        let date = Utc::now().format("%Y-%m-%d").to_string();
+        let date = Utc::now().format("%Y-%m-%d_%H-%M-%S").to_string();
         let project_dir_name = format!("{}_{}", date, request.project_name.replace(" ", "_"));
         let project_dir = self.export_base_path.join(&project_dir_name);
 
