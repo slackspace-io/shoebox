@@ -12,6 +12,10 @@ on:
   pull_request:
     branches: [ main ]
 
+concurrency:
+  group: "shoebox"
+  cancel-in-progress: true
+
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
