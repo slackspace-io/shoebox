@@ -66,22 +66,72 @@ async fn start_scan(State(state): State<AppState>) -> Result<Json<ScanResponse>>
 
         let thumbnail_service = ThumbnailService::new(&config);
 
-        // Scan directories
+        // Start the scan but don't wait for it to complete
         match ScannerService::scan_directories(
             &source_paths,
             video_service,
             thumbnail_service,
         ).await {
-            Ok((new_videos, updated_videos)) => {
-                // Update scan status
-                let mut status = scan_status.write().await;
-                status.in_progress = false;
-                status.new_videos_count = new_videos.len();
-                status.updated_videos_count = updated_videos.len();
+            Ok((new_videos_arc, updated_videos_arc, tasks)) => {
+                // Spawn another task to wait for all processing tasks to complete
+                // This ensures the main scan task returns quickly
+                tokio::spawn(async move {
+                    // Periodically update the scan status with progress
+                    let update_interval = tokio::time::Duration::from_secs(2);
+                    let mut interval = tokio::time::interval(update_interval);
+
+                    // Track tasks that are still running
+                    let mut remaining_tasks = tasks;
+
+                    while !remaining_tasks.is_empty() {
+                        interval.tick().await;
+
+                        // Update status with current progress
+                        {
+                            let new_count = {
+                                let guard = new_videos_arc.lock().await;
+                                guard.len()
+                            };
+
+                            let updated_count = {
+                                let guard = updated_videos_arc.lock().await;
+                                guard.len()
+                            };
+
+                            let mut status = scan_status.write().await;
+                            status.new_videos_count = new_count;
+                            status.updated_videos_count = updated_count;
+                        }
+
+                        // Check which tasks have completed
+                        remaining_tasks.retain(|task| !task.is_finished());
+                    }
+
+                    // All tasks completed, collect final results
+                    match ScannerService::collect_scan_results(
+                        new_videos_arc,
+                        updated_videos_arc,
+                        Vec::new() // Empty vec since we've already waited for tasks
+                    ).await {
+                        Ok((new_videos, updated_videos)) => {
+                            // Update scan status with final results
+                            let mut status = scan_status.write().await;
+                            status.in_progress = false;
+                            status.new_videos_count = new_videos.len();
+                            status.updated_videos_count = updated_videos.len();
+                        },
+                        Err(e) => {
+                            tracing::error!("Error collecting scan results: {}", e);
+                            // Mark scan as not in progress even if it failed
+                            let mut status = scan_status.write().await;
+                            status.in_progress = false;
+                        }
+                    }
+                });
             },
             Err(e) => {
-                tracing::error!("Error during scan: {}", e);
-                // Mark scan as not in progress even if it failed
+                tracing::error!("Error starting scan: {}", e);
+                // Mark scan as not in progress if it failed to start
                 let mut status = scan_status.write().await;
                 status.in_progress = false;
             }
