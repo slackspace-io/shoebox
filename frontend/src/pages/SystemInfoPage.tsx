@@ -15,7 +15,16 @@ import {
   AlertIcon,
   AlertTitle,
   AlertDescription,
+  Button,
+  useToast,
 } from '@chakra-ui/react';
+import { FaSync } from 'react-icons/fa';
+
+interface MediaPathConfig {
+  path: string;
+  original_path?: string;
+  original_extension?: string;
+}
 
 interface SystemConfig {
   server: {
@@ -27,7 +36,7 @@ interface SystemConfig {
     max_connections: number;
   };
   media: {
-    source_paths: string[];
+    source_paths: MediaPathConfig[];
     export_base_path: string;
     thumbnail_path: string;
   };
@@ -37,6 +46,8 @@ const SystemInfoPage: React.FC = () => {
   const [config, setConfig] = useState<SystemConfig | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [rescanLoading, setRescanLoading] = useState<boolean>(false);
+  const toast = useToast();
 
   useEffect(() => {
     const fetchSystemInfo = async () => {
@@ -56,6 +67,39 @@ const SystemInfoPage: React.FC = () => {
 
     fetchSystemInfo();
   }, []);
+
+  const handleRescan = async () => {
+    setRescanLoading(true);
+    try {
+      const response = await fetch('/api/scan', {
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error rescanning library: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      toast({
+        title: 'Library Rescanned',
+        description: `Successfully rescanned library. Found ${data.new_videos_count} new videos.`,
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      });
+    } catch (err) {
+      toast({
+        title: 'Rescan Failed',
+        description: err instanceof Error ? err.message : 'An unknown error occurred',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setRescanLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -84,7 +128,7 @@ const SystemInfoPage: React.FC = () => {
         System Information
       </Heading>
 
-      <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={10}>
+      <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={10} mb={8}>
         {/* Server Configuration */}
         <Card>
           <CardHeader>
@@ -134,9 +178,9 @@ const SystemInfoPage: React.FC = () => {
             <VStack align="stretch" spacing={3}>
               <Box>
                 <Text fontWeight="bold" mb={1}>Source Paths:</Text>
-                {config?.media.source_paths.map((path, index) => (
-                  <Text key={index} fontSize="sm" isTruncated title={path}>
-                    {path}
+                {config?.media.source_paths.map((pathConfig, index) => (
+                  <Text key={index} fontSize="sm" isTruncated title={pathConfig.path}>
+                    {pathConfig.path}
                   </Text>
                 ))}
               </Box>
@@ -158,6 +202,22 @@ const SystemInfoPage: React.FC = () => {
           </CardBody>
         </Card>
       </SimpleGrid>
+
+      <Box textAlign="center" mt={6}>
+        <Button
+          colorScheme="blue"
+          size="lg"
+          onClick={handleRescan}
+          isLoading={rescanLoading}
+          loadingText="Rescanning..."
+          leftIcon={<FaSync />}
+        >
+          Rescan Library
+        </Button>
+        <Text mt={2} fontSize="sm" color="gray.600">
+          Rescans existing library to capture any new metadata or fields that have been added
+        </Text>
+      </Box>
     </Box>
   );
 };
