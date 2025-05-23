@@ -375,20 +375,9 @@ impl ScannerService {
                     }
                 };
 
-                // Get created date
-                let created_date = match metadata.created() {
-                    Ok(time) => {
-                        let datetime: chrono::DateTime<chrono::Utc> = time.into();
-                        info!("Created date from file metadata: {}", datetime.to_rfc3339());
-                        Self::get_video_creation_date(&file_path)
-//                        Some(datetime.to_rfc3339())
-                    },
-                    Err(_) => {
-                        info!("No created_date found in file metadata, trying to extract from video metadata");
-                        // Try to extract creation date from video metadata as a fallback
-                        Self::get_video_creation_date(&file_path)
-                    },
-                };
+                // Get created date - only use video metadata as filesystem metadata is not accurate
+                info!("Extracting creation date from video metadata");
+                let created_date = Self::get_video_creation_date(&file_path);
 
                 // Generate thumbnail
                 let thumbnail_path = match thumbnail_service.generate_thumbnail(&file_path).await {
