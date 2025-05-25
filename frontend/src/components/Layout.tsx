@@ -1,8 +1,9 @@
 import React from 'react';
-import { Box, Flex, Heading, Link, Spacer, Button, useColorMode, useColorModeValue, Alert, AlertIcon, AlertTitle, AlertDescription, Spinner } from '@chakra-ui/react';
+import { Box, Flex, Heading, Link, Spacer, Button, useColorMode, useColorModeValue, Alert, AlertIcon, AlertTitle, AlertDescription, Spinner, Image } from '@chakra-ui/react';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { FaSun, FaMoon, FaVideo, FaFileExport, FaTags, FaClipboardCheck, FaCog } from 'react-icons/fa';
 import { useScanContext } from '../contexts/ScanContext';
+import logo from '../assets/logo_large.png';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -31,11 +32,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         zIndex={10}
       >
         <Flex align="center" mr={5}>
-          <Heading as="h1" size="lg" letterSpacing="tight">
-            <Link as={RouterLink} to="/" _hover={{ textDecoration: 'none' }}>
-              Shoebox
-            </Link>
-          </Heading>
+          <Link as={RouterLink} to="/" _hover={{ textDecoration: 'none' }}>
+            <Flex align="center">
+              <Image src={logo} alt="Shoebox Logo" height="40px" mr={2} />
+              <Heading as="h1" size="lg" letterSpacing="tight">
+                Shoebox
+              </Heading>
+            </Flex>
+          </Link>
         </Flex>
 
         <Spacer />
