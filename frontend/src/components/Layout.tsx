@@ -3,6 +3,7 @@ import { Box, Flex, Heading, Link, Spacer, Button, useColorMode, useColorModeVal
 import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { FaSun, FaMoon, FaVideo, FaFileExport, FaTags, FaClipboardCheck, FaCog } from 'react-icons/fa';
 import { useScanContext } from '../contexts/ScanContext';
+// @ts-ignore
 import logo from '../assets/logo_large.png';
 
 interface LayoutProps {
