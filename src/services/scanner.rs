@@ -19,6 +19,63 @@ use crate::services::thumbnail::ThumbnailService;
 pub struct ScannerService;
 
 impl ScannerService {
+    // Extract EXIF data from file using exiftool
+    async fn get_exif_data(path: &str) -> Option<serde_json::Value> {
+        // Check if this is a BRAW file
+        let is_braw = path.to_lowercase().ends_with(".braw");
+
+        // Build the exiftool command with appropriate arguments
+        let mut command = TokioCommand::new("exiftool");
+        command.arg("-j") // Output in JSON format
+               .arg("-G"); // Include group names
+
+        // Add specific arguments for BRAW files to extract all metadata
+        if is_braw {
+            info!("Extracting EXIF data from BRAW file: {}", path);
+            // Add any BRAW-specific exiftool arguments here if needed
+            // For example, to extract all metadata including proprietary tags
+            command.arg("-a") // Extract binary data
+                   .arg("-u") // Extract unknown tags
+                   .arg("-U"); // Extract unsafe tags
+        }
+
+        command.arg(path);
+
+        // Execute the command
+        let output = match command.output().await {
+            Ok(output) => output,
+            Err(e) => {
+                warn!("Failed to run exiftool for {}: {}", path, e);
+                return None;
+            }
+        };
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            warn!("exiftool failed for {}: {}", path, stderr);
+            return None;
+        }
+
+        // Parse the JSON output
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        match serde_json::from_str::<Vec<serde_json::Value>>(&stdout) {
+            Ok(json_array) => {
+                // exiftool returns an array of objects, we want the first one
+                let exif_data = json_array.into_iter().next();
+
+                if is_braw && exif_data.is_some() {
+                    info!("Successfully extracted EXIF data from BRAW file: {}", path);
+                }
+
+                exif_data
+            },
+            Err(e) => {
+                warn!("Failed to parse exiftool JSON output for {}: {}", path, e);
+                None
+            }
+        }
+    }
+
     // Extract creation date from video file using FFprobe (part of FFmpeg suite)
     async fn get_video_creation_date(path: &str) -> Option<String> {
         info!("Attempting to extract creation date from video metadata for: {}", path);
@@ -117,7 +174,7 @@ impl ScannerService {
     // Check if a file extension is a supported video format
     fn is_supported_video_format(ext: &str) -> bool {
         // List of supported video formats
-        ["mp4", "mov", "mkv", "avi", "wmv", "flv", "webm"].contains(&ext)
+        ["mp4", "mov", "mkv", "avi", "wmv", "flv", "webm", "braw"].contains(&ext)
     }
 
     // Get video duration using FFprobe
@@ -473,6 +530,9 @@ impl ScannerService {
                     None
                 };
 
+                // Extract EXIF data from the main file
+                let mut exif_data = Self::get_exif_data(&file_path).await;
+
                 // Check for original file if original_path is specified
                 let original_file_path = if let Some(original_path) = &path_config.original_path {
                     // Get the file name without extension
@@ -485,6 +545,30 @@ impl ScannerService {
                         let all_files_guard = all_original_files.lock().await;
                         if let Some(original_file) = all_files_guard.get(&stem) {
                             info!("Found original file: {}", original_file);
+
+                            // If configured, extract EXIF data from the original file as well
+                            if let Some(original_exif_data) = Self::get_exif_data(original_file).await {
+                                info!("Extracted EXIF data from original file: {}", original_file);
+
+                                // Merge original file EXIF data with main file EXIF data
+                                if let Some(ref mut main_exif) = exif_data {
+                                    // If we have EXIF data from both files, merge them
+                                    if let serde_json::Value::Object(main_map) = main_exif {
+                                        if let serde_json::Value::Object(original_map) = original_exif_data {
+                                            // Add a prefix to original file EXIF data keys to distinguish them
+                                            for (key, value) in original_map {
+                                                main_map.insert(format!("Original_{}", key), value);
+                                            }
+                                            info!("Merged EXIF data from original file with main file EXIF data");
+                                        }
+                                    }
+                                } else {
+                                    // If we only have EXIF data from the original file, use that
+                                    exif_data = Some(original_exif_data);
+                                    info!("Using EXIF data from original file only");
+                                }
+                            }
+
                             Some(original_file.clone())
                         } else {
                             // If not found in the map, we couldn't find the original file
@@ -509,13 +593,17 @@ impl ScannerService {
                     Ok(existing_video) => {
                         // Update existing video with new metadata
                         info!("Updating existing video: {}", file_path);
+                        // We already have the EXIF data from both the main file and original file (if available)
+                        // No need to extract it again
+
                         match video_service.update_technical_metadata(
                             &existing_video.id,
                             Some(metadata.len() as i64),
                             duration,
                             created_date,
                             thumbnail_path,
-                            original_file_path
+                            original_file_path,
+                            exif_data
                         ).await {
                             Ok(updated_video) => {
                                 let mut updated_videos_guard = updated_videos.lock().await;
@@ -550,6 +638,7 @@ impl ScannerService {
                     tags: Vec::new(),
                     people: Vec::new(),
                     original_file_path,
+                    exif_data,
                 };
 
                 match video_service.create(create_dto).await {
@@ -608,7 +697,7 @@ impl ScannerService {
             if path.is_file() {
                 if let Some(ext) = path.extension() {
                     let ext = ext.to_string_lossy().to_lowercase();
-                    if ["mp4", "mov", "mkv"].contains(&ext.as_str()) {
+                    if ["mp4", "mov", "mkv", "braw"].contains(&ext.as_str()) {
                         video_files.push(entry);
                     }
                 }
@@ -621,7 +710,7 @@ impl ScannerService {
     pub fn is_video_file(path: &Path) -> bool {
         if let Some(ext) = path.extension() {
             let ext = ext.to_string_lossy().to_lowercase();
-            return ["mp4", "mov", "mkv"].contains(&ext.as_str());
+            return ["mp4", "mov", "mkv", "braw"].contains(&ext.as_str());
         }
         false
     }

@@ -279,7 +279,7 @@ impl VideoService {
         self.find_by_id(id).await
     }
 
-    pub async fn update_technical_metadata(&self, id: &str, file_size: Option<i64>, duration: Option<i64>, created_date: Option<String>, thumbnail_path: Option<String>, original_file_path: Option<String>) -> Result<Video> {
+    pub async fn update_technical_metadata(&self, id: &str, file_size: Option<i64>, duration: Option<i64>, created_date: Option<String>, thumbnail_path: Option<String>, original_file_path: Option<String>, exif_data: Option<serde_json::Value>) -> Result<Video> {
         let mut tx = self.db.begin().await.map_err(AppError::Database)?;
 
         // Check if video exists
@@ -313,6 +313,11 @@ impl VideoService {
         if let Some(orig) = &original_file_path {
             query.push_str(", original_file_path = ?");
             params.push(orig.clone());
+        }
+
+        if let Some(exif) = &exif_data {
+            query.push_str(", exif_data = ?");
+            params.push(exif.to_string());
         }
 
         query.push_str(" WHERE id = ?");
@@ -488,6 +493,7 @@ impl VideoService {
                 rating: row.get("rating"),
                 duration: row.get("duration"),
                 original_file_path: row.get("original_file_path"),
+                exif_data: row.get("exif_data"),
                 created_at: row.get("created_at"),
                 updated_at: row.get("updated_at"),
             };

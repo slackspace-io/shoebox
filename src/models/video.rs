@@ -16,6 +16,7 @@ pub struct Video {
     pub rating: Option<i32>,
     pub duration: Option<i64>,
     pub original_file_path: Option<String>,
+    pub exif_data: Option<serde_json::Value>,
     pub created_at: String,
     pub updated_at: String,
 }
@@ -40,6 +41,7 @@ pub struct CreateVideoDto {
     pub rating: Option<i32>,
     pub duration: Option<i64>,
     pub original_file_path: Option<String>,
+    pub exif_data: Option<serde_json::Value>,
     pub tags: Vec<String>,
     pub people: Vec<String>,
 }
@@ -87,6 +89,7 @@ impl Video {
             rating: None,
             duration: None,
             original_file_path: None,
+            exif_data: None,
             created_at: now.clone(),
             updated_at: now,
         }
