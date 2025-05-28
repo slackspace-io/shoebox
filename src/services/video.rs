@@ -428,6 +428,16 @@ impl VideoService {
             conditions.push("(v.rating IS NULL AND v.description IS NULL AND NOT EXISTS (SELECT 1 FROM video_tags WHERE video_id = v.id) AND NOT EXISTS (SELECT 1 FROM video_people WHERE video_id = v.id))".to_string());
         }
 
+        if let Some(start_date) = &params.start_date {
+            conditions.push("date(v.created_date) >= date(?)".to_string());
+            query_params.push(start_date.clone());
+        }
+
+        if let Some(end_date) = &params.end_date {
+            conditions.push("date(v.created_date) <= date(?)".to_string());
+            query_params.push(end_date.clone());
+        }
+
         // Add WHERE clause if conditions exist
         if !conditions.is_empty() {
             query.push_str(" WHERE ");

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Flex, Heading, Link, Spacer, Button, useColorMode, useColorModeValue, Alert, AlertIcon, AlertTitle, AlertDescription, Spinner, Image } from '@chakra-ui/react';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
-import { FaSun, FaMoon, FaVideo, FaFileExport, FaTags, FaClipboardCheck, FaCog } from 'react-icons/fa';
+import { FaSun, FaMoon, FaVideo, FaFileExport, FaTags, FaClipboardCheck, FaCog, FaChartLine } from 'react-icons/fa';
 import { useScanContext } from '../contexts/ScanContext';
 // @ts-ignore
 import logo from '../assets/logo_large.png';
@@ -57,6 +57,18 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           >
             <FaVideo style={{ marginRight: '8px' }} />
             Videos
+          </Link>
+          <Link
+            as={RouterLink}
+            to="/timeline"
+            mr={4}
+            display="flex"
+            alignItems="center"
+            fontWeight={location.pathname === '/timeline' ? 'bold' : 'normal'}
+            color={location.pathname === '/timeline' ? 'brand.500' : undefined}
+          >
+            <FaChartLine style={{ marginRight: '8px' }} />
+            Ratings Timeline
           </Link>
           <Link
             as={RouterLink}

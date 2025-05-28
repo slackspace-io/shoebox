@@ -63,6 +63,8 @@ export interface VideoSearchParams {
   unreviewed?: boolean;
   sort_by?: string;
   sort_order?: string;
+  start_date?: string;
+  end_date?: string;
 }
 
 export interface Tag {

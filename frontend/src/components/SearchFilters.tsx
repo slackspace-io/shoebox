@@ -9,7 +9,9 @@ import {
   Collapse,
   SimpleGrid,
   useColorModeValue,
-  Checkbox
+  Checkbox,
+  Input,
+  Text
 } from '@chakra-ui/react';
 import { FaFilter, FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import ReactSelect from 'react-select';
@@ -17,6 +19,7 @@ import { tagApi, personApi, TagUsage, PersonUsage, VideoSearchParams } from '../
 
 interface SearchFiltersProps {
   onFilterChange: (filters: Partial<VideoSearchParams>) => void;
+  initialFilters?: Partial<VideoSearchParams>;
 }
 
 interface SelectOption {
@@ -25,7 +28,7 @@ interface SelectOption {
   count?: number;
 }
 
-const SearchFilters: React.FC<SearchFiltersProps> = ({ onFilterChange }) => {
+const SearchFilters: React.FC<SearchFiltersProps> = ({ onFilterChange, initialFilters }) => {
   const { isOpen, onToggle } = useDisclosure();
   const [tags, setTags] = useState<SelectOption[]>([]);
   const [people, setPeople] = useState<SelectOption[]>([]);
@@ -35,6 +38,8 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onFilterChange }) => {
   const [isUnreviewed, setIsUnreviewed] = useState<boolean>(false);
   const [sortBy, setSortBy] = useState<string>('created_date');
   const [sortOrder, setSortOrder] = useState<string>('DESC');
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
   const [loading, setLoading] = useState(true);
 
   const bgColor = useColorModeValue('white', 'gray.800');
@@ -72,6 +77,19 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onFilterChange }) => {
     fetchFilters();
   }, []);
 
+  // Initialize filters from props
+  useEffect(() => {
+    if (initialFilters) {
+      // Initialize date filters if provided
+      if (initialFilters.start_date) {
+        setStartDate(initialFilters.start_date);
+      }
+      if (initialFilters.end_date) {
+        setEndDate(initialFilters.end_date);
+      }
+    }
+  }, [initialFilters]);
+
   // Apply filters
   const applyFilters = () => {
     onFilterChange({
@@ -80,7 +98,9 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onFilterChange }) => {
       rating: selectedRating ? parseInt(selectedRating, 10) : undefined,
       unreviewed: isUnreviewed || undefined,
       sort_by: sortBy || undefined,
-      sort_order: sortOrder || undefined
+      sort_order: sortOrder || undefined,
+      start_date: startDate || undefined,
+      end_date: endDate || undefined
     });
   };
 
@@ -92,13 +112,17 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onFilterChange }) => {
     setIsUnreviewed(false);
     setSortBy('created_date');
     setSortOrder('DESC');
+    setStartDate('');
+    setEndDate('');
     onFilterChange({
       tags: undefined,
       people: undefined,
       rating: undefined,
       unreviewed: undefined,
       sort_by: 'created_date',
-      sort_order: 'DESC'
+      sort_order: 'DESC',
+      start_date: undefined,
+      end_date: undefined
     });
   };
 
@@ -177,6 +201,34 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onFilterChange }) => {
               <option value="4">4 stars</option>
               <option value="5">5 stars</option>
             </ChakraSelect>
+          </Box>
+        </SimpleGrid>
+
+        <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4} mt={4}>
+          <Box>
+            <Heading size="sm" mb={2}>Start Date</Heading>
+            <Input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              placeholder="Start date"
+            />
+            <Text fontSize="xs" color="gray.500" mt={1}>
+              Filter videos created on or after this date
+            </Text>
+          </Box>
+
+          <Box>
+            <Heading size="sm" mb={2}>End Date</Heading>
+            <Input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              placeholder="End date"
+            />
+            <Text fontSize="xs" color="gray.500" mt={1}>
+              Filter videos created on or before this date
+            </Text>
           </Box>
         </SimpleGrid>
 

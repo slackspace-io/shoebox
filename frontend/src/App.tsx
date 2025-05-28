@@ -8,6 +8,7 @@ import ExportPage from './pages/ExportPage';
 import ManagementPage from './pages/ManagementPage';
 import UnreviewedPage from './pages/UnreviewedPage';
 import SystemInfoPage from './pages/SystemInfoPage';
+import RatedVideosTimelinePage from './pages/RatedVideosTimelinePage';
 
 const App: React.FC = () => {
   return (
@@ -20,6 +21,7 @@ const App: React.FC = () => {
           <Route path="/export" element={<ExportPage />} />
           <Route path="/manage" element={<ManagementPage />} />
           <Route path="/system" element={<SystemInfoPage />} />
+          <Route path="/timeline" element={<RatedVideosTimelinePage />} />
         </Routes>
       </Layout>
     </Box>

@@ -66,6 +66,8 @@ pub struct VideoSearchParams {
     pub unreviewed: Option<bool>,
     pub sort_by: Option<String>,
     pub sort_order: Option<String>,
+    pub start_date: Option<String>,
+    pub end_date: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
   Box,
   Heading,
@@ -29,6 +30,7 @@ const HomePage: React.FC = () => {
   });
   const toast = useToast();
   const { scanStatus, checkScanStatus } = useScanContext();
+  const location = useLocation();
 
   // Function to fetch videos
   const fetchVideos = async () => {
@@ -48,6 +50,21 @@ const HomePage: React.FC = () => {
       setLoading(false);
     }
   };
+
+  // Parse URL parameters and update search params
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const start_date = searchParams.get('start_date');
+    const end_date = searchParams.get('end_date');
+
+    if (start_date || end_date) {
+      setSearchParams(prevParams => ({
+        ...prevParams,
+        start_date: start_date || undefined,
+        end_date: end_date || undefined
+      }));
+    }
+  }, [location]);
 
   // Load videos on component mount and when search params change
   useEffect(() => {
@@ -78,9 +95,16 @@ const HomePage: React.FC = () => {
 
   // Handle search submit
   const handleSearch = () => {
+    // Preserve start_date and end_date from URL if they exist
+    const urlParams = new URLSearchParams(location.search);
+    const start_date = urlParams.get('start_date');
+    const end_date = urlParams.get('end_date');
+
     setSearchParams({
       ...searchParams,
       query: searchQuery.trim() || undefined,
+      start_date: start_date || searchParams.start_date,
+      end_date: end_date || searchParams.end_date,
       offset: 0, // Reset pagination when searching
     });
   };
@@ -94,9 +118,16 @@ const HomePage: React.FC = () => {
 
   // Handle filter changes
   const handleFilterChange = (newFilters: Partial<VideoSearchParams>) => {
+    // Preserve start_date and end_date from URL if they exist
+    const urlParams = new URLSearchParams(location.search);
+    const start_date = urlParams.get('start_date');
+    const end_date = urlParams.get('end_date');
+
     setSearchParams({
       ...searchParams,
       ...newFilters,
+      start_date: start_date || newFilters.start_date || searchParams.start_date,
+      end_date: end_date || newFilters.end_date || searchParams.end_date,
       offset: 0, // Reset pagination when filters change
     });
   };
@@ -165,7 +196,7 @@ const HomePage: React.FC = () => {
         </Button>
       </Flex>
 
-      <SearchFilters onFilterChange={handleFilterChange} />
+      <SearchFilters onFilterChange={handleFilterChange} initialFilters={searchParams} />
 
       {loading ? (
         <Flex justify="center" align="center" h="200px">
