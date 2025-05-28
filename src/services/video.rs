@@ -420,7 +420,7 @@ impl VideoService {
         }
 
         if let Some(rating) = params.rating {
-            conditions.push("v.rating = ?".to_string());
+            conditions.push("v.rating >= ?".to_string());
             query_params.push(rating.to_string());
         }
 
