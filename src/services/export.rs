@@ -67,7 +67,12 @@ impl ExportService {
 
         // Copy videos to export directory
         for video_metadata in &videos_with_metadata {
-            let source_path = Path::new(&video_metadata.video.file_path);
+            // Determine source path based on configuration
+            let source_path = if request.use_original_files && video_metadata.video.original_file_path.is_some() {
+                Path::new(video_metadata.video.original_file_path.as_ref().unwrap())
+            } else {
+                Path::new(&video_metadata.video.file_path)
+            };
             let dest_path = project_dir.join(&video_metadata.video.file_name);
 
             // Copy the file

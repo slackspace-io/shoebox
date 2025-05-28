@@ -50,6 +50,7 @@ const ExportPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
   const [exportPath, setExportPath] = useState<string | null>(null);
+  const [useOriginalFiles, setUseOriginalFiles] = useState(false);
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
 
@@ -156,6 +157,7 @@ const ExportPage: React.FC = () => {
       const result = await exportApi.exportVideos({
         video_ids: selectedVideos,
         project_name: projectName.trim(),
+        use_original_files: useOriginalFiles,
       });
 
       setExportPath(result.export_path);
@@ -325,6 +327,18 @@ const ExportPage: React.FC = () => {
             />
             <FormHelperText>
               This will be used to create the export folder
+            </FormHelperText>
+          </FormControl>
+
+          <FormControl mt={4}>
+            <Checkbox
+              isChecked={useOriginalFiles}
+              onChange={(e) => setUseOriginalFiles(e.target.checked)}
+            >
+              Use original files when available
+            </Checkbox>
+            <FormHelperText>
+              If checked, the export will use the original files instead of the displayed files
             </FormHelperText>
           </FormControl>
 

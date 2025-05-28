@@ -92,6 +92,7 @@ export interface PersonUsage {
 export interface ExportRequest {
   video_ids: string[];
   project_name: string;
+  use_original_files?: boolean;
 }
 
 export interface ExportResponse {

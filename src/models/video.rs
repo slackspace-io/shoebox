@@ -72,6 +72,8 @@ pub struct VideoSearchParams {
 pub struct ExportRequest {
     pub video_ids: Vec<String>,
     pub project_name: String,
+    #[serde(default)]
+    pub use_original_files: bool,
 }
 
 impl Video {
