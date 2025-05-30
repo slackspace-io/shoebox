@@ -26,6 +26,13 @@ The main purpose of Shoebox is to help you:
 
 While other services focus on viewing and sharing, Shoebox focuses on organization and preservation with the specific goal of making your video content useful for future creative projects.
 
+### Video Demo
+
+Here's a video demo of the application:
+
+[Watch the demo video on YouTube](https://www.youtube.com/watch?v=xfPMCLWnUz8)
+
+
 ## Tech Stack
 
 - **Backend**: Rust with Axum web framework
