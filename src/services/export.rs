@@ -73,7 +73,20 @@ impl ExportService {
             } else {
                 Path::new(&video_metadata.video.file_path)
             };
-            let dest_path = project_dir.join(&video_metadata.video.file_name);
+
+            // Determine destination file name
+            let dest_file_name = if request.use_original_files && video_metadata.video.original_file_path.is_some() {
+                // Extract the file name from the original file path
+                Path::new(video_metadata.video.original_file_path.as_ref().unwrap())
+                    .file_name()
+                    .unwrap_or_else(|| std::ffi::OsStr::new(&video_metadata.video.file_name))
+                    .to_string_lossy()
+                    .to_string()
+            } else {
+                video_metadata.video.file_name.clone()
+            };
+
+            let dest_path = project_dir.join(&dest_file_name);
 
             // Copy the file
             match fs::copy(source_path, &dest_path).await {
