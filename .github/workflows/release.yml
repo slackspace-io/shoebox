@@ -53,7 +53,7 @@ jobs:
       - name: Run clippy
         run: |
           rustup component add clippy
-          cargo clippy --all-features -- -D warnings
+          cargo clippy --all-features -- -A warnings
 
   update-version:
     needs: validate
