@@ -20,6 +20,11 @@ on:
         required: true
         default: false
         type: boolean
+      update_helm:
+        description: 'Update Helm chart version?'
+        required: true
+        default: false
+        type: boolean
 
 jobs:
   validate:
@@ -73,11 +78,17 @@ jobs:
           echo "new_version=$VERSION" >> $GITHUB_OUTPUT
           sed -i "s/^version = \".*\"/version = \"$VERSION\"/" Cargo.toml
 
-          # Also update the version in the Helm chart
-          sed -i "s/^version: .*/version: $VERSION/" charts/shoebox/Chart.yaml
-          sed -i "s/^appVersion: .*/appVersion: \"$VERSION\"/" charts/shoebox/Chart.yaml
+          # Only update the Helm chart if requested
+          if [[ "${{ github.event.inputs.update_helm }}" == "true" ]]; then
+            echo "Updating Helm chart version to $VERSION"
+            sed -i "s/^version: .*/version: $VERSION/" charts/shoebox/Chart.yaml
+            sed -i "s/^appVersion: .*/appVersion: \"$VERSION\"/" charts/shoebox/Chart.yaml
+            git add Cargo.toml charts/shoebox/Chart.yaml
+          else
+            echo "Skipping Helm chart update as requested"
+            git add Cargo.toml
+          fi
 
-          git add Cargo.toml charts/shoebox/Chart.yaml
           git commit -m "chore: bump version to $VERSION"
           git tag -a "v$VERSION" -m "Release v$VERSION"
           git push origin main
@@ -119,23 +130,30 @@ jobs:
             docker pull ghcr.io/${{ github.repository }}:${{ needs.update-version.outputs.new_version }}
             ```
 
-            ### Helm Chart
+            ${{ github.event.inputs.update_helm == 'true' && '### Helm Chart
             ```
             helm repo add shoebox https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/helm/
             helm repo update
             helm install shoebox shoebox/shoebox --version ${{ needs.update-version.outputs.new_version }}
-            ```
+            ```' || '' }}
           draft: false
           prerelease: ${{ github.event.inputs.prerelease }}
 
   release-helm-chart:
     needs: [update-version, create-release]
+    if: ${{ github.event.inputs.update_helm == 'true' }}
     uses: ./.github/workflows/helm-release.yml
+
+  update-docs-with-helm:
+    needs: [update-version, create-release, release-helm-chart]
+    if: ${{ github.event.inputs.update_helm == 'true' }}
+    uses: ./.github/workflows/mdbook.yml
     secrets:
       GH_PAT: ${{ secrets.GITHUB_TOKEN }}
 
-  update-docs:
-    needs: [update-version, create-release, release-helm-chart]
+  update-docs-without-helm:
+    needs: [update-version, create-release]
+    if: ${{ github.event.inputs.update_helm != 'true' }}
     uses: ./.github/workflows/mdbook.yml
     secrets:
       GH_PAT: ${{ secrets.GITHUB_TOKEN }}

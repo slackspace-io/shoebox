@@ -118,14 +118,20 @@ Shoebox uses GitHub Actions for automated releases. To create a new release:
 4. Enter the version number (e.g., 0.1.0) following semantic versioning
 5. Select the release type (patch, minor, or major)
 6. Indicate whether this is a prerelease
-7. Click "Run workflow"
+7. Choose whether to update the Helm chart version (default: false)
+8. Click "Run workflow"
 
 The workflow will:
 - Validate the version format and run tests
-- Update version numbers in Cargo.toml and Helm charts
+- Update version number in Cargo.toml
 - Build and publish Docker images
 - Create a GitHub release with auto-generated changelog
-- Update Helm charts and documentation
+- Update documentation
+
+If you choose to update the Helm chart version, the workflow will also:
+- Update version numbers in Helm charts
+- Release the updated Helm chart
+- Include Helm chart installation instructions in the release notes
 
 ## License
 

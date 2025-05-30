@@ -11,10 +11,6 @@ on:
     paths:
       - 'charts/**'
   workflow_call:
-    secrets:
-      GH_PAT:
-        required: true
-
 
 concurrency:
   group: "shoebox-helm"
@@ -68,6 +64,8 @@ jobs:
     needs: lint-test
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -95,4 +93,4 @@ jobs:
         with:
           pages_branch: main
         env:
-          CR_TOKEN: "${{ secrets.GH_PAT }}"
+          CR_TOKEN: "${{ github.token }}"
