@@ -1,7 +1,7 @@
 use axum::{
     extract::{Path, State},
     http::{header, HeaderMap, StatusCode},
-    response::{IntoResponse, Response},
+    response::Response,
     routing::get,
     Router,
 };
@@ -30,14 +30,14 @@ async fn serve_media(
 
     // Check if the file exists
     if !file_path.exists() {
-        return Err(AppError::NotFound(format!("Media file not found: {}", path)));
+        return Err(AppError::NotFound(format!("Media file not found: {path}")));
     }
 
     // Get the file size
     let metadata = match tokio::fs::metadata(&file_path).await {
         Ok(metadata) => metadata,
         Err(err) => {
-            return Err(AppError::InternalServerError(format!("Failed to read file metadata: {}", err)));
+            return Err(AppError::InternalServerError(format!("Failed to read file metadata: {err}")));
         }
     };
 
@@ -78,14 +78,14 @@ async fn serve_media(
                     let mut file = match File::open(&file_path).await {
                         Ok(file) => file,
                         Err(err) => {
-                            return Err(AppError::InternalServerError(format!("Failed to open media file: {}", err)));
+                            return Err(AppError::InternalServerError(format!("Failed to open media file: {err}")));
                         }
                     };
 
                     // Seek to the start position
                     use tokio::io::AsyncSeekExt;
                     if let Err(err) = file.seek(std::io::SeekFrom::Start(start)).await {
-                        return Err(AppError::InternalServerError(format!("Failed to seek in file: {}", err)));
+                        return Err(AppError::InternalServerError(format!("Failed to seek in file: {err}")));
                     }
 
                     // Create a limited stream from the file
@@ -98,7 +98,7 @@ async fn serve_media(
                         .status(StatusCode::PARTIAL_CONTENT)
                         .header(header::CONTENT_TYPE, content_type)
                         .header(header::CONTENT_LENGTH, length)
-                        .header(header::CONTENT_RANGE, format!("bytes {}-{}/{}", start, end, file_size))
+                        .header(header::CONTENT_RANGE, format!("bytes {start}-{end}/{file_size}"))
                         .header(header::ACCEPT_RANGES, "bytes")
                         .header(header::CACHE_CONTROL, "public, max-age=31536000")
                         .header("X-Content-Type-Options", "nosniff")
@@ -119,7 +119,7 @@ async fn serve_media(
     let file = match File::open(&file_path).await {
         Ok(file) => file,
         Err(err) => {
-            return Err(AppError::InternalServerError(format!("Failed to open media file: {}", err)));
+            return Err(AppError::InternalServerError(format!("Failed to open media file: {err}")));
         }
     };
 

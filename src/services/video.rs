@@ -40,7 +40,7 @@ impl VideoService {
                 .unwrap_or("");
 
             // Return a web-compatible path
-            format!("/app/thumbnails/{}", filename)
+            format!("/app/thumbnails/{filename}")
         })
     }
 
@@ -68,7 +68,7 @@ impl VideoService {
             .fetch_one(&self.db)
             .await
             .map_err(|e| match e {
-                sqlx::Error::RowNotFound => AppError::NotFound(format!("Video not found: {}", id)),
+                sqlx::Error::RowNotFound => AppError::NotFound(format!("Video not found: {id}")),
                 _ => AppError::Database(e),
             })?;
 
@@ -84,7 +84,7 @@ impl VideoService {
             .fetch_one(&self.db)
             .await
             .map_err(|e| match e {
-                sqlx::Error::RowNotFound => AppError::NotFound(format!("Video not found: {}", path)),
+                sqlx::Error::RowNotFound => AppError::NotFound(format!("Video not found: {path}")),
                 _ => AppError::Database(e),
             })?;
 
@@ -382,7 +382,7 @@ impl VideoService {
         // Add search conditions
         if let Some(search_query) = &params.query {
             conditions.push("(v.title LIKE ? OR v.description LIKE ? OR t.name LIKE ? OR p.name LIKE ?)".to_string());
-            let like_param = format!("%{}%", search_query);
+            let like_param = format!("%{search_query}%");
             query_params.push(like_param.clone());
             query_params.push(like_param.clone());
             query_params.push(like_param.clone());
@@ -467,11 +467,11 @@ impl VideoService {
             let order = if order.to_uppercase() == "DESC" { "DESC" } else { "ASC" };
 
             match sort_by.as_str() {
-                "duration" => query.push_str(&format!(" ORDER BY v.duration {}", order)),
-                "title" => query.push_str(&format!(" ORDER BY v.title {}", order)),
-                "rating" => query.push_str(&format!(" ORDER BY v.rating {}", order)),
-                "file_size" => query.push_str(&format!(" ORDER BY v.file_size {}", order)),
-                "created_date" => query.push_str(&format!(" ORDER BY datetime(v.created_date) {}", order)),
+                "duration" => query.push_str(&format!(" ORDER BY v.duration {order}")),
+                "title" => query.push_str(&format!(" ORDER BY v.title {order}")),
+                "rating" => query.push_str(&format!(" ORDER BY v.rating {order}")),
+                "file_size" => query.push_str(&format!(" ORDER BY v.file_size {order}")),
+                "created_date" => query.push_str(&format!(" ORDER BY datetime(v.created_date) {order}")),
                 _ => query.push_str(" ORDER BY v.created_date DESC"),
             }
         } else {

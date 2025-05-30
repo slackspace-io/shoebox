@@ -29,7 +29,7 @@ pub async fn ensure_dir_exists(path: &Path) -> Result<()> {
         fs::create_dir_all(path).await.map_err(|e| {
             AppError::Io(std::io::Error::new(
                 std::io::ErrorKind::Other,
-                format!("Failed to create directory {}: {}", path.display(), e),
+                format!("Failed to create directory {}: {e}", path.display()),
             ))
         })?;
     }

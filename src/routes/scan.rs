@@ -1,11 +1,9 @@
 use axum::{extract::State, routing::{post, get}, Json, Router};
-use serde::{Deserialize, Serialize};
-use std::sync::Arc;
-use tokio::sync::RwLock;
+use serde::Serialize;
 
 use crate::error::Result;
 use crate::services::AppState;
-use crate::services::{ScannerService, VideoService, ThumbnailService, TagService, PersonService, ScanStatus};
+use crate::services::{ScannerService, VideoService, ThumbnailService, TagService, PersonService};
 
 pub fn router(app_state: AppState) -> Router {
     Router::new()

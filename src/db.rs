@@ -21,7 +21,7 @@ pub async fn init_db(config: &Config) -> Result<Pool<Sqlite>> {
         info!("Creating database at {}", db_url);
         Sqlite::create_database(db_filename).await.map_err(|e| {
             AppError::Database(sqlx::Error::Configuration(
-                format!("Failed to create database: {}", e).into(),
+                format!("Failed to create database: {e}").into(),
             ))
         })?;
     }
@@ -33,7 +33,7 @@ pub async fn init_db(config: &Config) -> Result<Pool<Sqlite>> {
         fs::create_dir_all(migrations_dir).map_err(|e| {
             AppError::Io(std::io::Error::new(
                 std::io::ErrorKind::Other,
-                format!("Failed to create migrations directory: {}", e),
+                format!("Failed to create migrations directory: {e}"),
             ))
         })?;
 

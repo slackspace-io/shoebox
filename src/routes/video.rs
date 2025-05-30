@@ -1,15 +1,14 @@
 use axum::{
     extract::{Path, Query, State},
     routing::{get, post, put, delete},
-    Json, Router, response::{IntoResponse, Response}, http::{header, StatusCode, HeaderMap},
+    Json, Router, response::{Response}, http::{header, StatusCode, HeaderMap},
     body::Body,
 };
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use std::path::PathBuf;
 use tokio::fs::File;
 use tokio_util::io::ReaderStream;
 use std::io::{SeekFrom, Seek};
-use tokio::io::{AsyncReadExt, AsyncSeekExt};
 use std::fs;
 use std::io::Read;
 
@@ -148,26 +147,27 @@ async fn stream_video(
     // Check if the file exists
     let path = PathBuf::from(&video.file_path);
     if !path.exists() {
-        return Err(AppError::NotFound(format!("Video file not found: {}", video.file_path)));
+        let file_path = &video.file_path;
+        return Err(AppError::NotFound(format!("Video file not found: {file_path}")));
     }
 
     // Get the file size
     let metadata = match tokio::fs::metadata(&path).await {
         Ok(metadata) => metadata,
         Err(err) => {
-            return Err(AppError::InternalServerError(format!("Failed to read file metadata: {}", err)));
+            return Err(AppError::InternalServerError(format!("Failed to read file metadata: {err}")));
         }
     };
 
     let file_size = metadata.len();
 
     // Determine content type based on file extension
-    let mut content_type = mime_guess::from_path(&path)
+    let content_type = mime_guess::from_path(&path)
         .first_or_octet_stream()
         .to_string();
 
     // Special handling for MP4 files to ensure metadata is properly positioned
-    let is_mp4 = content_type == "video/mp4" || path.extension().map_or(false, |ext| ext == "mp4");
+    let is_mp4 = content_type == "video/mp4" || path.extension().is_some_and(|ext| ext == "mp4");
 
     // Get range header if it exists
     let range_header = headers.get(header::RANGE);
@@ -194,14 +194,14 @@ async fn stream_video(
                     let mut file = match File::open(&path).await {
                         Ok(file) => file,
                         Err(err) => {
-                            return Err(AppError::InternalServerError(format!("Failed to open video file: {}", err)));
+                            return Err(AppError::InternalServerError(format!("Failed to open video file: {err}")));
                         }
                     };
 
                     // Seek to the start position
                     use tokio::io::AsyncSeekExt;
                     if let Err(err) = file.seek(std::io::SeekFrom::Start(start)).await {
-                        return Err(AppError::InternalServerError(format!("Failed to seek in file: {}", err)));
+                        return Err(AppError::InternalServerError(format!("Failed to seek in file: {err}")));
                     }
 
                     // Create a limited stream from the file
@@ -214,7 +214,7 @@ async fn stream_video(
                         .status(StatusCode::PARTIAL_CONTENT)
                         .header(header::CONTENT_TYPE, content_type)
                         .header(header::CONTENT_LENGTH, length)
-                        .header(header::CONTENT_RANGE, format!("bytes {}-{}/{}", start, end, file_size))
+                        .header(header::CONTENT_RANGE, format!("bytes {start}-{end}/{file_size}"))
                         .header(header::ACCEPT_RANGES, "bytes")
                         .header(header::CACHE_CONTROL, "public, max-age=31536000")
                         .header("X-Content-Type-Options", "nosniff")
@@ -235,7 +235,7 @@ async fn stream_video(
     let file = match File::open(&path).await {
         Ok(file) => file,
         Err(err) => {
-            return Err(AppError::InternalServerError(format!("Failed to open video file: {}", err)));
+            return Err(AppError::InternalServerError(format!("Failed to open video file: {err}")));
         }
     };
 
@@ -287,7 +287,7 @@ async fn stream_video(
         .header("X-Content-Type-Options", "nosniff");
 
     // Only add cache-control if it's not already in additional_headers
-    if !additional_headers.iter().any(|(name, _)| name == &header::CACHE_CONTROL) {
+    if !additional_headers.iter().any(|(name, _)| *name == header::CACHE_CONTROL) {
         response_builder = response_builder.header(header::CACHE_CONTROL, "public, max-age=31536000");
     }
 
@@ -370,12 +370,7 @@ fn get_mp4_duration(path: &PathBuf) -> Option<f64> {
     let mut position = 0;
 
     // We'll search the entire file for the moov atom
-    loop {
-        // Read atom header
-        match reader.read_exact(&mut buffer) {
-            Ok(_) => {},
-            Err(_) => break, // End of file or error
-        }
+    while let Ok(_) = reader.read_exact(&mut buffer) {
 
         // Parse atom size (big-endian)
         let size = ((buffer[0] as u32) << 24) |

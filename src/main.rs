@@ -65,7 +65,7 @@ async fn main() -> anyhow::Result<()> {
         // Serve media files from the media directory with custom handler
         .nest("/media", routes::media::router(app_state))
         // Serve static files from the frontend directory
-        .fallback_service(ServeDir::new(&frontend_path).fallback(ServeFile::new(format!("{}/index.html", frontend_path))));
+        .fallback_service(ServeDir::new(&frontend_path).fallback(ServeFile::new(format!("{frontend_path}/index.html"))));
 
     // Run the server
     let addr = SocketAddr::from(([0, 0, 0, 0], config.server.port));

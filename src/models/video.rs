@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use uuid::Uuid;
-use chrono;
+use chrono::Utc;
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct Video {
@@ -82,7 +82,7 @@ pub struct ExportRequest {
 
 impl Video {
     pub fn new(file_path: String, file_name: String) -> Self {
-        let now = chrono::Utc::now().to_rfc3339();
+        let now = Utc::now().to_rfc3339();
         Self {
             id: Uuid::new_v4().to_string(),
             file_path,

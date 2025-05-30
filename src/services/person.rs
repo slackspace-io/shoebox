@@ -29,7 +29,7 @@ impl PersonService {
             .fetch_one(&self.db)
             .await
             .map_err(|e| match e {
-                sqlx::Error::RowNotFound => AppError::NotFound(format!("Person not found: {}", id)),
+                sqlx::Error::RowNotFound => AppError::NotFound(format!("Person not found: {id}")),
                 _ => AppError::Database(e),
             })?;
 
@@ -43,7 +43,7 @@ impl PersonService {
             .await
             .map_err(|e| match e {
                 sqlx::Error::RowNotFound => {
-                    AppError::NotFound(format!("Person not found: {}", name))
+                    AppError::NotFound(format!("Person not found: {name}"))
                 }
                 _ => AppError::Database(e),
             })?;
@@ -79,7 +79,7 @@ impl PersonService {
             .await
             .map_err(AppError::Database)?;
 
-        info!("Created new person: {} ({})", name, id);
+        info!("Created new person: {name} ({id})");
         Ok(id)
     }
 
@@ -123,8 +123,7 @@ impl PersonService {
 
         if existing.is_some() {
             return Err(AppError::BadRequest(format!(
-                "Person with name '{}' already exists",
-                new_name
+                "Person with name '{new_name}' already exists"
             )));
         }
 
@@ -136,7 +135,7 @@ impl PersonService {
             .await
             .map_err(AppError::Database)?;
 
-        info!("Updated person: {} -> {} ({})", person.name, new_name, id);
+        info!("Updated person: {0} -> {new_name} ({id})", person.name);
 
         // Return updated person
         let updated_person = self.find_by_id(id).await?;

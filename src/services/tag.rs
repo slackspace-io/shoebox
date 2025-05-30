@@ -29,7 +29,7 @@ impl TagService {
             .fetch_one(&self.db)
             .await
             .map_err(|e| match e {
-                sqlx::Error::RowNotFound => AppError::NotFound(format!("Tag not found: {}", id)),
+                sqlx::Error::RowNotFound => AppError::NotFound(format!("Tag not found: {id}")),
                 _ => AppError::Database(e),
             })?;
 
@@ -43,7 +43,7 @@ impl TagService {
             .await
             .map_err(|e| match e {
                 sqlx::Error::RowNotFound => {
-                    AppError::NotFound(format!("Tag not found: {}", name))
+                    AppError::NotFound(format!("Tag not found: {name}"))
                 }
                 _ => AppError::Database(e),
             })?;
@@ -79,7 +79,7 @@ impl TagService {
             .await
             .map_err(AppError::Database)?;
 
-        info!("Created new tag: {} ({})", name, id);
+        info!("Created new tag: {name} ({id})");
         Ok(id)
     }
 
@@ -105,7 +105,7 @@ impl TagService {
             .await
             .map_err(AppError::Database)?;
 
-        info!("Created new tag: {} ({})", tag.name, tag.id);
+        info!("Created new tag: {0} ({1})", tag.name, tag.id);
         Ok(tag)
     }
 
@@ -123,8 +123,7 @@ impl TagService {
 
         if existing.is_some() {
             return Err(AppError::BadRequest(format!(
-                "Tag with name '{}' already exists",
-                new_name
+                "Tag with name '{new_name}' already exists"
             )));
         }
 
@@ -136,7 +135,7 @@ impl TagService {
             .await
             .map_err(AppError::Database)?;
 
-        info!("Updated tag: {} -> {} ({})", tag.name, new_name, id);
+        info!("Updated tag: {0} -> {new_name} ({id})", tag.name);
 
         // Return updated tag
         let updated_tag = self.find_by_id(id).await?;

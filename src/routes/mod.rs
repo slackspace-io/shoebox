@@ -6,10 +6,7 @@ mod export;
 mod system;
 pub mod media;
 
-use axum::{
-    routing::{get, post, put, delete},
-    Router,
-};
+use axum::Router;
 
 use crate::services::AppState;
 

@@ -95,7 +95,7 @@ impl ScannerService {
                 .arg("-v")
                 .arg("error")
                 .arg("-show_entries")
-                .arg(format!("format_tags={}", tag))
+                .arg(format!("format_tags={tag}"))
                 .arg("-of")
                 .arg("default=noprint_wrappers=1:nokey=1")
                 .arg(path)
@@ -557,7 +557,7 @@ impl ScannerService {
                                         if let serde_json::Value::Object(original_map) = original_exif_data {
                                             // Add a prefix to original file EXIF data keys to distinguish them
                                             for (key, value) in original_map {
-                                                main_map.insert(format!("Original_{}", key), value);
+                                                main_map.insert(format!("Original_{key}"), value);
                                             }
                                             info!("Merged EXIF data from original file with main file EXIF data");
                                         }
@@ -573,7 +573,7 @@ impl ScannerService {
                         } else {
                             // If not found in the map, we couldn't find the original file
                             let extension_info = if let Some(ext) = &path_config.original_extension {
-                                format!(" with extension '{}'", ext)
+                                format!(" with extension '{ext}'")
                             } else {
                                 "".to_string()
                             };

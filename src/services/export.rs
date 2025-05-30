@@ -28,7 +28,7 @@ impl ExportService {
     pub async fn export_videos(&self, request: ExportRequest) -> Result<String> {
         // Create export directory with timestamp and project name
         let date = Utc::now().format("%Y-%m-%d_%H-%M-%S").to_string();
-        let project_dir_name = format!("{}_{}", date, request.project_name.replace(" ", "_"));
+        let project_dir_name = format!("{date}_{}", request.project_name.replace(" ", "_"));
         let project_dir = self.export_base_path.join(&project_dir_name);
 
         // Ensure export base directory exists
@@ -36,7 +36,7 @@ impl ExportService {
             fs::create_dir_all(&self.export_base_path).await.map_err(|e| {
                 AppError::Io(std::io::Error::new(
                     std::io::ErrorKind::Other,
-                    format!("Failed to create export directory: {}", e),
+                    format!("Failed to create export directory: {e}"),
                 ))
             })?;
         }
@@ -45,11 +45,11 @@ impl ExportService {
         fs::create_dir_all(&project_dir).await.map_err(|e| {
             AppError::Io(std::io::Error::new(
                 std::io::ErrorKind::Other,
-                format!("Failed to create project directory: {}", e),
+                format!("Failed to create project directory: {e}"),
             ))
         })?;
 
-        info!("Exporting videos to {}", project_dir.display());
+        info!("Exporting videos to {0}", project_dir.display());
 
         // Collect videos with metadata
         let mut videos_with_metadata = Vec::new();
@@ -59,7 +59,7 @@ impl ExportService {
                     videos_with_metadata.push(video_metadata);
                 }
                 Err(e) => {
-                    error!("Error fetching video {}: {}", video_id, e);
+                    error!("Error fetching video {video_id}: {e}");
                     return Err(e);
                 }
             }
@@ -92,17 +92,16 @@ impl ExportService {
             match fs::copy(source_path, &dest_path).await {
                 Ok(_) => {
                     info!(
-                        "Copied {} to {}",
+                        "Copied {0} to {1}",
                         source_path.display(),
                         dest_path.display()
                     );
                 }
                 Err(e) => {
                     error!(
-                        "Failed to copy {} to {}: {}",
+                        "Failed to copy {0} to {1}: {e}",
                         source_path.display(),
-                        dest_path.display(),
-                        e
+                        dest_path.display()
                     );
                     return Err(AppError::Io(e));
                 }
@@ -130,13 +129,13 @@ impl ExportService {
 
         let metadata_path = project_dir.join("metadata.json");
         let metadata_json = serde_json::to_string_pretty(&metadata).map_err(|e| {
-            AppError::InternalServerError(format!("Failed to serialize metadata: {}", e))
+            AppError::InternalServerError(format!("Failed to serialize metadata: {e}"))
         })?;
 
         fs::write(&metadata_path, metadata_json).await.map_err(|e| {
             AppError::Io(std::io::Error::new(
                 std::io::ErrorKind::Other,
-                format!("Failed to write metadata file: {}", e),
+                format!("Failed to write metadata file: {e}"),
             ))
         })?;
 
