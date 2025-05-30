@@ -1,0 +1,138 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 0.1.0)'
+        required: true
+      release_type:
+        description: 'Release type'
+        required: true
+        default: 'minor'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      prerelease:
+        description: 'Is this a prerelease?'
+        required: true
+        default: false
+        type: boolean
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: Validate version format
+        run: |
+          if ! [[ "${{ github.event.inputs.version }}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Invalid version format. Please use semantic versioning (e.g., 0.1.0)"
+            exit 1
+          fi
+
+      - name: Run tests
+        run: cargo test --all-features
+
+      - name: Run clippy
+        run: |
+          rustup component add clippy
+          cargo clippy --all-features -- -D warnings
+
+  update-version:
+    needs: validate
+    runs-on: ubuntu-latest
+    outputs:
+      new_version: ${{ steps.set-version.outputs.new_version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
+      - name: Update version in Cargo.toml
+        id: set-version
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          echo "new_version=$VERSION" >> $GITHUB_OUTPUT
+          sed -i "s/^version = \".*\"/version = \"$VERSION\"/" Cargo.toml
+          
+          # Also update the version in the Helm chart
+          sed -i "s/^version: .*/version: $VERSION/" charts/shoebox/Chart.yaml
+          sed -i "s/^appVersion: .*/appVersion: \"$VERSION\"/" charts/shoebox/Chart.yaml
+          
+          git add Cargo.toml charts/shoebox/Chart.yaml
+          git commit -m "chore: bump version to $VERSION"
+          git tag -a "v$VERSION" -m "Release v$VERSION"
+          git push origin main
+          git push origin "v$VERSION"
+
+  build-and-publish:
+    needs: update-version
+    uses: ./.github/workflows/build-and-publish.yml
+    secrets: inherit
+
+  create-release:
+    needs: [update-version, build-and-publish]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate changelog
+        id: changelog
+        uses: metcalfc/changelog-generator@v4.1.0
+        with:
+          myToken: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ needs.update-version.outputs.new_version }}
+          name: Release v${{ needs.update-version.outputs.new_version }}
+          body: |
+            ## Shoebox v${{ needs.update-version.outputs.new_version }}
+            
+            ${{ steps.changelog.outputs.changelog }}
+            
+            ### Docker Image
+            ```
+            docker pull ghcr.io/${{ github.repository }}:${{ needs.update-version.outputs.new_version }}
+            ```
+            
+            ### Helm Chart
+            ```
+            helm repo add shoebox https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/helm/
+            helm repo update
+            helm install shoebox shoebox/shoebox --version ${{ needs.update-version.outputs.new_version }}
+            ```
+          draft: false
+          prerelease: ${{ github.event.inputs.prerelease }}
+
+  release-helm-chart:
+    needs: [update-version, create-release]
+    uses: ./.github/workflows/helm-release.yml
+    secrets: inherit
+
+  update-docs:
+    needs: [update-version, create-release, release-helm-chart]
+    uses: ./.github/workflows/mdbook.yml
+    secrets: inherit

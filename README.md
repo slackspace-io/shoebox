@@ -108,6 +108,25 @@ The application will be available at http://localhost:3000.
 
 As this project is in active development, contributions are welcome but the codebase may change rapidly.
 
+## Releasing
+
+Shoebox uses GitHub Actions for automated releases. To create a new release:
+
+1. Go to the Actions tab in the GitHub repository
+2. Select the "Release" workflow
+3. Click "Run workflow"
+4. Enter the version number (e.g., 0.1.0) following semantic versioning
+5. Select the release type (patch, minor, or major)
+6. Indicate whether this is a prerelease
+7. Click "Run workflow"
+
+The workflow will:
+- Validate the version format and run tests
+- Update version numbers in Cargo.toml and Helm charts
+- Build and publish Docker images
+- Create a GitHub release with auto-generated changelog
+- Update Helm charts and documentation
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

@@ -11,6 +11,10 @@ on:
       - 'book.toml'
   pull_request:
     branches: [ main ]
+  workflow_call:
+    secrets:
+      GITHUB_TOKEN:
+        required: true
 
 concurrency:
   group: "shoebox"

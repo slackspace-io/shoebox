@@ -10,6 +10,10 @@ on:
     branches: [ main ]
     paths:
       - 'charts/**'
+  workflow_call:
+    secrets:
+      GITHUB_TOKEN:
+        required: true
 
 
 concurrency:
