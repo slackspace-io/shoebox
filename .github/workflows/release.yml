@@ -72,11 +72,11 @@ jobs:
           VERSION="${{ github.event.inputs.version }}"
           echo "new_version=$VERSION" >> $GITHUB_OUTPUT
           sed -i "s/^version = \".*\"/version = \"$VERSION\"/" Cargo.toml
-          
+
           # Also update the version in the Helm chart
           sed -i "s/^version: .*/version: $VERSION/" charts/shoebox/Chart.yaml
           sed -i "s/^appVersion: .*/appVersion: \"$VERSION\"/" charts/shoebox/Chart.yaml
-          
+
           git add Cargo.toml charts/shoebox/Chart.yaml
           git commit -m "chore: bump version to $VERSION"
           git tag -a "v$VERSION" -m "Release v$VERSION"
@@ -86,7 +86,8 @@ jobs:
   build-and-publish:
     needs: update-version
     uses: ./.github/workflows/build-and-publish.yml
-    secrets: inherit
+    secrets:
+      GH_PAT: ${{ secrets.GITHUB_TOKEN }}
 
   create-release:
     needs: [update-version, build-and-publish]
@@ -110,14 +111,14 @@ jobs:
           name: Release v${{ needs.update-version.outputs.new_version }}
           body: |
             ## Shoebox v${{ needs.update-version.outputs.new_version }}
-            
+
             ${{ steps.changelog.outputs.changelog }}
-            
+
             ### Docker Image
             ```
             docker pull ghcr.io/${{ github.repository }}:${{ needs.update-version.outputs.new_version }}
             ```
-            
+
             ### Helm Chart
             ```
             helm repo add shoebox https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/helm/
@@ -130,9 +131,11 @@ jobs:
   release-helm-chart:
     needs: [update-version, create-release]
     uses: ./.github/workflows/helm-release.yml
-    secrets: inherit
+    secrets:
+      GH_PAT: ${{ secrets.GITHUB_TOKEN }}
 
   update-docs:
     needs: [update-version, create-release, release-helm-chart]
     uses: ./.github/workflows/mdbook.yml
-    secrets: inherit
+    secrets:
+      GH_PAT: ${{ secrets.GITHUB_TOKEN }}

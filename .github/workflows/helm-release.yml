@@ -12,7 +12,7 @@ on:
       - 'charts/**'
   workflow_call:
     secrets:
-      GITHUB_TOKEN:
+      GH_PAT:
         required: true
 
 
@@ -95,4 +95,4 @@ jobs:
         with:
           pages_branch: main
         env:
-          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          CR_TOKEN: "${{ secrets.GH_PAT }}"

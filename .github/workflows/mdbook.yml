@@ -21,7 +21,7 @@ on:
 
   workflow_call:
     secrets:
-      GITHUB_TOKEN:
+      GH_PAT:
         required: true
 
   # Allows you to run this workflow manually from the Actions tab
