@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use uuid::Uuid;
-use chrono::{DateTime, Utc};
+use chrono;
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct Video {
@@ -68,6 +68,8 @@ pub struct VideoSearchParams {
     pub sort_order: Option<String>,
     pub start_date: Option<String>,
     pub end_date: Option<String>,
+    pub min_duration: Option<i64>,
+    pub max_duration: Option<i64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

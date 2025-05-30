@@ -438,6 +438,20 @@ impl VideoService {
             query_params.push(end_date.clone());
         }
 
+        if let Some(min_duration) = params.min_duration {
+            // Convert from seconds to milliseconds
+            let min_duration_ms = min_duration * 1000;
+            conditions.push("v.duration >= ?".to_string());
+            query_params.push(min_duration_ms.to_string());
+        }
+
+        if let Some(max_duration) = params.max_duration {
+            // Convert from seconds to milliseconds
+            let max_duration_ms = max_duration * 1000;
+            conditions.push("v.duration <= ?".to_string());
+            query_params.push(max_duration_ms.to_string());
+        }
+
         // Add WHERE clause if conditions exist
         if !conditions.is_empty() {
             query.push_str(" WHERE ");

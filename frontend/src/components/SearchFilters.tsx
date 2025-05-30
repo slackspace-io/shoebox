@@ -40,6 +40,8 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onFilterChange, initialFi
   const [sortOrder, setSortOrder] = useState<string>('DESC');
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
+  const [minDuration, setMinDuration] = useState<string>('');
+  const [maxDuration, setMaxDuration] = useState<string>('');
   const [loading, setLoading] = useState(true);
 
   const bgColor = useColorModeValue('white', 'gray.800');
@@ -100,7 +102,9 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onFilterChange, initialFi
       sort_by: sortBy || undefined,
       sort_order: sortOrder || undefined,
       start_date: startDate || undefined,
-      end_date: endDate || undefined
+      end_date: endDate || undefined,
+      min_duration: minDuration ? parseInt(minDuration, 10) : undefined,
+      max_duration: maxDuration ? parseInt(maxDuration, 10) : undefined
     });
   };
 
@@ -114,6 +118,8 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onFilterChange, initialFi
     setSortOrder('DESC');
     setStartDate('');
     setEndDate('');
+    setMinDuration('');
+    setMaxDuration('');
     onFilterChange({
       tags: undefined,
       people: undefined,
@@ -122,7 +128,9 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onFilterChange, initialFi
       sort_by: 'created_date',
       sort_order: 'DESC',
       start_date: undefined,
-      end_date: undefined
+      end_date: undefined,
+      min_duration: undefined,
+      max_duration: undefined
     });
   };
 
@@ -227,6 +235,36 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onFilterChange, initialFi
             />
             <Text fontSize="xs" color="gray.500" mt={1}>
               Filter videos created on or before this date
+            </Text>
+          </Box>
+        </SimpleGrid>
+
+        <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4} mt={4}>
+          <Box>
+            <Heading size="sm" mb={2}>Min Duration (seconds)</Heading>
+            <Input
+              type="number"
+              value={minDuration}
+              onChange={(e) => setMinDuration(e.target.value)}
+              placeholder="Minimum duration"
+              min="0"
+            />
+            <Text fontSize="xs" color="gray.500" mt={1}>
+              Filter videos with duration greater than or equal to this value
+            </Text>
+          </Box>
+
+          <Box>
+            <Heading size="sm" mb={2}>Max Duration (seconds)</Heading>
+            <Input
+              type="number"
+              value={maxDuration}
+              onChange={(e) => setMaxDuration(e.target.value)}
+              placeholder="Maximum duration"
+              min="0"
+            />
+            <Text fontSize="xs" color="gray.500" mt={1}>
+              Filter videos with duration less than or equal to this value
             </Text>
           </Box>
         </SimpleGrid>

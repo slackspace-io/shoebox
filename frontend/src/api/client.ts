@@ -65,6 +65,8 @@ export interface VideoSearchParams {
   sort_order?: string;
   start_date?: string;
   end_date?: string;
+  min_duration?: number;
+  max_duration?: number;
 }
 
 export interface Tag {
