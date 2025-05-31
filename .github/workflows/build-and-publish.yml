@@ -9,6 +9,11 @@ on:
       - '**.md'
       - 'docs/**'
       - 'book.toml'
+      - '.github/dependabot.yml'
+      - '.github/workflows/helm-release.yml'
+      - '.github/workflows/mdbook.yml'
+      - '.github/workflows/release.yml'
+      - '.github/workflows/rust-clippy.yml'
   pull_request:
     branches: [ main ]
   workflow_call:
