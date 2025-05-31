@@ -32,6 +32,7 @@ const TIME_PERIODS = [
 const GROUPING_OPTIONS = [
   { value: 'auto', label: 'Auto' },
   { value: 'day', label: 'Day' },
+  { value: 'week', label: 'Week' },
   { value: 'month', label: 'Month' },
   { value: 'quarter', label: 'Quarter' },
   { value: 'year', label: 'Year' },
@@ -131,8 +132,10 @@ const RatedVideosTimelinePage: React.FC = () => {
         effectiveGrouping = 'year';
       } else if (dateRange > 6) {
         effectiveGrouping = 'quarter';
-      } else if (dateRange > 1) {
+      } else if (dateRange > 3) {
         effectiveGrouping = 'month';
+      } else if (dateRange > 1) {
+        effectiveGrouping = 'week';
       } else {
         effectiveGrouping = 'day';
       }
@@ -151,6 +154,15 @@ const RatedVideosTimelinePage: React.FC = () => {
         case 'day':
           periodKey = date.toISOString().split('T')[0]; // YYYY-MM-DD
           break;
+        case 'week': {
+          // Get the first day of the week (Sunday)
+          const day = date.getDay(); // 0 = Sunday, 1 = Monday, etc.
+          const diff = date.getDate() - day;
+          const firstDayOfWeek = new Date(date);
+          firstDayOfWeek.setDate(diff);
+          periodKey = `${firstDayOfWeek.toISOString().split('T')[0]}-week`; // YYYY-MM-DD-week
+          break;
+        }
         case 'month':
           periodKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`; // YYYY-MM
           break;
@@ -209,6 +221,25 @@ const RatedVideosTimelinePage: React.FC = () => {
     switch (effectiveGrouping) {
       case 'day':
         return new Date(period).toLocaleDateString();
+      case 'week': {
+        const weekDate = period.split('-week')[0]; // Extract the date part
+        const date = new Date(weekDate);
+        // Calculate the end of the week (Saturday)
+        const endOfWeek = new Date(date);
+        endOfWeek.setDate(date.getDate() + 6);
+        // Format as "MMM D - MMM D, YYYY" (e.g., "Jan 1 - Jan 7, 2023")
+        const startMonth = date.toLocaleString('default', { month: 'short' });
+        const endMonth = endOfWeek.toLocaleString('default', { month: 'short' });
+        const startDay = date.getDate();
+        const endDay = endOfWeek.getDate();
+        const year = date.getFullYear();
+
+        if (startMonth === endMonth) {
+          return `${startMonth} ${startDay}-${endDay}, ${year}`;
+        } else {
+          return `${startMonth} ${startDay} - ${endMonth} ${endDay}, ${year}`;
+        }
+      }
       case 'month': {
         const [year, month] = period.split('-');
         return `${new Date(parseInt(year), parseInt(month) - 1).toLocaleString('default', { month: 'short' })} ${year}`;
@@ -234,8 +265,10 @@ const RatedVideosTimelinePage: React.FC = () => {
       return 'year';
     } else if (dateRange > 6) {
       return 'quarter';
-    } else if (dateRange > 1) {
+    } else if (dateRange > 3) {
       return 'month';
+    } else if (dateRange > 1) {
+      return 'week';
     } else {
       return 'day';
     }
@@ -264,6 +297,16 @@ const RatedVideosTimelinePage: React.FC = () => {
         startDate = group.period;
         endDate = group.period;
         break;
+      case 'week': {
+        // For week grouping, use the first day of the week and the day 6 days later
+        const weekDate = group.period.split('-week')[0]; // Extract the date part
+        const firstDay = new Date(weekDate);
+        const lastDay = new Date(weekDate);
+        lastDay.setDate(firstDay.getDate() + 6); // 6 days after the first day = end of week
+        startDate = firstDay.toISOString().split('T')[0];
+        endDate = lastDay.toISOString().split('T')[0];
+        break;
+      }
       case 'month': {
         // For month grouping, use the first and last day of the month
         const [year, month] = group.period.split('-');
