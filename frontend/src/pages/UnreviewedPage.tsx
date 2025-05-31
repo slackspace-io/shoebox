@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Box,
   Flex,
@@ -30,6 +30,7 @@ import { FaSave, FaArrowLeft, FaArrowRight, FaStar, FaRegStar, FaBug } from 'rea
 import ReactPlayer from 'react-player';
 import CreatableSelect from 'react-select/creatable';
 import { videoApi, tagApi, personApi, VideoWithMetadata, UpdateVideoDto, VideoSearchParams } from '../api/client';
+import SearchFilters from '../components/SearchFilters';
 
 interface SelectOption {
   value: string;
@@ -38,6 +39,7 @@ interface SelectOption {
 
 const UnreviewedPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
 
@@ -47,6 +49,13 @@ const UnreviewedPage: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [loadingNextVideo, setLoadingNextVideo] = useState(false);
   const [rawDatabaseValues, setRawDatabaseValues] = useState<string>('');
+  const [searchParams, setSearchParams] = useState<VideoSearchParams>({
+    unreviewed: true,
+    limit: 100,
+    offset: 0,
+    sort_by: 'created_date',
+    sort_order: 'ASC'
+  });
 
   // Form state
   const [title, setTitle] = useState('');
@@ -62,18 +71,39 @@ const UnreviewedPage: React.FC = () => {
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
 
+  // Parse URL parameters and update search params
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    const start_date = urlParams.get('start_date');
+    const end_date = urlParams.get('end_date');
+    const tags = urlParams.get('tags');
+    const people = urlParams.get('people');
+    const rating = urlParams.get('rating');
+    const sort_by = urlParams.get('sort_by');
+    const sort_order = urlParams.get('sort_order');
+    const min_duration = urlParams.get('min_duration');
+    const max_duration = urlParams.get('max_duration');
+
+    setSearchParams(prevParams => ({
+      ...prevParams,
+      start_date: start_date || undefined,
+      end_date: end_date || undefined,
+      tags: tags ? tags.split(',') : undefined,
+      people: people ? people.split(',') : undefined,
+      rating: rating ? parseInt(rating, 10) : undefined,
+      sort_by: sort_by || prevParams.sort_by,
+      sort_order: sort_order || prevParams.sort_order,
+      min_duration: min_duration ? parseInt(min_duration, 10) : undefined,
+      max_duration: max_duration ? parseInt(max_duration, 10) : undefined,
+      unreviewed: true // Always keep unreviewed filter
+    }));
+  }, [location]);
+
   // Load unreviewed videos
   useEffect(() => {
     const fetchUnreviewedVideos = async () => {
       setLoading(true);
       try {
-        const searchParams: VideoSearchParams = {
-          unreviewed: true,
-          limit: 100,
-          offset: 0,
-          sort_by: 'created_date',
-          sort_order: 'ASC'
-        };
         const results = await videoApi.searchVideos(searchParams);
         setVideos(results);
 
@@ -95,7 +125,7 @@ const UnreviewedPage: React.FC = () => {
     };
 
     fetchUnreviewedVideos();
-  }, [toast]);
+  }, [searchParams, toast]);
 
   // Load tags and people options
   useEffect(() => {
@@ -158,12 +188,12 @@ const UnreviewedPage: React.FC = () => {
       } else {
         // If this was the last video, refresh the list to get more unreviewed videos
         setLoadingNextVideo(true);
-        const searchParams: VideoSearchParams = {
-          unreviewed: true,
-          limit: 100,
+        // Keep the current search parameters but reset offset
+        const nextSearchParams = {
+          ...searchParams,
           offset: 0
         };
-        const results = await videoApi.searchVideos(searchParams);
+        const results = await videoApi.searchVideos(nextSearchParams);
 
         if (results.length > 0) {
           setVideos(results);
@@ -219,6 +249,33 @@ const UnreviewedPage: React.FC = () => {
         isClosable: true,
       });
     }
+  };
+
+  // Handle filter changes
+  const handleFilterChange = (newFilters: Partial<VideoSearchParams>) => {
+    // Always keep unreviewed: true
+    setSearchParams({
+      ...searchParams,
+      ...newFilters,
+      unreviewed: true,
+      offset: 0, // Reset pagination when filters change
+    });
+
+    // Update URL with filter parameters
+    const urlParams = new URLSearchParams();
+
+    if (newFilters.start_date) urlParams.set('start_date', newFilters.start_date);
+    if (newFilters.end_date) urlParams.set('end_date', newFilters.end_date);
+    if (newFilters.tags && newFilters.tags.length > 0) urlParams.set('tags', newFilters.tags.join(','));
+    if (newFilters.people && newFilters.people.length > 0) urlParams.set('people', newFilters.people.join(','));
+    if (newFilters.rating) urlParams.set('rating', newFilters.rating.toString());
+    if (newFilters.sort_by) urlParams.set('sort_by', newFilters.sort_by);
+    if (newFilters.sort_order) urlParams.set('sort_order', newFilters.sort_order);
+    if (newFilters.min_duration) urlParams.set('min_duration', newFilters.min_duration.toString());
+    if (newFilters.max_duration) urlParams.set('max_duration', newFilters.max_duration.toString());
+
+    // Navigate to the same page with updated query parameters
+    navigate({ pathname: location.pathname, search: urlParams.toString() });
   };
 
   // Render rating stars
@@ -292,6 +349,8 @@ const UnreviewedPage: React.FC = () => {
           Reviewing {currentVideoIndex + 1} of {videos.length}
         </Text>
       </Flex>
+
+      <SearchFilters onFilterChange={handleFilterChange} initialFilters={searchParams} />
 
       <Flex direction={{ base: 'column', lg: 'row' }} gap={8}>
         <Box flex="1" maxW={{ lg: '60%' }}>
