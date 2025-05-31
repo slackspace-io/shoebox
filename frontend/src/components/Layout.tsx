@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Flex, Heading, Link, Spacer, Button, useColorMode, useColorModeValue, Alert, AlertIcon, AlertTitle, AlertDescription, Spinner, Image } from '@chakra-ui/react';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
-import { FaSun, FaMoon, FaVideo, FaFileExport, FaTags, FaClipboardCheck, FaCog, FaChartLine } from 'react-icons/fa';
+import { FaSun, FaMoon, FaVideo, FaFileExport, FaTags, FaClipboardCheck, FaCog, FaChartLine, FaEdit } from 'react-icons/fa';
 import { useScanContext } from '../contexts/ScanContext';
 // @ts-ignore
 import logo from '../assets/logo_large.png';
@@ -93,6 +93,18 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           >
             <FaFileExport style={{ marginRight: '8px' }} />
             Export
+          </Link>
+          <Link
+            as={RouterLink}
+            to="/bulk-edit"
+            mr={4}
+            display="flex"
+            alignItems="center"
+            fontWeight={location.pathname === '/bulk-edit' ? 'bold' : 'normal'}
+            color={location.pathname === '/bulk-edit' ? 'brand.500' : undefined}
+          >
+            <FaEdit style={{ marginRight: '8px' }} />
+            Bulk Edit
           </Link>
           <Link
             as={RouterLink}

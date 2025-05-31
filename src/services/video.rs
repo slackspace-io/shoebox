@@ -363,6 +363,22 @@ impl VideoService {
         Ok(())
     }
 
+    pub async fn bulk_update(&self, video_ids: Vec<String>, update_dto: UpdateVideoDto) -> Result<Vec<Video>> {
+        let mut updated_videos = Vec::new();
+
+        for id in video_ids {
+            match self.update(&id, update_dto.clone()).await {
+                Ok(video) => updated_videos.push(video),
+                Err(e) => {
+                    error!("Failed to update video {}: {}", id, e);
+                    // Continue with other videos even if one fails
+                }
+            }
+        }
+
+        Ok(updated_videos)
+    }
+
     pub async fn search(&self, params: VideoSearchParams) -> Result<Vec<VideoWithMetadata>> {
         let mut conditions = Vec::<String>::new();
         let mut query_params = Vec::new();

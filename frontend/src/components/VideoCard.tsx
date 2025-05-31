@@ -22,20 +22,6 @@ const VideoCard: React.FC<VideoCardProps> = ({ video }) => {
   const cardBg = useColorModeValue('white', 'gray.800');
   const cardBorder = useColorModeValue('gray.200', 'gray.700');
 
-  // Format file size
-  const formatFileSize = (bytes?: number): string => {
-    if (!bytes) return 'Unknown size';
-    const units = ['B', 'KB', 'MB', 'GB', 'TB'];
-    let size = bytes;
-    let unitIndex = 0;
-
-    while (size >= 1024 && unitIndex < units.length - 1) {
-      size /= 1024;
-      unitIndex++;
-    }
-
-    return `${size.toFixed(1)} ${units[unitIndex]}`;
-  };
 
   // Format date
   const formatDate = (dateString?: string): string => {
@@ -120,8 +106,7 @@ const VideoCard: React.FC<VideoCardProps> = ({ video }) => {
         </Text>
 
         <Flex fontSize="sm" color="gray.500" noOfLines={1} justifyContent="space-between">
-          <Text>{formatFileSize(video.file_size)}</Text>
-          {video.duration && <Text>{formatDuration(video.duration)}</Text>}
+          <Text>{video.duration ? formatDuration(video.duration) : 'Unknown duration'}</Text>
         </Flex>
 
         {video.tags.length > 0 && (

@@ -53,6 +53,11 @@ export interface UpdateVideoDto {
   people?: string[];
 }
 
+export interface BulkUpdateVideoDto {
+  video_ids: string[];
+  update: UpdateVideoDto;
+}
+
 export interface VideoSearchParams {
   query?: string;
   tags?: string[];
@@ -126,6 +131,12 @@ export const videoApi = {
   // Update a video
   updateVideo: async (id: string, data: UpdateVideoDto): Promise<VideoWithMetadata> => {
     const response = await apiClient.put(`/videos/${id}`, data);
+    return response.data;
+  },
+
+  // Bulk update multiple videos
+  bulkUpdateVideos: async (data: BulkUpdateVideoDto): Promise<Video[]> => {
+    const response = await apiClient.post('/videos/bulk-update', data);
     return response.data;
   },
 

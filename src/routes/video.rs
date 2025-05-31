@@ -13,7 +13,7 @@ use std::fs;
 use std::io::Read;
 
 use crate::error::{Result, AppError};
-use crate::models::{CreateVideoDto, UpdateVideoDto, VideoSearchParams};
+use crate::models::{CreateVideoDto, UpdateVideoDto, VideoSearchParams, BulkUpdateVideoDto};
 use crate::services::AppState;
 use crate::services::VideoService;
 
@@ -22,6 +22,7 @@ pub fn router(app_state: AppState) -> Router {
         .route("/", get(list_videos))
         .route("/", post(create_video))
         .route("/search", post(search_videos))
+        .route("/bulk-update", post(bulk_update_videos))
         .route("/{id}", get(get_video))
         .route("/{id}", put(update_video))
         .route("/{id}", delete(delete_video))
@@ -126,6 +127,21 @@ async fn search_videos(
     );
 
     let videos = video_service.search(search_params).await?;
+    Ok(Json(videos))
+}
+
+async fn bulk_update_videos(
+    State(state): State<AppState>,
+    Json(bulk_update_dto): Json<BulkUpdateVideoDto>,
+) -> Result<Json<Vec<crate::models::Video>>> {
+    let video_service = VideoService::new(
+        state.db.clone(),
+        crate::services::TagService::new(state.db.clone()),
+        crate::services::PersonService::new(state.db.clone()),
+        crate::services::ThumbnailService::new(&state.config),
+    );
+
+    let videos = video_service.bulk_update(bulk_update_dto.video_ids, bulk_update_dto.update).await?;
     Ok(Json(videos))
 }
 

@@ -56,6 +56,12 @@ pub struct UpdateVideoDto {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BulkUpdateVideoDto {
+    pub video_ids: Vec<String>,
+    pub update: UpdateVideoDto,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VideoSearchParams {
     pub query: Option<String>,
     pub tags: Option<Vec<String>>,
