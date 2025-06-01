@@ -6,13 +6,7 @@ import {
   Heading,
   Text,
   Button,
-  FormControl,
-  FormLabel,
-  Input,
-  Textarea,
-  HStack,
   VStack,
-  IconButton,
   useToast,
   Spinner,
   useColorModeValue,
@@ -26,11 +20,11 @@ import {
   Code,
   useDisclosure
 } from '@chakra-ui/react';
-import { FaSave, FaArrowLeft, FaArrowRight, FaStar, FaRegStar, FaBug } from 'react-icons/fa';
+import { FaSave, FaArrowLeft, FaArrowRight, FaBug } from 'react-icons/fa';
 import ReactPlayer from 'react-player';
-import CreatableSelect from 'react-select/creatable';
-import { videoApi, tagApi, personApi, VideoWithMetadata, UpdateVideoDto, VideoSearchParams } from '../api/client';
+import { videoApi, VideoWithMetadata, UpdateVideoDto, VideoSearchParams } from '../api/client';
 import SearchFilters from '../components/SearchFilters';
+import VideoForm from '../components/VideoForm';
 
 interface SelectOption {
   value: string;
@@ -39,7 +33,7 @@ interface SelectOption {
 
 const UnreviewedPage: React.FC = () => {
   const navigate = useNavigate();
-  const location = useLocation();
+  const routerLocation = useLocation();
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
 
@@ -61,19 +55,16 @@ const UnreviewedPage: React.FC = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [rating, setRating] = useState<number | undefined>(undefined);
+  const [videoLocation, setVideoLocation] = useState('');
+  const [event, setEvent] = useState('');
   const [selectedTags, setSelectedTags] = useState<SelectOption[]>([]);
   const [selectedPeople, setSelectedPeople] = useState<SelectOption[]>([]);
 
-  // Options for select inputs
-  const [tagOptions, setTagOptions] = useState<SelectOption[]>([]);
-  const [peopleOptions, setPeopleOptions] = useState<SelectOption[]>([]);
-
-  const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
 
   // Parse URL parameters and update search params
   useEffect(() => {
-    const urlParams = new URLSearchParams(location.search);
+    const urlParams = new URLSearchParams(routerLocation.search);
     const start_date = urlParams.get('start_date');
     const end_date = urlParams.get('end_date');
     const tags = urlParams.get('tags');
@@ -97,7 +88,7 @@ const UnreviewedPage: React.FC = () => {
       max_duration: max_duration ? parseInt(max_duration, 10) : undefined,
       unreviewed: true // Always keep unreviewed filter
     }));
-  }, [location]);
+  }, [routerLocation]);
 
   // Load unreviewed videos
   useEffect(() => {
@@ -127,30 +118,14 @@ const UnreviewedPage: React.FC = () => {
     fetchUnreviewedVideos();
   }, [searchParams, toast]);
 
-  // Load tags and people options
-  useEffect(() => {
-    const fetchOptions = async () => {
-      try {
-        // Fetch tags
-        const tags = await tagApi.getTags();
-        setTagOptions(tags.map(tag => ({ value: tag.name, label: tag.name })));
-
-        // Fetch people
-        const people = await personApi.getPeople();
-        setPeopleOptions(people.map(person => ({ value: person.name, label: person.name })));
-      } catch (error) {
-        console.error('Error fetching options:', error);
-      }
-    };
-
-    fetchOptions();
-  }, []);
 
   // Initialize form with video data
   const initializeForm = (video: VideoWithMetadata) => {
     setTitle(video.title || '');
     setDescription(video.description || '');
     setRating(video.rating);
+    setVideoLocation(video.location || '');
+    setEvent(video.event || '');
     setSelectedTags(video.tags.map(tag => ({ value: tag, label: tag })));
     setSelectedPeople(video.people.map(person => ({ value: person, label: person })));
   };
@@ -166,6 +141,8 @@ const UnreviewedPage: React.FC = () => {
         title: title || undefined,
         description: description || undefined,
         rating,
+        location: videoLocation || undefined,
+        event: event || undefined,
         tags: selectedTags.map(tag => tag.value),
         people: selectedPeople.map(person => person.value),
       };
@@ -225,11 +202,6 @@ const UnreviewedPage: React.FC = () => {
     }
   };
 
-  // Handle rating change
-  const handleRatingChange = (newRating: number) => {
-    setRating(newRating === rating ? undefined : newRating);
-  };
-
   // Handle showing debug information
   const handleShowDebug = async () => {
     if (videos.length === 0 || currentVideoIndex >= videos.length) return;
@@ -275,47 +247,9 @@ const UnreviewedPage: React.FC = () => {
     if (newFilters.max_duration) urlParams.set('max_duration', newFilters.max_duration.toString());
 
     // Navigate to the same page with updated query parameters
-    navigate({ pathname: location.pathname, search: urlParams.toString() });
+    navigate({ pathname: routerLocation.pathname, search: urlParams.toString() });
   };
 
-  // Render rating stars
-  const renderRatingStars = () => {
-    const stars = [];
-    for (let i = 1; i <= 5; i++) {
-      stars.push(
-        <IconButton
-          key={i}
-          icon={i <= (rating || 0) ? <FaStar /> : <FaRegStar />}
-          aria-label={`${i} star`}
-          variant="ghost"
-          color={i <= (rating || 0) ? 'yellow.400' : 'gray.400'}
-          onClick={() => handleRatingChange(i)}
-        />
-      );
-    }
-    return <HStack spacing={1}>{stars}</HStack>;
-  };
-
-  // Custom styles for react-select
-  const selectStyles = {
-    control: (base: any) => ({
-      ...base,
-      background: bgColor,
-      borderColor: borderColor,
-    }),
-    menu: (base: any) => ({
-      ...base,
-      background: bgColor,
-      zIndex: 2
-    }),
-    option: (base: any, state: any) => ({
-      ...base,
-      backgroundColor: state.isFocused
-        ? useColorModeValue('blue.50', 'blue.900')
-        : useColorModeValue('white', 'gray.700'),
-      color: useColorModeValue('black', 'black')
-    })
-  };
 
   if (loading) {
     return (
@@ -401,101 +335,31 @@ const UnreviewedPage: React.FC = () => {
         </Box>
 
         <VStack align="stretch" flex="1" spacing={4}>
-          <FormControl>
-            <FormLabel>Title</FormLabel>
-            <Input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Enter title"
-            />
-          </FormControl>
-
-          <FormControl>
-            <FormLabel>Rating</FormLabel>
-            {renderRatingStars()}
-          </FormControl>
-
-          <FormControl>
-            <FormLabel>Description</FormLabel>
-            <Textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Enter description"
-              rows={4}
-            />
-          </FormControl>
-
-          <FormControl>
-            <FormLabel>Tags</FormLabel>
-            <CreatableSelect
-              isMulti
-              options={tagOptions}
-              value={selectedTags}
-              onChange={(selected: any) => setSelectedTags(selected || [])}
-              placeholder="Select or create tags..."
-              styles={selectStyles}
-              isClearable
-              formatCreateLabel={(inputValue) => `Create tag "${inputValue}"`}
-              onCreateOption={async (inputValue) => {
-                try {
-                  const newTag = await tagApi.createTag(inputValue);
-                  const newOption = { value: newTag.name, label: newTag.name };
-                  setTagOptions([...tagOptions, newOption]);
-                  setSelectedTags([...selectedTags, newOption]);
-                  toast({
-                    title: 'Tag created',
-                    status: 'success',
-                    duration: 2000,
-                    isClosable: true,
-                  });
-                } catch (error) {
-                  console.error('Error creating tag:', error);
-                  toast({
-                    title: 'Error creating tag',
-                    status: 'error',
-                    duration: 3000,
-                    isClosable: true,
-                  });
-                }
-              }}
-            />
-          </FormControl>
-
-          <FormControl>
-            <FormLabel>People</FormLabel>
-            <CreatableSelect
-              isMulti
-              options={peopleOptions}
-              value={selectedPeople}
-              onChange={(selected: any) => setSelectedPeople(selected || [])}
-              placeholder="Select or create people..."
-              styles={selectStyles}
-              isClearable
-              formatCreateLabel={(inputValue) => `Create person "${inputValue}"`}
-              onCreateOption={async (inputValue) => {
-                try {
-                  const newPerson = await personApi.createPerson(inputValue);
-                  const newOption = { value: newPerson.name, label: newPerson.name };
-                  setPeopleOptions([...peopleOptions, newOption]);
-                  setSelectedPeople([...selectedPeople, newOption]);
-                  toast({
-                    title: 'Person created',
-                    status: 'success',
-                    duration: 2000,
-                    isClosable: true,
-                  });
-                } catch (error) {
-                  console.error('Error creating person:', error);
-                  toast({
-                    title: 'Error creating person',
-                    status: 'error',
-                    duration: 3000,
-                    isClosable: true,
-                  });
-                }
-              }}
-            />
-          </FormControl>
+          <VideoForm
+            video={currentVideo}
+            formData={{
+              title,
+              description,
+              rating,
+              location: videoLocation,
+              event,
+              selectedTags,
+              selectedPeople
+            }}
+            onChange={(formData) => {
+              if (formData.title !== undefined) setTitle(formData.title);
+              if (formData.description !== undefined) setDescription(formData.description);
+              if (formData.rating !== undefined) setRating(formData.rating);
+              if (formData.location !== undefined) setVideoLocation(formData.location);
+              if (formData.event !== undefined) setEvent(formData.event);
+              if (formData.tags !== undefined) {
+                setSelectedTags(formData.tags.map(tag => ({ value: tag, label: tag })));
+              }
+              if (formData.people !== undefined) {
+                setSelectedPeople(formData.people.map(person => ({ value: person, label: person })));
+              }
+            }}
+          />
 
           <Button
             leftIcon={<FaSave />}

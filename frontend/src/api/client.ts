@@ -23,6 +23,8 @@ export interface Video {
   thumbnail_path?: string;
   rating?: number;
   duration?: number;
+  location?: string;
+  event?: string;
   created_at: string;
   updated_at: string;
 }
@@ -41,6 +43,8 @@ export interface CreateVideoDto {
   file_size?: number;
   thumbnail_path?: string;
   rating?: number;
+  location?: string;
+  event?: string;
   tags: string[];
   people: string[];
 }
@@ -49,6 +53,8 @@ export interface UpdateVideoDto {
   title?: string;
   description?: string;
   rating?: number;
+  location?: string;
+  event?: string;
   tags?: string[];
   people?: string[];
 }
@@ -62,6 +68,8 @@ export interface VideoSearchParams {
   query?: string;
   tags?: string[];
   people?: string[];
+  location?: string;
+  event?: string;
   rating?: number;
   limit?: number;
   offset?: number;
@@ -94,6 +102,16 @@ export interface Person {
 
 export interface PersonUsage {
   id: string;
+  name: string;
+  video_count: number;
+}
+
+export interface LocationUsage {
+  name: string;
+  video_count: number;
+}
+
+export interface EventUsage {
   name: string;
   video_count: number;
 }
@@ -209,6 +227,64 @@ export const personApi = {
   // Delete a person by ID
   deletePerson: async (id: string): Promise<void> => {
     await apiClient.delete(`/people/${id}`);
+  },
+};
+
+export const locationApi = {
+  // Get all locations
+  getLocations: async (): Promise<string[]> => {
+    const response = await apiClient.get('/locations');
+    return response.data;
+  },
+
+  // Get location usage statistics
+  getLocationUsage: async (): Promise<LocationUsage[]> => {
+    const response = await apiClient.get('/locations/usage');
+    return response.data;
+  },
+
+  // Update a location
+  updateLocation: async (oldLocation: string, newLocation: string): Promise<number> => {
+    const response = await apiClient.post('/locations/update', {
+      old_location: oldLocation,
+      new_location: newLocation
+    });
+    return response.data;
+  },
+
+  // Delete a location
+  deleteLocation: async (location: string): Promise<number> => {
+    const response = await apiClient.delete(`/locations/${encodeURIComponent(location)}`);
+    return response.data;
+  },
+};
+
+export const eventApi = {
+  // Get all events
+  getEvents: async (): Promise<string[]> => {
+    const response = await apiClient.get('/events');
+    return response.data;
+  },
+
+  // Get event usage statistics
+  getEventUsage: async (): Promise<EventUsage[]> => {
+    const response = await apiClient.get('/events/usage');
+    return response.data;
+  },
+
+  // Update an event
+  updateEvent: async (oldEvent: string, newEvent: string): Promise<number> => {
+    const response = await apiClient.post('/events/update', {
+      old_event: oldEvent,
+      new_event: newEvent
+    });
+    return response.data;
+  },
+
+  // Delete an event
+  deleteEvent: async (event: string): Promise<number> => {
+    const response = await apiClient.delete(`/events/${encodeURIComponent(event)}`);
+    return response.data;
   },
 };
 

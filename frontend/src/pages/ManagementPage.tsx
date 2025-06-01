@@ -30,11 +30,12 @@ import {
   Td,
   IconButton,
   Flex,
+  Text,
   useColorModeValue
 } from '@chakra-ui/react';
-import { FaTrash, FaPlus, FaArrowLeft } from 'react-icons/fa';
+import { FaTrash, FaPlus, FaArrowLeft, FaEdit, FaSave } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
-import { tagApi, personApi, TagUsage, PersonUsage } from '../api/client';
+import { tagApi, personApi, locationApi, eventApi, TagUsage, PersonUsage, LocationUsage, EventUsage } from '../api/client';
 
 const ManagementPage: React.FC = () => {
   const navigate = useNavigate();
@@ -44,24 +45,32 @@ const ManagementPage: React.FC = () => {
 
   const [tags, setTags] = useState<TagUsage[]>([]);
   const [people, setPeople] = useState<PersonUsage[]>([]);
+  const [locations, setLocations] = useState<LocationUsage[]>([]);
+  const [events, setEvents] = useState<EventUsage[]>([]);
   const [loading, setLoading] = useState(true);
   const [newTagName, setNewTagName] = useState('');
   const [newPersonName, setNewPersonName] = useState('');
-  const [itemToDelete, setItemToDelete] = useState<{ id: string; name: string; type: 'tag' | 'person' } | null>(null);
+  const [editingLocation, setEditingLocation] = useState<{ oldName: string; newName: string } | null>(null);
+  const [editingEvent, setEditingEvent] = useState<{ oldName: string; newName: string } | null>(null);
+  const [itemToDelete, setItemToDelete] = useState<{ id?: string; name: string; type: 'tag' | 'person' | 'location' | 'event' } | null>(null);
 
   const bgColor = useColorModeValue('white', 'gray.800');
 
-  // Load tags and people
+  // Load tags, people, locations, and events
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [tagsData, peopleData] = await Promise.all([
+        const [tagsData, peopleData, locationsData, eventsData] = await Promise.all([
           tagApi.getTagUsage(),
-          personApi.getPersonUsage()
+          personApi.getPersonUsage(),
+          locationApi.getLocationUsage(),
+          eventApi.getEventUsage()
         ]);
         setTags(tagsData);
         setPeople(peopleData);
+        setLocations(locationsData);
+        setEvents(eventsData);
       } catch (error) {
         console.error('Error fetching data:', error);
         toast({
@@ -144,12 +153,12 @@ const ManagementPage: React.FC = () => {
     }
   };
 
-  // Handle deleting a tag or person
+  // Handle deleting a tag, person, location, or event
   const handleDelete = async () => {
     if (!itemToDelete) return;
 
     try {
-      if (itemToDelete.type === 'tag') {
+      if (itemToDelete.type === 'tag' && itemToDelete.id) {
         await tagApi.deleteTag(itemToDelete.id);
         setTags(tags.filter(tag => tag.id !== itemToDelete.id));
         toast({
@@ -158,11 +167,33 @@ const ManagementPage: React.FC = () => {
           duration: 2000,
           isClosable: true,
         });
-      } else {
+      } else if (itemToDelete.type === 'person' && itemToDelete.id) {
         await personApi.deletePerson(itemToDelete.id);
         setPeople(people.filter(person => person.id !== itemToDelete.id));
         toast({
           title: 'Person deleted',
+          status: 'success',
+          duration: 2000,
+          isClosable: true,
+        });
+      } else if (itemToDelete.type === 'location') {
+        const count = await locationApi.deleteLocation(itemToDelete.name);
+        // Refresh locations after deletion
+        const updatedLocations = await locationApi.getLocationUsage();
+        setLocations(updatedLocations);
+        toast({
+          title: `Location deleted from ${count} videos`,
+          status: 'success',
+          duration: 2000,
+          isClosable: true,
+        });
+      } else if (itemToDelete.type === 'event') {
+        const count = await eventApi.deleteEvent(itemToDelete.name);
+        // Refresh events after deletion
+        const updatedEvents = await eventApi.getEventUsage();
+        setEvents(updatedEvents);
+        toast({
+          title: `Event deleted from ${count} videos`,
           status: 'success',
           duration: 2000,
           isClosable: true,
@@ -184,9 +215,63 @@ const ManagementPage: React.FC = () => {
   };
 
   // Open delete confirmation dialog
-  const openDeleteDialog = (id: string, name: string, type: 'tag' | 'person') => {
+  const openDeleteDialog = (id: string | undefined, name: string, type: 'tag' | 'person' | 'location' | 'event') => {
     setItemToDelete({ id, name, type });
     onOpen();
+  };
+
+  // Handle updating a location
+  const handleUpdateLocation = async () => {
+    if (!editingLocation) return;
+
+    try {
+      const count = await locationApi.updateLocation(editingLocation.oldName, editingLocation.newName);
+      // Refresh locations after update
+      const updatedLocations = await locationApi.getLocationUsage();
+      setLocations(updatedLocations);
+      setEditingLocation(null);
+      toast({
+        title: `Location updated in ${count} videos`,
+        status: 'success',
+        duration: 2000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error('Error updating location:', error);
+      toast({
+        title: 'Error updating location',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  // Handle updating an event
+  const handleUpdateEvent = async () => {
+    if (!editingEvent) return;
+
+    try {
+      const count = await eventApi.updateEvent(editingEvent.oldName, editingEvent.newName);
+      // Refresh events after update
+      const updatedEvents = await eventApi.getEventUsage();
+      setEvents(updatedEvents);
+      setEditingEvent(null);
+      toast({
+        title: `Event updated in ${count} videos`,
+        status: 'success',
+        duration: 2000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error('Error updating event:', error);
+      toast({
+        title: 'Error updating event',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
   };
 
   // Handle deleting all unused tags
@@ -249,7 +334,7 @@ const ManagementPage: React.FC = () => {
         <Button leftIcon={<FaArrowLeft />} onClick={() => navigate('/')}>
           Back to Videos
         </Button>
-        <Heading size="lg">Manage Tags & People</Heading>
+        <Heading size="lg">Manage Data</Heading>
         <Box width="100px" /> {/* Spacer for alignment */}
       </Flex>
 
@@ -257,6 +342,8 @@ const ManagementPage: React.FC = () => {
         <TabList mb="1em">
           <Tab>Tags</Tab>
           <Tab>People</Tab>
+          <Tab>Locations</Tab>
+          <Tab>Events</Tab>
         </TabList>
 
         <TabPanels>
@@ -409,6 +496,200 @@ const ManagementPage: React.FC = () => {
               </Box>
             </VStack>
           </TabPanel>
+
+          {/* Locations Panel */}
+          <TabPanel>
+            <VStack spacing={4} align="stretch">
+              <Box p={4} borderWidth="1px" borderRadius="md" bg={bgColor}>
+                <Heading size="md" mb={4}>Manage Locations</Heading>
+                <Text mb={4}>
+                  Locations are automatically created when you add them to videos.
+                  Here you can rename or delete existing locations.
+                </Text>
+              </Box>
+
+              <Box p={4} borderWidth="1px" borderRadius="md" bg={bgColor}>
+                <Heading size="md" mb={4}>Existing Locations</Heading>
+                <Table variant="simple">
+                  <Thead>
+                    <Tr>
+                      <Th>Name</Th>
+                      <Th isNumeric>Videos</Th>
+                      <Th width="120px">Actions</Th>
+                    </Tr>
+                  </Thead>
+                  <Tbody>
+                    {locations.length > 0 ? (
+                      locations.map((location) => (
+                        <Tr key={location.name}>
+                          <Td>
+                            {editingLocation && editingLocation.oldName === location.name ? (
+                              <Input
+                                value={editingLocation.newName}
+                                onChange={(e) => setEditingLocation({
+                                  ...editingLocation,
+                                  newName: e.target.value
+                                })}
+                                size="sm"
+                              />
+                            ) : (
+                              <Badge colorScheme="purple" color="white">{location.name}</Badge>
+                            )}
+                          </Td>
+                          <Td isNumeric>{location.video_count}</Td>
+                          <Td>
+                            {editingLocation && editingLocation.oldName === location.name ? (
+                              <HStack spacing={1}>
+                                <IconButton
+                                  aria-label="Save location"
+                                  icon={<FaSave />}
+                                  size="sm"
+                                  colorScheme="green"
+                                  variant="ghost"
+                                  onClick={handleUpdateLocation}
+                                />
+                                <IconButton
+                                  aria-label="Cancel"
+                                  icon={<FaArrowLeft />}
+                                  size="sm"
+                                  colorScheme="gray"
+                                  variant="ghost"
+                                  onClick={() => setEditingLocation(null)}
+                                />
+                              </HStack>
+                            ) : (
+                              <HStack spacing={1}>
+                                <IconButton
+                                  aria-label="Edit location"
+                                  icon={<FaEdit />}
+                                  size="sm"
+                                  colorScheme="blue"
+                                  variant="ghost"
+                                  onClick={() => setEditingLocation({
+                                    oldName: location.name,
+                                    newName: location.name
+                                  })}
+                                />
+                                <IconButton
+                                  aria-label="Delete location"
+                                  icon={<FaTrash />}
+                                  size="sm"
+                                  colorScheme="red"
+                                  variant="ghost"
+                                  onClick={() => openDeleteDialog(undefined, location.name, 'location')}
+                                />
+                              </HStack>
+                            )}
+                          </Td>
+                        </Tr>
+                      ))
+                    ) : (
+                      <Tr>
+                        <Td colSpan={3} textAlign="center">No locations found</Td>
+                      </Tr>
+                    )}
+                  </Tbody>
+                </Table>
+              </Box>
+            </VStack>
+          </TabPanel>
+
+          {/* Events Panel */}
+          <TabPanel>
+            <VStack spacing={4} align="stretch">
+              <Box p={4} borderWidth="1px" borderRadius="md" bg={bgColor}>
+                <Heading size="md" mb={4}>Manage Events</Heading>
+                <Text mb={4}>
+                  Events are automatically created when you add them to videos.
+                  Here you can rename or delete existing events.
+                </Text>
+              </Box>
+
+              <Box p={4} borderWidth="1px" borderRadius="md" bg={bgColor}>
+                <Heading size="md" mb={4}>Existing Events</Heading>
+                <Table variant="simple">
+                  <Thead>
+                    <Tr>
+                      <Th>Name</Th>
+                      <Th isNumeric>Videos</Th>
+                      <Th width="120px">Actions</Th>
+                    </Tr>
+                  </Thead>
+                  <Tbody>
+                    {events.length > 0 ? (
+                      events.map((event) => (
+                        <Tr key={event.name}>
+                          <Td>
+                            {editingEvent && editingEvent.oldName === event.name ? (
+                              <Input
+                                value={editingEvent.newName}
+                                onChange={(e) => setEditingEvent({
+                                  ...editingEvent,
+                                  newName: e.target.value
+                                })}
+                                size="sm"
+                              />
+                            ) : (
+                              <Badge colorScheme="orange" color="white">{event.name}</Badge>
+                            )}
+                          </Td>
+                          <Td isNumeric>{event.video_count}</Td>
+                          <Td>
+                            {editingEvent && editingEvent.oldName === event.name ? (
+                              <HStack spacing={1}>
+                                <IconButton
+                                  aria-label="Save event"
+                                  icon={<FaSave />}
+                                  size="sm"
+                                  colorScheme="green"
+                                  variant="ghost"
+                                  onClick={handleUpdateEvent}
+                                />
+                                <IconButton
+                                  aria-label="Cancel"
+                                  icon={<FaArrowLeft />}
+                                  size="sm"
+                                  colorScheme="gray"
+                                  variant="ghost"
+                                  onClick={() => setEditingEvent(null)}
+                                />
+                              </HStack>
+                            ) : (
+                              <HStack spacing={1}>
+                                <IconButton
+                                  aria-label="Edit event"
+                                  icon={<FaEdit />}
+                                  size="sm"
+                                  colorScheme="blue"
+                                  variant="ghost"
+                                  onClick={() => setEditingEvent({
+                                    oldName: event.name,
+                                    newName: event.name
+                                  })}
+                                />
+                                <IconButton
+                                  aria-label="Delete event"
+                                  icon={<FaTrash />}
+                                  size="sm"
+                                  colorScheme="red"
+                                  variant="ghost"
+                                  onClick={() => openDeleteDialog(undefined, event.name, 'event')}
+                                />
+                              </HStack>
+                            )}
+                          </Td>
+                        </Tr>
+                      ))
+                    ) : (
+                      <Tr>
+                        <Td colSpan={3} textAlign="center">No events found</Td>
+                      </Tr>
+                    )}
+                  </Tbody>
+                </Table>
+              </Box>
+            </VStack>
+          </TabPanel>
         </TabPanels>
       </Tabs>
 
@@ -421,7 +702,11 @@ const ManagementPage: React.FC = () => {
         <AlertDialogOverlay>
           <AlertDialogContent>
             <AlertDialogHeader fontSize="lg" fontWeight="bold">
-              Delete {itemToDelete?.type === 'tag' ? 'Tag' : 'Person'}
+              Delete {
+                itemToDelete?.type === 'tag' ? 'Tag' :
+                itemToDelete?.type === 'person' ? 'Person' :
+                itemToDelete?.type === 'location' ? 'Location' : 'Event'
+              }
             </AlertDialogHeader>
 
             <AlertDialogBody>

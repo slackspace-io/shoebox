@@ -4,6 +4,8 @@ mod person;
 mod scan;
 mod export;
 mod system;
+mod location;
+mod event;
 pub mod media;
 
 use axum::Router;
@@ -18,6 +20,10 @@ pub fn api_router(app_state: AppState) -> Router {
         .nest("/tags", tag::router(app_state.clone()))
         // Person routes
         .nest("/people", person::router(app_state.clone()))
+        // Location routes
+        .nest("/locations", location::router(app_state.clone()))
+        // Event routes
+        .nest("/events", event::router(app_state.clone()))
         // Scan routes
         .nest("/scan", scan::router(app_state.clone()))
         // Export routes

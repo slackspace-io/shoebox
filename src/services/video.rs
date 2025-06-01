@@ -95,7 +95,7 @@ impl VideoService {
     }
 
     pub async fn find_with_metadata(&self, id: &str) -> Result<VideoWithMetadata> {
-        let mut video = self.find_by_id(id).await?;
+        let video = self.find_by_id(id).await?;
 
         // Get tags for this video
         let tags = sqlx::query_scalar::<_, String>(
@@ -136,8 +136,8 @@ impl VideoService {
 
         // Insert video
         sqlx::query(
-            "INSERT INTO videos (id, file_path, file_name, title, description, created_date, file_size, thumbnail_path, rating, duration, original_file_path, created_at, updated_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+            "INSERT INTO videos (id, file_path, file_name, title, description, created_date, file_size, thumbnail_path, rating, duration, original_file_path, location, event, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
         )
         .bind(&id)
         .bind(&dto.file_path)
@@ -150,6 +150,8 @@ impl VideoService {
         .bind(&dto.rating)
         .bind(&dto.duration)
         .bind(&dto.original_file_path)
+        .bind(&dto.location)
+        .bind(&dto.event)
         .bind(&now)
         .bind(&now)
         .execute(&mut *tx)
@@ -192,7 +194,7 @@ impl VideoService {
         let mut tx = self.db.begin().await.map_err(AppError::Database)?;
 
         // Check if video exists
-        let video = self.find_by_id(id).await?;
+        let _video = self.find_by_id(id).await?;
         let now = chrono::Utc::now().to_rfc3339();
 
         // Update video fields
@@ -212,6 +214,16 @@ impl VideoService {
         if let Some(rating) = dto.rating {
             query.push_str(", rating = ?");
             params.push(rating.to_string());
+        }
+
+        if let Some(location) = &dto.location {
+            query.push_str(", location = ?");
+            params.push(location.clone());
+        }
+
+        if let Some(event) = &dto.event {
+            query.push_str(", event = ?");
+            params.push(event.clone());
         }
 
         query.push_str(" WHERE id = ?");
@@ -283,7 +295,7 @@ impl VideoService {
         let mut tx = self.db.begin().await.map_err(AppError::Database)?;
 
         // Check if video exists
-        let video = self.find_by_id(id).await?;
+        let _video = self.find_by_id(id).await?;
         let now = chrono::Utc::now().to_rfc3339();
 
         // Update video fields
@@ -440,8 +452,18 @@ impl VideoService {
             query_params.push(rating.to_string());
         }
 
+        if let Some(location) = &params.location {
+            conditions.push("v.location LIKE ?".to_string());
+            query_params.push(format!("%{}%", location));
+        }
+
+        if let Some(event) = &params.event {
+            conditions.push("v.event LIKE ?".to_string());
+            query_params.push(format!("%{}%", event));
+        }
+
         if let Some(true) = params.unreviewed {
-            conditions.push("(v.rating IS NULL AND v.description IS NULL AND NOT EXISTS (SELECT 1 FROM video_tags WHERE video_id = v.id) AND NOT EXISTS (SELECT 1 FROM video_people WHERE video_id = v.id))".to_string());
+            conditions.push("(v.rating IS NULL AND v.description IS NULL AND v.location IS NULL AND v.event IS NULL AND NOT EXISTS (SELECT 1 FROM video_tags WHERE video_id = v.id) AND NOT EXISTS (SELECT 1 FROM video_people WHERE video_id = v.id))".to_string());
         }
 
         if let Some(start_date) = &params.start_date {
@@ -534,6 +556,8 @@ impl VideoService {
                 duration: row.get("duration"),
                 original_file_path: row.get("original_file_path"),
                 exif_data: row.get("exif_data"),
+                location: row.get("location"),
+                event: row.get("event"),
                 created_at: row.get("created_at"),
                 updated_at: row.get("updated_at"),
             };

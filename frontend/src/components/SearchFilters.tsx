@@ -15,7 +15,7 @@ import {
 } from '@chakra-ui/react';
 import { FaFilter, FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import ReactSelect from 'react-select';
-import { tagApi, personApi, TagUsage, PersonUsage, VideoSearchParams } from '../api/client';
+import { tagApi, personApi, locationApi, eventApi, TagUsage, PersonUsage, LocationUsage, EventUsage, VideoSearchParams } from '../api/client';
 
 interface SearchFiltersProps {
   onFilterChange: (filters: Partial<VideoSearchParams>) => void;
@@ -32,8 +32,12 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onFilterChange, initialFi
   const { isOpen, onToggle } = useDisclosure();
   const [tags, setTags] = useState<SelectOption[]>([]);
   const [people, setPeople] = useState<SelectOption[]>([]);
+  const [locations, setLocations] = useState<SelectOption[]>([]);
+  const [events, setEvents] = useState<SelectOption[]>([]);
   const [selectedTags, setSelectedTags] = useState<SelectOption[]>([]);
   const [selectedPeople, setSelectedPeople] = useState<SelectOption[]>([]);
+  const [selectedLocation, setSelectedLocation] = useState<SelectOption | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<SelectOption | null>(null);
   const [selectedRating, setSelectedRating] = useState<string>('');
   const [isUnreviewed, setIsUnreviewed] = useState<boolean>(false);
   const [sortBy, setSortBy] = useState<string>('created_date');
@@ -47,7 +51,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onFilterChange, initialFi
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
 
-  // Load tags and people on component mount
+  // Load tags, people, locations, and events on component mount
   useEffect(() => {
     const fetchFilters = async () => {
       setLoading(true);
@@ -69,6 +73,24 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onFilterChange, initialFi
           count: person.video_count
         }));
         setPeople(peopleOptions);
+
+        // Fetch locations with usage count
+        const locationsData = await locationApi.getLocationUsage();
+        const locationOptions = locationsData.map((location: LocationUsage) => ({
+          value: location.name,
+          label: `${location.name} (${location.video_count})`,
+          count: location.video_count
+        }));
+        setLocations(locationOptions);
+
+        // Fetch events with usage count
+        const eventsData = await eventApi.getEventUsage();
+        const eventOptions = eventsData.map((event: EventUsage) => ({
+          value: event.name,
+          label: `${event.name} (${event.video_count})`,
+          count: event.video_count
+        }));
+        setEvents(eventOptions);
       } catch (error) {
         console.error('Error fetching filters:', error);
       } finally {
@@ -89,14 +111,32 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onFilterChange, initialFi
       if (initialFilters.end_date) {
         setEndDate(initialFilters.end_date);
       }
+
+      // Initialize location filter if provided
+      if (initialFilters.location && locations.length > 0) {
+        const locationOption = locations.find(loc => loc.value === initialFilters.location);
+        if (locationOption) {
+          setSelectedLocation(locationOption);
+        }
+      }
+
+      // Initialize event filter if provided
+      if (initialFilters.event && events.length > 0) {
+        const eventOption = events.find(evt => evt.value === initialFilters.event);
+        if (eventOption) {
+          setSelectedEvent(eventOption);
+        }
+      }
     }
-  }, [initialFilters]);
+  }, [initialFilters, locations, events]);
 
   // Apply filters
   const applyFilters = () => {
     onFilterChange({
       tags: selectedTags.map(tag => tag.value),
       people: selectedPeople.map(person => person.value),
+      location: selectedLocation ? selectedLocation.value : undefined,
+      event: selectedEvent ? selectedEvent.value : undefined,
       rating: selectedRating ? parseInt(selectedRating, 10) : undefined,
       unreviewed: isUnreviewed || undefined,
       sort_by: sortBy || undefined,
@@ -112,6 +152,8 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onFilterChange, initialFi
   const resetFilters = () => {
     setSelectedTags([]);
     setSelectedPeople([]);
+    setSelectedLocation(null);
+    setSelectedEvent(null);
     setSelectedRating('');
     setIsUnreviewed(false);
     setSortBy('created_date');
@@ -123,6 +165,8 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onFilterChange, initialFi
     onFilterChange({
       tags: undefined,
       people: undefined,
+      location: undefined,
+      event: undefined,
       rating: undefined,
       unreviewed: undefined,
       sort_by: 'created_date',
@@ -208,6 +252,34 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onFilterChange, initialFi
               <option value="4">4 stars</option>
               <option value="5">5 stars</option>
             </ChakraSelect>
+          </Box>
+        </SimpleGrid>
+
+        <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4} mt={4}>
+          <Box>
+            <Heading size="sm" mb={2}>Location</Heading>
+            <ReactSelect
+              options={locations}
+              value={selectedLocation}
+              onChange={(selected: any) => setSelectedLocation(selected)}
+              placeholder="Select location..."
+              isLoading={loading}
+              styles={selectStyles}
+              isClearable
+            />
+          </Box>
+
+          <Box>
+            <Heading size="sm" mb={2}>Event</Heading>
+            <ReactSelect
+              options={events}
+              value={selectedEvent}
+              onChange={(selected: any) => setSelectedEvent(selected)}
+              placeholder="Select event..."
+              isLoading={loading}
+              styles={selectStyles}
+              isClearable
+            />
           </Box>
         </SimpleGrid>
 

@@ -639,6 +639,8 @@ impl ScannerService {
                     people: Vec::new(),
                     original_file_path,
                     exif_data,
+                    location: None,
+                    event: None,
                 };
 
                 match video_service.create(create_dto).await {

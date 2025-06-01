@@ -6,13 +6,10 @@ import {
   Heading,
   Text,
   Button,
+  VStack,
+  HStack,
   FormControl,
   FormLabel,
-  Input,
-  Textarea,
-  HStack,
-  VStack,
-  IconButton,
   useToast,
   Spinner,
   Badge,
@@ -27,10 +24,10 @@ import {
   Code,
   useColorModeValue
 } from '@chakra-ui/react';
-import { FaEdit, FaSave, FaTrash, FaArrowLeft, FaStar, FaRegStar, FaBug } from 'react-icons/fa';
+import { FaEdit, FaSave, FaTrash, FaArrowLeft, FaBug } from 'react-icons/fa';
 import ReactPlayer from 'react-player';
-import CreatableSelect from 'react-select/creatable';
-import { videoApi, tagApi, personApi, VideoWithMetadata, UpdateVideoDto } from '../api/client';
+import { videoApi, VideoWithMetadata, UpdateVideoDto } from '../api/client';
+import VideoForm from '../components/VideoForm';
 
 interface SelectOption {
   value: string;
@@ -55,14 +52,12 @@ const VideoDetailPage: React.FC = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [rating, setRating] = useState<number | undefined>(undefined);
+  const [location, setLocation] = useState('');
+  const [event, setEvent] = useState('');
   const [selectedTags, setSelectedTags] = useState<SelectOption[]>([]);
   const [selectedPeople, setSelectedPeople] = useState<SelectOption[]>([]);
 
-  // Options for select inputs
-  const [tagOptions, setTagOptions] = useState<SelectOption[]>([]);
-  const [peopleOptions, setPeopleOptions] = useState<SelectOption[]>([]);
 
-  const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
 
   // Load video data
@@ -79,6 +74,8 @@ const VideoDetailPage: React.FC = () => {
         setTitle(videoData.title || '');
         setDescription(videoData.description || '');
         setRating(videoData.rating);
+        setLocation(videoData.location || '');
+        setEvent(videoData.event || '');
         setSelectedTags(videoData.tags.map(tag => ({ value: tag, label: tag })));
         setSelectedPeople(videoData.people.map(person => ({ value: person, label: person })));
       } catch (error) {
@@ -98,24 +95,6 @@ const VideoDetailPage: React.FC = () => {
     fetchVideo();
   }, [id, navigate, toast]);
 
-  // Load tags and people options
-  useEffect(() => {
-    const fetchOptions = async () => {
-      try {
-        // Fetch tags
-        const tags = await tagApi.getTags();
-        setTagOptions(tags.map(tag => ({ value: tag.name, label: tag.name })));
-
-        // Fetch people
-        const people = await personApi.getPeople();
-        setPeopleOptions(people.map(person => ({ value: person.name, label: person.name })));
-      } catch (error) {
-        console.error('Error fetching options:', error);
-      }
-    };
-
-    fetchOptions();
-  }, []);
 
   // Handle save
   const handleSave = async () => {
@@ -127,6 +106,8 @@ const VideoDetailPage: React.FC = () => {
         title: title || undefined,
         description: description || undefined,
         rating,
+        location: location || undefined,
+        event: event || undefined,
         tags: selectedTags.map(tag => tag.value),
         people: selectedPeople.map(person => person.value),
       };
@@ -191,16 +172,13 @@ const VideoDetailPage: React.FC = () => {
         setTitle(video.title || '');
         setDescription(video.description || '');
         setRating(video.rating);
+        setLocation(video.location || '');
+        setEvent(video.event || '');
         setSelectedTags(video.tags.map(tag => ({ value: tag, label: tag })));
         setSelectedPeople(video.people.map(person => ({ value: person, label: person })));
       }
     }
     setIsEditing(!isEditing);
-  };
-
-  // Handle rating change
-  const handleRatingChange = (newRating: number) => {
-    setRating(newRating === rating ? undefined : newRating);
   };
 
   // Handle showing debug information
@@ -223,45 +201,7 @@ const VideoDetailPage: React.FC = () => {
     }
   };
 
-  // Render rating stars
-  const renderRatingStars = (editable = false) => {
-    const stars = [];
-    for (let i = 1; i <= 5; i++) {
-      stars.push(
-        <IconButton
-          key={i}
-          icon={i <= (rating || 0) ? <FaStar /> : <FaRegStar />}
-          aria-label={`${i} star`}
-          variant="ghost"
-          color={i <= (rating || 0) ? 'yellow.400' : 'gray.400'}
-          isDisabled={!editable}
-          onClick={() => editable && handleRatingChange(i)}
-        />
-      );
-    }
-    return <HStack spacing={1}>{stars}</HStack>;
-  };
 
-  // Custom styles for react-select
-  const selectStyles = {
-    control: (base: any) => ({
-      ...base,
-      background: bgColor,
-      borderColor: borderColor,
-    }),
-    menu: (base: any) => ({
-      ...base,
-      background: bgColor,
-      zIndex: 2
-    }),
-    option: (base: any, state: any) => ({
-      ...base,
-      backgroundColor: state.isFocused
-        ? useColorModeValue('blue.50', 'blue.900')
-        : useColorModeValue('white', 'gray.700'),
-      color: useColorModeValue('black', 'black')
-    })
-  };
 
   if (loading) {
     return (
@@ -356,136 +296,92 @@ const VideoDetailPage: React.FC = () => {
 
         <VStack align="stretch" flex="1" spacing={4}>
           {isEditing ? (
-            <FormControl>
-              <FormLabel>Title</FormLabel>
-              <Input
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Enter title"
-              />
-            </FormControl>
+            <VideoForm
+              video={video}
+              formData={{
+                title,
+                description,
+                rating,
+                location: location,
+                event,
+                selectedTags,
+                selectedPeople
+              }}
+              onChange={(formData) => {
+                if (formData.title !== undefined) setTitle(formData.title);
+                if (formData.description !== undefined) setDescription(formData.description);
+                if (formData.rating !== undefined) setRating(formData.rating);
+                if (formData.location !== undefined) setLocation(formData.location);
+                if (formData.event !== undefined) setEvent(formData.event);
+                if (formData.tags !== undefined) {
+                  setSelectedTags(formData.tags.map(tag => ({ value: tag, label: tag })));
+                }
+                if (formData.people !== undefined) {
+                  setSelectedPeople(formData.people.map(person => ({ value: person, label: person })));
+                }
+              }}
+            />
           ) : (
-            <Heading size="xl">{video.title || video.file_name}</Heading>
+            <>
+              <Heading size="xl">{video.title || video.file_name}</Heading>
+
+              <FormControl>
+                <FormLabel>Rating</FormLabel>
+                <Flex>
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Text key={i} color={i < (rating || 0) ? "yellow.400" : "gray.400"} fontSize="xl">
+                      ★
+                    </Text>
+                  ))}
+                </Flex>
+              </FormControl>
+
+              <FormControl>
+                <FormLabel>Description</FormLabel>
+                <Text>{video.description || 'No description'}</Text>
+              </FormControl>
+
+              <FormControl>
+                <FormLabel>Location</FormLabel>
+                <Text>{video.location || 'No location'}</Text>
+              </FormControl>
+
+              <FormControl>
+                <FormLabel>Event</FormLabel>
+                <Text>{video.event || 'No event'}</Text>
+              </FormControl>
+
+              <FormControl>
+                <FormLabel>Tags</FormLabel>
+                <Flex wrap="wrap" gap={2}>
+                  {video.tags.length > 0 ? (
+                    video.tags.map((tag) => (
+                      <Badge key={tag} colorScheme="blue" color="white">
+                        {tag}
+                      </Badge>
+                    ))
+                  ) : (
+                    <Text color="gray.500">No tags</Text>
+                  )}
+                </Flex>
+              </FormControl>
+
+              <FormControl>
+                <FormLabel>People</FormLabel>
+                <Flex wrap="wrap" gap={2}>
+                  {video.people.length > 0 ? (
+                    video.people.map((person) => (
+                      <Badge key={person} colorScheme="green" color="white">
+                        {person}
+                      </Badge>
+                    ))
+                  ) : (
+                    <Text color="gray.500">No people</Text>
+                  )}
+                </Flex>
+              </FormControl>
+            </>
           )}
-
-          <FormControl>
-            <FormLabel>Rating</FormLabel>
-            {renderRatingStars(isEditing)}
-          </FormControl>
-
-          <FormControl>
-            <FormLabel>Description</FormLabel>
-            {isEditing ? (
-              <Textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Enter description"
-                rows={4}
-              />
-            ) : (
-              <Text>{video.description || 'No description'}</Text>
-            )}
-          </FormControl>
-
-          <FormControl>
-            <FormLabel>Tags</FormLabel>
-            {isEditing ? (
-              <CreatableSelect
-                isMulti
-                options={tagOptions}
-                value={selectedTags}
-                onChange={(selected: any) => setSelectedTags(selected || [])}
-                placeholder="Select or create tags..."
-                styles={selectStyles}
-                isClearable
-                formatCreateLabel={(inputValue) => `Create tag "${inputValue}"`}
-                onCreateOption={async (inputValue) => {
-                  try {
-                    const newTag = await tagApi.createTag(inputValue);
-                    const newOption = { value: newTag.name, label: newTag.name };
-                    setTagOptions([...tagOptions, newOption]);
-                    setSelectedTags([...selectedTags, newOption]);
-                    toast({
-                      title: 'Tag created',
-                      status: 'success',
-                      duration: 2000,
-                      isClosable: true,
-                    });
-                  } catch (error) {
-                    console.error('Error creating tag:', error);
-                    toast({
-                      title: 'Error creating tag',
-                      status: 'error',
-                      duration: 3000,
-                      isClosable: true,
-                    });
-                  }
-                }}
-              />
-            ) : (
-              <Flex wrap="wrap" gap={2}>
-                {video.tags.length > 0 ? (
-                  video.tags.map((tag) => (
-                    <Badge key={tag} colorScheme="blue" color="white">
-                      {tag}
-                    </Badge>
-                  ))
-                ) : (
-                  <Text color="gray.500">No tags</Text>
-                )}
-              </Flex>
-            )}
-          </FormControl>
-
-          <FormControl>
-            <FormLabel>People</FormLabel>
-            {isEditing ? (
-              <CreatableSelect
-                isMulti
-                options={peopleOptions}
-                value={selectedPeople}
-                onChange={(selected: any) => setSelectedPeople(selected || [])}
-                placeholder="Select or create people..."
-                styles={selectStyles}
-                isClearable
-                formatCreateLabel={(inputValue) => `Create person "${inputValue}"`}
-                onCreateOption={async (inputValue) => {
-                  try {
-                    const newPerson = await personApi.createPerson(inputValue);
-                    const newOption = { value: newPerson.name, label: newPerson.name };
-                    setPeopleOptions([...peopleOptions, newOption]);
-                    setSelectedPeople([...selectedPeople, newOption]);
-                    toast({
-                      title: 'Person created',
-                      status: 'success',
-                      duration: 2000,
-                      isClosable: true,
-                    });
-                  } catch (error) {
-                    console.error('Error creating person:', error);
-                    toast({
-                      title: 'Error creating person',
-                      status: 'error',
-                      duration: 3000,
-                      isClosable: true,
-                    });
-                  }
-                }}
-              />
-            ) : (
-              <Flex wrap="wrap" gap={2}>
-                {video.people.length > 0 ? (
-                  video.people.map((person) => (
-                    <Badge key={person} colorScheme="green" color="white">
-                      {person}
-                    </Badge>
-                  ))
-                ) : (
-                  <Text color="gray.500">No people</Text>
-                )}
-              </Flex>
-            )}
-          </FormControl>
         </VStack>
       </Flex>
 

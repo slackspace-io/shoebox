@@ -34,7 +34,7 @@ import {
   TagCloseButton,
 } from '@chakra-ui/react';
 import { FaSearch, FaEdit, FaStar } from 'react-icons/fa';
-import { videoApi, tagApi, personApi, VideoWithMetadata, UpdateVideoDto, BulkUpdateVideoDto } from '../api/client';
+import { videoApi, tagApi, personApi, locationApi, eventApi, VideoWithMetadata, UpdateVideoDto, BulkUpdateVideoDto } from '../api/client';
 import SearchFilters from '../components/SearchFilters';
 
 const BulkEditPage: React.FC = () => {
@@ -45,10 +45,16 @@ const BulkEditPage: React.FC = () => {
   const [updating, setUpdating] = useState(false);
   const [availableTags, setAvailableTags] = useState<string[]>([]);
   const [availablePeople, setAvailablePeople] = useState<string[]>([]);
+  const [availableLocations, setAvailableLocations] = useState<string[]>([]);
+  const [availableEvents, setAvailableEvents] = useState<string[]>([]);
   const [newTag, setNewTag] = useState('');
   const [newPerson, setNewPerson] = useState('');
+  const [newLocation, setNewLocation] = useState('');
+  const [newEvent, setNewEvent] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedPeople, setSelectedPeople] = useState<string[]>([]);
+  const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<string | null>(null);
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
   const toast = useToast();
 
@@ -59,6 +65,8 @@ const BulkEditPage: React.FC = () => {
     fetchVideos();
     fetchTags();
     fetchPeople();
+    fetchLocations();
+    fetchEvents();
   }, []);
 
   // Fetch videos from API
@@ -100,6 +108,26 @@ const BulkEditPage: React.FC = () => {
       setAvailablePeople(people.map(person => person.name));
     } catch (error) {
       console.error('Error fetching people:', error);
+    }
+  };
+
+  // Fetch available locations
+  const fetchLocations = async () => {
+    try {
+      const locations = await locationApi.getLocations();
+      setAvailableLocations(locations);
+    } catch (error) {
+      console.error('Error fetching locations:', error);
+    }
+  };
+
+  // Fetch available events
+  const fetchEvents = async () => {
+    try {
+      const events = await eventApi.getEvents();
+      setAvailableEvents(events);
+    } catch (error) {
+      console.error('Error fetching events:', error);
     }
   };
 
@@ -174,6 +202,32 @@ const BulkEditPage: React.FC = () => {
     setSelectedPeople(selectedPeople.filter(p => p !== person));
   };
 
+  // Set the selected location
+  const setLocation = (location: string) => {
+    if (location) {
+      setSelectedLocation(location);
+      setNewLocation('');
+    }
+  };
+
+  // Clear the selected location
+  const clearLocation = () => {
+    setSelectedLocation(null);
+  };
+
+  // Set the selected event
+  const setEvent = (event: string) => {
+    if (event) {
+      setSelectedEvent(event);
+      setNewEvent('');
+    }
+  };
+
+  // Clear the selected event
+  const clearEvent = () => {
+    setSelectedEvent(null);
+  };
+
   // Handle bulk update
   const handleBulkUpdate = async () => {
     if (selectedVideos.length === 0) {
@@ -187,10 +241,10 @@ const BulkEditPage: React.FC = () => {
       return;
     }
 
-    if (!selectedRating && selectedTags.length === 0 && selectedPeople.length === 0) {
+    if (!selectedRating && selectedTags.length === 0 && selectedPeople.length === 0 && !selectedLocation && !selectedEvent) {
       toast({
         title: 'No changes to apply',
-        description: 'Please select a rating, tags, or people to update',
+        description: 'Please select a rating, tags, people, location, or event to update',
         status: 'warning',
         duration: 3000,
         isClosable: true,
@@ -210,6 +264,14 @@ const BulkEditPage: React.FC = () => {
 
     if (selectedPeople.length > 0) {
       updateDto.people = selectedPeople;
+    }
+
+    if (selectedLocation) {
+      updateDto.location = selectedLocation;
+    }
+
+    if (selectedEvent) {
+      updateDto.event = selectedEvent;
     }
 
     setUpdating(true);
@@ -237,6 +299,8 @@ const BulkEditPage: React.FC = () => {
       setSelectedRating(null);
       setSelectedTags([]);
       setSelectedPeople([]);
+      setSelectedLocation(null);
+      setSelectedEvent(null);
 
     } catch (error) {
       console.error('Error updating videos:', error);
@@ -467,6 +531,72 @@ const BulkEditPage: React.FC = () => {
                 ))}
               </datalist>
             </FormControl>
+
+            <FormControl>
+              <FormLabel>Location</FormLabel>
+              {selectedLocation ? (
+                <Flex mb={2} wrap="wrap" gap={2}>
+                  <Tag size="md" borderRadius="full" variant="solid" colorScheme="purple">
+                    <TagLabel>{selectedLocation}</TagLabel>
+                    <TagCloseButton onClick={clearLocation} />
+                  </Tag>
+                </Flex>
+              ) : null}
+              <Flex>
+                <Input
+                  placeholder="Set location"
+                  value={newLocation}
+                  onChange={(e) => setNewLocation(e.target.value)}
+                  list="available-locations"
+                  isDisabled={selectedLocation !== null}
+                />
+                <Button
+                  ml={2}
+                  onClick={() => setLocation(newLocation)}
+                  isDisabled={selectedLocation !== null}
+                >
+                  Set
+                </Button>
+              </Flex>
+              <datalist id="available-locations">
+                {availableLocations.map(location => (
+                  <option key={location} value={location} />
+                ))}
+              </datalist>
+            </FormControl>
+
+            <FormControl>
+              <FormLabel>Event</FormLabel>
+              {selectedEvent ? (
+                <Flex mb={2} wrap="wrap" gap={2}>
+                  <Tag size="md" borderRadius="full" variant="solid" colorScheme="orange">
+                    <TagLabel>{selectedEvent}</TagLabel>
+                    <TagCloseButton onClick={clearEvent} />
+                  </Tag>
+                </Flex>
+              ) : null}
+              <Flex>
+                <Input
+                  placeholder="Set event"
+                  value={newEvent}
+                  onChange={(e) => setNewEvent(e.target.value)}
+                  list="available-events"
+                  isDisabled={selectedEvent !== null}
+                />
+                <Button
+                  ml={2}
+                  onClick={() => setEvent(newEvent)}
+                  isDisabled={selectedEvent !== null}
+                >
+                  Set
+                </Button>
+              </Flex>
+              <datalist id="available-events">
+                {availableEvents.map(event => (
+                  <option key={event} value={event} />
+                ))}
+              </datalist>
+            </FormControl>
           </VStack>
 
           <Button
@@ -477,7 +607,7 @@ const BulkEditPage: React.FC = () => {
             loadingText="Updating"
             onClick={handleBulkUpdate}
             isDisabled={selectedVideos.length === 0 ||
-                       (selectedRating === null && selectedTags.length === 0 && selectedPeople.length === 0)}
+                       (selectedRating === null && selectedTags.length === 0 && selectedPeople.length === 0 && selectedLocation === null && selectedEvent === null)}
           >
             Update Selected Videos
           </Button>

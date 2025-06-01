@@ -4,6 +4,8 @@ mod video;
 mod tag;
 mod person;
 mod export;
+mod location;
+mod event;
 
 pub use scanner::*;
 pub use thumbnail::*;
@@ -11,6 +13,8 @@ pub use video::*;
 pub use tag::*;
 pub use person::*;
 pub use export::*;
+pub use location::*;
+pub use event::*;
 
 use sqlx::{Pool, Sqlite};
 use crate::config::Config;

@@ -116,7 +116,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             color={location.pathname === '/manage' ? 'brand.500' : undefined}
           >
             <FaTags style={{ marginRight: '8px' }} />
-            Manage Tags & People
+            Manage Data
           </Link>
           <Link
             as={RouterLink}
