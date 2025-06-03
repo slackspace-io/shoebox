@@ -42,7 +42,7 @@ spec:
             - name: DATABASE_MAX_CONNECTIONS
               value: {{ .Values.config.databaseMaxConnections | default "10"  | quote }}
             - name: DATABASE_URL
-              value: {{ if .Values.postgresql.enabled }}postgres://{{ .Values.postgresql.postgresqlUsername }}:{{ .Values.postgresql.postgresqlPassword }}@{{ include "shoebox.fullname" . }}-postgresql:5432/{{ .Values.postgresql.postgresqlDatabase }}{{ else }}{{ .Values.config.databaseUrl }}{{ end }}
+              value: {{ if .Values.postgresql.enabled }}postgres://{{ .Values.postgresql.postgresqlUsername }}:{{ .Values.postgresql.postgresqlPassword }}@shoebox-postgresql:5432/{{ .Values.postgresql.postgresqlDatabase }}{{ else }}{{ .Values.config.databaseUrl }}{{ end }}
             - name: MEDIA_SOURCE_PATHS
               value: {{ if kindIs "string" .Values.config.mediaSourcePaths }}{{ .Values.config.mediaSourcePaths | quote }}{{ else }}{{ include "shoebox.mediaSourcePathsString" . }}{{ end }}
             - name: THUMBNAIL_PATH

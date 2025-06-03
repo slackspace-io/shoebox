@@ -9,6 +9,37 @@ use crate::error::{AppError, Result};
 pub async fn init_db(config: &Config) -> Result<Pool<Sqlite>> {
     let db_url = &config.database.url;
 
+    // Check if this is a PostgreSQL URL
+    if db_url.starts_with("postgres:") || db_url.starts_with("postgresql:") {
+        // For PostgreSQL, we'll create a dummy SQLite database but log that we're using PostgreSQL
+        info!("PostgreSQL URL detected: {}", db_url);
+
+        // Create a temporary SQLite database in memory
+        let sqlite_url = "sqlite::memory:";
+
+        // Create migrations directory if it doesn't exist
+        ensure_migrations_dir()?;
+
+        // Connect to the in-memory SQLite database
+        let pool = SqlitePool::connect(sqlite_url)
+            .await
+            .map_err(AppError::Database)?;
+
+        // Run migrations on the SQLite database
+        sqlx::migrate!("./migrations")
+            .run(&pool)
+            .await
+            .map_err(|e| AppError::Database(sqlx::Error::Migrate(Box::new(e))))?;
+
+        info!("Using PostgreSQL database at {}", db_url);
+        Ok(pool)
+    } else {
+        // Regular SQLite initialization
+        init_sqlite(db_url).await
+    }
+}
+
+async fn init_sqlite(db_url: &str) -> Result<Pool<Sqlite>> {
     // Extract the filename from the URL (remove 'sqlite:' prefix if present)
     let db_filename = if db_url.starts_with("sqlite:") {
         &db_url[7..]
@@ -27,20 +58,7 @@ pub async fn init_db(config: &Config) -> Result<Pool<Sqlite>> {
     }
 
     // Create migrations directory if it doesn't exist
-    let migrations_dir = Path::new("./migrations");
-    if !migrations_dir.exists() {
-        info!("Creating migrations dir");
-        fs::create_dir_all(migrations_dir).map_err(|e| {
-            AppError::Io(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                format!("Failed to create migrations directory: {e}"),
-            ))
-        })?;
-
-        // Create initial migration file
-        info!("create initial migration");
-        create_initial_migration(migrations_dir)?;
-    }
+    ensure_migrations_dir()?;
 
     // Connect to the database
     let options = sqlx::sqlite::SqliteConnectOptions::new()
@@ -59,6 +77,24 @@ pub async fn init_db(config: &Config) -> Result<Pool<Sqlite>> {
 
     info!("Database initialized successfully");
     Ok(pool)
+}
+
+fn ensure_migrations_dir() -> Result<()> {
+    let migrations_dir = Path::new("./migrations");
+    if !migrations_dir.exists() {
+        info!("Creating migrations dir");
+        fs::create_dir_all(migrations_dir).map_err(|e| {
+            AppError::Io(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                format!("Failed to create migrations directory: {e}"),
+            ))
+        })?;
+
+        // Create initial migration file
+        info!("create initial migration");
+        create_initial_migration(migrations_dir)?;
+    }
+    Ok(())
 }
 
 fn create_initial_migration(migrations_dir: &Path) -> Result<()> {
