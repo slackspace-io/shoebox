@@ -1,15 +1,15 @@
-use sqlx::{Pool, Sqlite, Row};
+use sqlx::{Pool, Postgres, Row};
 use tracing::info;
 use uuid::Uuid;
 
 use crate::error::{AppError, Result};
 
 pub struct LocationService {
-    db: Pool<Sqlite>,
+    db: Pool<Postgres>,
 }
 
 impl LocationService {
-    pub fn new(db: Pool<Sqlite>) -> Self {
+    pub fn new(db: Pool<Postgres>) -> Self {
         Self { db }
     }
 
@@ -60,7 +60,7 @@ impl LocationService {
     // Update location across multiple videos
     pub async fn update_location(&self, old_location: &str, new_location: &str) -> Result<usize> {
         let result = sqlx::query(
-            "UPDATE videos SET location = ? WHERE location = ?"
+            "UPDATE videos SET location = $1 WHERE location = $2"
         )
         .bind(new_location)
         .bind(old_location)
@@ -79,7 +79,7 @@ impl LocationService {
     // Delete (set to NULL) location across multiple videos
     pub async fn delete_location(&self, location: &str) -> Result<usize> {
         let result = sqlx::query(
-            "UPDATE videos SET location = NULL WHERE location = ?"
+            "UPDATE videos SET location = NULL WHERE location = $1"
         )
         .bind(location)
         .execute(&self.db)

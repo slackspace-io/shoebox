@@ -16,7 +16,7 @@ pub use export::*;
 pub use location::*;
 pub use event::*;
 
-use sqlx::{Pool, Sqlite};
+use sqlx::{Pool, Postgres};
 use crate::config::Config;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -41,7 +41,7 @@ impl Default for ScanStatus {
 
 #[derive(Clone)]
 pub struct AppState {
-    pub db: Pool<Sqlite>,
+    pub db: Pool<Postgres>,
     pub config: Config,
     pub scan_status: Arc<RwLock<ScanStatus>>,
 }

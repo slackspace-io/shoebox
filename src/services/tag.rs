@@ -1,4 +1,4 @@
-use sqlx::{Pool, Sqlite, Transaction, Row};
+use sqlx::{Pool, Postgres, Transaction, Row};
 use tracing::{info, warn};
 use uuid::Uuid;
 
@@ -6,11 +6,11 @@ use crate::error::{AppError, Result};
 use crate::models::{Tag, CreateTagDto, TagUsage};
 
 pub struct TagService {
-    db: Pool<Sqlite>,
+    db: Pool<Postgres>,
 }
 
 impl TagService {
-    pub fn new(db: Pool<Sqlite>) -> Self {
+    pub fn new(db: Pool<Postgres>) -> Self {
         Self { db }
     }
 
@@ -24,7 +24,7 @@ impl TagService {
     }
 
     pub async fn find_by_id(&self, id: &str) -> Result<Tag> {
-        let tag = sqlx::query_as::<_, Tag>("SELECT * FROM tags WHERE id = ?")
+        let tag = sqlx::query_as::<_, Tag>("SELECT * FROM tags WHERE id = $1")
             .bind(id)
             .fetch_one(&self.db)
             .await
@@ -37,7 +37,7 @@ impl TagService {
     }
 
     pub async fn find_by_name(&self, name: &str) -> Result<Tag> {
-        let tag = sqlx::query_as::<_, Tag>("SELECT * FROM tags WHERE name = ?")
+        let tag = sqlx::query_as::<_, Tag>("SELECT * FROM tags WHERE name = $1")
             .bind(name)
             .fetch_one(&self.db)
             .await
@@ -54,10 +54,10 @@ impl TagService {
     pub async fn find_or_create_by_name(
         &self,
         name: &str,
-        tx: &mut Transaction<'_, Sqlite>,
+        tx: &mut Transaction<'_, Postgres>,
     ) -> Result<String> {
         // Try to find existing tag
-        let tag_result = sqlx::query_as::<_, Tag>("SELECT * FROM tags WHERE name = ?")
+        let tag_result = sqlx::query_as::<_, Tag>("SELECT * FROM tags WHERE name = $1")
             .bind(name)
             .fetch_optional(&mut **tx)
             .await
@@ -69,9 +69,9 @@ impl TagService {
 
         // Create new tag
         let id = Uuid::new_v4().to_string();
-        let now = chrono::Utc::now().to_rfc3339();
+        let now = chrono::Utc::now().naive_utc();
 
-        sqlx::query("INSERT INTO tags (id, name, created_at) VALUES (?, ?, ?)")
+        sqlx::query("INSERT INTO tags (id, name, created_at) VALUES ($1, $2, $3)")
             .bind(&id)
             .bind(name)
             .bind(&now)
@@ -85,7 +85,7 @@ impl TagService {
 
     pub async fn create(&self, dto: CreateTagDto) -> Result<Tag> {
         // Check if tag already exists
-        let existing = sqlx::query_as::<_, Tag>("SELECT * FROM tags WHERE name = ?")
+        let existing = sqlx::query_as::<_, Tag>("SELECT * FROM tags WHERE name = $1")
             .bind(&dto.name)
             .fetch_optional(&self.db)
             .await
@@ -97,7 +97,7 @@ impl TagService {
 
         let tag = Tag::new(dto.name);
 
-        sqlx::query("INSERT INTO tags (id, name, created_at) VALUES (?, ?, ?)")
+        sqlx::query("INSERT INTO tags (id, name, created_at) VALUES ($1, $2, $3)")
             .bind(&tag.id)
             .bind(&tag.name)
             .bind(&tag.created_at)
@@ -114,7 +114,7 @@ impl TagService {
         let tag = self.find_by_id(id).await?;
 
         // Check if the new name already exists
-        let existing = sqlx::query_as::<_, Tag>("SELECT * FROM tags WHERE name = ? AND id != ?")
+        let existing = sqlx::query_as::<_, Tag>("SELECT * FROM tags WHERE name = $1 AND id != $2")
             .bind(new_name)
             .bind(id)
             .fetch_optional(&self.db)
@@ -128,7 +128,7 @@ impl TagService {
         }
 
         // Update tag
-        sqlx::query("UPDATE tags SET name = ? WHERE id = ?")
+        sqlx::query("UPDATE tags SET name = $1 WHERE id = $2")
             .bind(new_name)
             .bind(id)
             .execute(&self.db)
@@ -147,7 +147,7 @@ impl TagService {
         let tag = self.find_by_id(id).await?;
 
         // Check if tag is in use
-        let count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM video_tags WHERE tag_id = ?")
+        let count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM video_tags WHERE tag_id = $1")
             .bind(id)
             .fetch_one(&self.db)
             .await
@@ -161,7 +161,7 @@ impl TagService {
         }
 
         // Delete tag
-        sqlx::query("DELETE FROM tags WHERE id = ?")
+        sqlx::query("DELETE FROM tags WHERE id = $1")
             .bind(id)
             .execute(&self.db)
             .await

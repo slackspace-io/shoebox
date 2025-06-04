@@ -1,4 +1,4 @@
-use sqlx::{Pool, Sqlite, Row};
+use sqlx::{Pool, Postgres, Row};
 use tracing::{info, error};
 use uuid::Uuid;
 
@@ -9,7 +9,7 @@ use crate::services::person::PersonService;
 use crate::services::thumbnail::ThumbnailService;
 
 pub struct VideoService {
-    db: Pool<Sqlite>,
+    db: Pool<Postgres>,
     tag_service: TagService,
     person_service: PersonService,
     thumbnail_service: ThumbnailService,
@@ -17,7 +17,7 @@ pub struct VideoService {
 
 impl VideoService {
     pub fn new(
-        db: Pool<Sqlite>,
+        db: Pool<Postgres>,
         tag_service: TagService,
         person_service: PersonService,
         thumbnail_service: ThumbnailService,
@@ -46,7 +46,7 @@ impl VideoService {
 
     pub async fn find_all(&self, limit: i64, offset: i64) -> Result<Vec<Video>> {
         let mut videos = sqlx::query_as::<_, Video>(
-            "SELECT * FROM videos ORDER BY created_date DESC LIMIT ? OFFSET ?"
+            "SELECT * FROM videos ORDER BY created_date DESC LIMIT $1 OFFSET $2"
         )
         .bind(limit)
         .bind(offset)
@@ -63,7 +63,7 @@ impl VideoService {
     }
 
     pub async fn find_by_id(&self, id: &str) -> Result<Video> {
-        let mut video = sqlx::query_as::<_, Video>("SELECT * FROM videos WHERE id = ?")
+        let mut video = sqlx::query_as::<_, Video>("SELECT * FROM videos WHERE id = $1")
             .bind(id)
             .fetch_one(&self.db)
             .await
@@ -79,7 +79,7 @@ impl VideoService {
     }
 
     pub async fn find_by_path(&self, path: &str) -> Result<Video> {
-        let mut video = sqlx::query_as::<_, Video>("SELECT * FROM videos WHERE file_path = ?")
+        let mut video = sqlx::query_as::<_, Video>("SELECT * FROM videos WHERE file_path = $1")
             .bind(path)
             .fetch_one(&self.db)
             .await
@@ -101,7 +101,7 @@ impl VideoService {
         let tags = sqlx::query_scalar::<_, String>(
             "SELECT t.name FROM tags t
              JOIN video_tags vt ON t.id = vt.tag_id
-             WHERE vt.video_id = ?"
+             WHERE vt.video_id = $1"
         )
         .bind(id)
         .fetch_all(&self.db)
@@ -112,7 +112,7 @@ impl VideoService {
         let people = sqlx::query_scalar::<_, String>(
             "SELECT p.name FROM people p
              JOIN video_people vp ON p.id = vp.person_id
-             WHERE vp.video_id = ?"
+             WHERE vp.video_id = $1"
         )
         .bind(id)
         .fetch_all(&self.db)
@@ -132,12 +132,12 @@ impl VideoService {
         let mut tx = self.db.begin().await.map_err(AppError::Database)?;
 
         let id = Uuid::new_v4().to_string();
-        let now = chrono::Utc::now().to_rfc3339();
+        let now = chrono::Utc::now().naive_utc();
 
         // Insert video
         sqlx::query(
             "INSERT INTO videos (id, file_path, file_name, title, description, created_date, file_size, thumbnail_path, rating, duration, original_file_path, location, event, created_at, updated_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14::timestamp, $15::timestamp)"
         )
         .bind(&id)
         .bind(&dto.file_path)
@@ -162,7 +162,7 @@ impl VideoService {
         for tag_name in &dto.tags {
             let tag_id = self.tag_service.find_or_create_by_name(tag_name, &mut tx).await?;
 
-            sqlx::query("INSERT INTO video_tags (video_id, tag_id, created_at) VALUES (?, ?, ?)")
+            sqlx::query("INSERT INTO video_tags (video_id, tag_id, created_at) VALUES ($1, $2, $3::timestamp)")
                 .bind(&id)
                 .bind(&tag_id)
                 .bind(&now)
@@ -175,7 +175,7 @@ impl VideoService {
         for person_name in &dto.people {
             let person_id = self.person_service.find_or_create_by_name(person_name, &mut tx).await?;
 
-            sqlx::query("INSERT INTO video_people (video_id, person_id, created_at) VALUES (?, ?, ?)")
+            sqlx::query("INSERT INTO video_people (video_id, person_id, created_at) VALUES ($1, $2, $3::timestamp)")
                 .bind(&id)
                 .bind(&person_id)
                 .bind(&now)
@@ -195,38 +195,45 @@ impl VideoService {
 
         // Check if video exists
         let _video = self.find_by_id(id).await?;
-        let now = chrono::Utc::now().to_rfc3339();
+        let now = chrono::Utc::now().naive_utc();
 
         // Update video fields
-        let mut query = "UPDATE videos SET updated_at = ?".to_string();
-        let mut params: Vec<String> = vec![now.clone()];
+        let mut query = "UPDATE videos SET updated_at = $1::timestamp".to_string();
+        let mut params: Vec<String> = vec![now.to_string()];
+        let mut param_count = 1;
 
         if let Some(title) = &dto.title {
-            query.push_str(", title = ?");
+            param_count += 1;
+            query.push_str(&format!(", title = ${}", param_count));
             params.push(title.clone());
         }
 
         if let Some(description) = &dto.description {
-            query.push_str(", description = ?");
+            param_count += 1;
+            query.push_str(&format!(", description = ${}", param_count));
             params.push(description.clone());
         }
 
         if let Some(rating) = dto.rating {
-            query.push_str(", rating = ?");
+            param_count += 1;
+            query.push_str(&format!(", rating = ${}::integer", param_count));
             params.push(rating.to_string());
         }
 
         if let Some(location) = &dto.location {
-            query.push_str(", location = ?");
+            param_count += 1;
+            query.push_str(&format!(", location = ${}", param_count));
             params.push(location.clone());
         }
 
         if let Some(event) = &dto.event {
-            query.push_str(", event = ?");
+            param_count += 1;
+            query.push_str(&format!(", event = ${}", param_count));
             params.push(event.clone());
         }
 
-        query.push_str(" WHERE id = ?");
+        param_count += 1;
+        query.push_str(&format!(" WHERE id = ${}", param_count));
         params.push(id.to_string());
 
         let mut query_builder = sqlx::query(&query);
@@ -242,7 +249,7 @@ impl VideoService {
         // Update tags if provided
         if let Some(tags) = &dto.tags {
             // Remove existing tags
-            sqlx::query("DELETE FROM video_tags WHERE video_id = ?")
+            sqlx::query("DELETE FROM video_tags WHERE video_id = $1")
                 .bind(id)
                 .execute(&mut *tx)
                 .await
@@ -252,7 +259,7 @@ impl VideoService {
             for tag_name in tags {
                 let tag_id = self.tag_service.find_or_create_by_name(tag_name, &mut tx).await?;
 
-                sqlx::query("INSERT INTO video_tags (video_id, tag_id, created_at) VALUES (?, ?, ?)")
+                sqlx::query("INSERT INTO video_tags (video_id, tag_id, created_at) VALUES ($1, $2, $3::timestamp)")
                     .bind(id)
                     .bind(&tag_id)
                     .bind(&now)
@@ -265,7 +272,7 @@ impl VideoService {
         // Update people if provided
         if let Some(people) = &dto.people {
             // Remove existing people
-            sqlx::query("DELETE FROM video_people WHERE video_id = ?")
+            sqlx::query("DELETE FROM video_people WHERE video_id = $1")
                 .bind(id)
                 .execute(&mut *tx)
                 .await
@@ -275,7 +282,7 @@ impl VideoService {
             for person_name in people {
                 let person_id = self.person_service.find_or_create_by_name(person_name, &mut tx).await?;
 
-                sqlx::query("INSERT INTO video_people (video_id, person_id, created_at) VALUES (?, ?, ?)")
+                sqlx::query("INSERT INTO video_people (video_id, person_id, created_at) VALUES ($1, $2, $3::timestamp)")
                     .bind(id)
                     .bind(&person_id)
                     .bind(&now)
@@ -296,43 +303,51 @@ impl VideoService {
 
         // Check if video exists
         let _video = self.find_by_id(id).await?;
-        let now = chrono::Utc::now().to_rfc3339();
+        let now = chrono::Utc::now().naive_utc();
 
         // Update video fields
-        let mut query = "UPDATE videos SET updated_at = ?".to_string();
-        let mut params: Vec<String> = vec![now.clone()];
+        let mut query = "UPDATE videos SET updated_at = $1::timestamp".to_string();
+        let mut params: Vec<String> = vec![now.to_string()];
+        let mut param_count = 1;
 
         if let Some(size) = file_size {
-            query.push_str(", file_size = ?");
+            param_count += 1;
+            query.push_str(&format!(", file_size = ${}::bigint", param_count));
             params.push(size.to_string());
         }
 
         if let Some(dur) = duration {
-            query.push_str(", duration = ?");
+            param_count += 1;
+            query.push_str(&format!(", duration = ${}::bigint", param_count));
             params.push(dur.to_string());
         }
 
         if let Some(date) = &created_date {
-            query.push_str(", created_date = ?");
+            param_count += 1;
+            query.push_str(&format!(", created_date = ${}", param_count));
             params.push(date.clone());
         }
 
         if let Some(thumb) = &thumbnail_path {
-            query.push_str(", thumbnail_path = ?");
+            param_count += 1;
+            query.push_str(&format!(", thumbnail_path = ${}", param_count));
             params.push(thumb.clone());
         }
 
         if let Some(orig) = &original_file_path {
-            query.push_str(", original_file_path = ?");
+            param_count += 1;
+            query.push_str(&format!(", original_file_path = ${}", param_count));
             params.push(orig.clone());
         }
 
         if let Some(exif) = &exif_data {
-            query.push_str(", exif_data = ?");
+            param_count += 1;
+            query.push_str(&format!(", exif_data = ${}::jsonb", param_count));
             params.push(exif.to_string());
         }
 
-        query.push_str(" WHERE id = ?");
+        param_count += 1;
+        query.push_str(&format!(" WHERE id = ${}", param_count));
         params.push(id.to_string());
 
         info!("Executing query: {} with params: {:?}", query, params);
@@ -357,7 +372,7 @@ impl VideoService {
         let video = self.find_by_id(id).await?;
 
         // Delete the video record
-        sqlx::query("DELETE FROM videos WHERE id = ?")
+        sqlx::query("DELETE FROM videos WHERE id = $1")
             .bind(id)
             .execute(&self.db)
             .await
@@ -394,12 +409,13 @@ impl VideoService {
     pub async fn search(&self, params: VideoSearchParams) -> Result<Vec<VideoWithMetadata>> {
         let mut conditions = Vec::<String>::new();
         let mut query_params = Vec::new();
+        let mut param_count = 0;
 
         // Base query
         let mut query = "
             SELECT v.*,
-                   group_concat(DISTINCT t.name) as tags,
-                   group_concat(DISTINCT p.name) as people
+                   string_agg(DISTINCT t.name, ',') as tags,
+                   string_agg(DISTINCT p.name, ',') as people
             FROM videos v
             LEFT JOIN video_tags vt ON v.id = vt.video_id
             LEFT JOIN tags t ON vt.tag_id = t.id
@@ -409,7 +425,16 @@ impl VideoService {
 
         // Add search conditions
         if let Some(search_query) = &params.query {
-            conditions.push("(v.title LIKE ? OR v.description LIKE ? OR t.name LIKE ? OR p.name LIKE ?)".to_string());
+            param_count += 1;
+            let title_param = format!("${}", param_count);
+            param_count += 1;
+            let desc_param = format!("${}", param_count);
+            param_count += 1;
+            let tag_param = format!("${}", param_count);
+            param_count += 1;
+            let person_param = format!("${}", param_count);
+
+            conditions.push(format!("(v.title LIKE {title_param} OR v.description LIKE {desc_param} OR t.name LIKE {tag_param} OR p.name LIKE {person_param})"));
             let like_param = format!("%{search_query}%");
             query_params.push(like_param.clone());
             query_params.push(like_param.clone());
@@ -421,11 +446,12 @@ impl VideoService {
             if !tags.is_empty() {
                 // For each tag, we need a separate subquery to ensure ALL tags are present
                 for tag in tags {
+                    param_count += 1;
                     let condition = format!("v.id IN (
                         SELECT video_id FROM video_tags
                         JOIN tags ON video_tags.tag_id = tags.id
-                        WHERE tags.name = ?
-                    )");
+                        WHERE tags.name = ${}
+                    )", param_count);
                     conditions.push(condition);
                     query_params.push(tag.clone());
                 }
@@ -436,11 +462,12 @@ impl VideoService {
             if !people.is_empty() {
                 // For each person, we need a separate subquery to ensure ALL people are present
                 for person in people {
+                    param_count += 1;
                     let condition = format!("v.id IN (
                         SELECT video_id FROM video_people
                         JOIN people ON video_people.person_id = people.id
-                        WHERE people.name = ?
-                    )");
+                        WHERE people.name = ${}
+                    )", param_count);
                     conditions.push(condition);
                     query_params.push(person.clone());
                 }
@@ -448,17 +475,20 @@ impl VideoService {
         }
 
         if let Some(rating) = params.rating {
-            conditions.push("v.rating >= ?".to_string());
+            param_count += 1;
+            conditions.push(format!("v.rating >= ${}::integer", param_count));
             query_params.push(rating.to_string());
         }
 
         if let Some(location) = &params.location {
-            conditions.push("v.location LIKE ?".to_string());
+            param_count += 1;
+            conditions.push(format!("v.location LIKE ${}", param_count));
             query_params.push(format!("%{}%", location));
         }
 
         if let Some(event) = &params.event {
-            conditions.push("v.event LIKE ?".to_string());
+            param_count += 1;
+            conditions.push(format!("v.event LIKE ${}", param_count));
             query_params.push(format!("%{}%", event));
         }
 
@@ -467,26 +497,30 @@ impl VideoService {
         }
 
         if let Some(start_date) = &params.start_date {
-            conditions.push("date(v.created_date) >= date(?)".to_string());
+            param_count += 1;
+            conditions.push(format!("date(v.created_date) >= date(${}) ", param_count));
             query_params.push(start_date.clone());
         }
 
         if let Some(end_date) = &params.end_date {
-            conditions.push("date(v.created_date) <= date(?)".to_string());
+            param_count += 1;
+            conditions.push(format!("date(v.created_date) <= date(${}) ", param_count));
             query_params.push(end_date.clone());
         }
 
         if let Some(min_duration) = params.min_duration {
             // Convert from seconds to milliseconds
             let min_duration_ms = min_duration * 1000;
-            conditions.push("v.duration >= ?".to_string());
+            param_count += 1;
+            conditions.push(format!("v.duration >= ${}::bigint", param_count));
             query_params.push(min_duration_ms.to_string());
         }
 
         if let Some(max_duration) = params.max_duration {
             // Convert from seconds to milliseconds
             let max_duration_ms = max_duration * 1000;
-            conditions.push("v.duration <= ?".to_string());
+            param_count += 1;
+            conditions.push(format!("v.duration <= ${}::bigint", param_count));
             query_params.push(max_duration_ms.to_string());
         }
 
@@ -509,22 +543,24 @@ impl VideoService {
                 "title" => query.push_str(&format!(" ORDER BY v.title {order}")),
                 "rating" => query.push_str(&format!(" ORDER BY v.rating {order}")),
                 "file_size" => query.push_str(&format!(" ORDER BY v.file_size {order}")),
-                "created_date" => query.push_str(&format!(" ORDER BY datetime(v.created_date) {order}")),
+                "created_date" => query.push_str(&format!(" ORDER BY to_timestamp(v.created_date, 'YYYY-MM-DD\"T\"HH24:MI:SS.MS\"Z\"') {order}")),
                 _ => query.push_str(" ORDER BY v.created_date DESC"),
             }
         } else {
-            query.push_str(" ORDER BY datetime(v.created_date) DESC");
+            query.push_str(" ORDER BY to_timestamp(v.created_date, 'YYYY-MM-DD\"T\"HH24:MI:SS.MS\"Z\"') DESC");
         }
 
         if let Some(limit) = params.limit {
-            query.push_str(" LIMIT ?");
+            param_count += 1;
+            query.push_str(&format!(" LIMIT ${}::integer", param_count));
             query_params.push(limit.to_string());
         } else {
             query.push_str(" LIMIT 100"); // Default limit
         }
 
         if let Some(offset) = params.offset {
-            query.push_str(" OFFSET ?");
+            param_count += 1;
+            query.push_str(&format!(" OFFSET ${}::bigint", param_count));
             query_params.push(offset.to_string());
         }
 

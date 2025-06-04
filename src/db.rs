@@ -1,4 +1,4 @@
-use sqlx::{migrate::MigrateDatabase, Pool, Sqlite, SqlitePool};
+use sqlx::{Pool, Postgres, PgPool};
 use std::fs;
 use std::path::Path;
 use tracing::info;
@@ -6,70 +6,34 @@ use tracing::info;
 use crate::config::Config;
 use crate::error::{AppError, Result};
 
-pub async fn init_db(config: &Config) -> Result<Pool<Sqlite>> {
+pub async fn init_db(config: &Config) -> Result<Pool<Postgres>> {
     let db_url = &config.database.url;
+    info!("Database URL: {}", db_url);
 
     // Check if this is a PostgreSQL URL
     if db_url.starts_with("postgres:") || db_url.starts_with("postgresql:") {
-        // For PostgreSQL, we'll create a dummy SQLite database but log that we're using PostgreSQL
-        info!("PostgreSQL URL detected: {}", db_url);
-
-        // Create a temporary SQLite database in memory
-        let sqlite_url = "sqlite::memory:";
-
-        // Create migrations directory if it doesn't exist
-        ensure_migrations_dir()?;
-
-        // Connect to the in-memory SQLite database
-        let pool = SqlitePool::connect(sqlite_url)
-            .await
-            .map_err(AppError::Database)?;
-
-        // Run migrations on the SQLite database
-        sqlx::migrate!("./migrations")
-            .run(&pool)
-            .await
-            .map_err(|e| AppError::Database(sqlx::Error::Migrate(Box::new(e))))?;
-
-        info!("Using PostgreSQL database at {}", db_url);
-        Ok(pool)
+        // Initialize PostgreSQL
+        init_postgres(db_url).await
     } else {
-        // Regular SQLite initialization
-        init_sqlite(db_url).await
+        // If not a PostgreSQL URL, return an error
+        Err(AppError::ConfigError(
+            "Only PostgreSQL is supported. Please provide a valid PostgreSQL connection URL.".to_string()
+        ))
     }
 }
 
-async fn init_sqlite(db_url: &str) -> Result<Pool<Sqlite>> {
-    // Extract the filename from the URL (remove 'sqlite:' prefix if present)
-    let db_filename = if db_url.starts_with("sqlite:") {
-        &db_url[7..]
-    } else {
-        db_url
-    };
-
-    // Create database if it doesn't exist
-    if !Sqlite::database_exists(db_filename).await.unwrap_or(false) {
-        info!("Creating database at {}", db_url);
-        Sqlite::create_database(db_filename).await.map_err(|e| {
-            AppError::Database(sqlx::Error::Configuration(
-                format!("Failed to create database: {e}").into(),
-            ))
-        })?;
-    }
-
+async fn init_postgres(db_url: &str) -> Result<Pool<Postgres>> {
     // Create migrations directory if it doesn't exist
     ensure_migrations_dir()?;
 
-    // Connect to the database
-    let options = sqlx::sqlite::SqliteConnectOptions::new()
-        .create_if_missing(true)
-        .foreign_keys(true);
-
-    let pool = SqlitePool::connect_with(options.filename(db_filename))
+    // Connect to the PostgreSQL database
+    info!("Connecting to PostgreSQL database at {}", db_url);
+    let pool = PgPool::connect(db_url)
         .await
         .map_err(AppError::Database)?;
 
     // Run migrations
+    info!("Running migrations");
     sqlx::migrate!("./migrations")
         .run(&pool)
         .await
@@ -104,38 +68,38 @@ fn create_initial_migration(migrations_dir: &Path) -> Result<()> {
 
 -- Videos table
 CREATE TABLE IF NOT EXISTS videos (
-    id TEXT PRIMARY KEY NOT NULL,
-    file_path TEXT NOT NULL,
-    file_name TEXT NOT NULL,
-    title TEXT,
+    id VARCHAR(36) PRIMARY KEY NOT NULL,
+    file_path VARCHAR(255) NOT NULL,
+    file_name VARCHAR(255) NOT NULL,
+    title VARCHAR(255),
     description TEXT,
-    created_date TEXT,
-    file_size INTEGER,
-    thumbnail_path TEXT,
+    created_date VARCHAR(50),
+    file_size BIGINT,
+    thumbnail_path VARCHAR(255),
     rating INTEGER CHECK (rating BETWEEN 1 AND 5 OR rating IS NULL),
-    created_at TEXT NOT NULL DEFAULT (datetime('now')),
-    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Tags table
 CREATE TABLE IF NOT EXISTS tags (
-    id TEXT PRIMARY KEY NOT NULL,
-    name TEXT NOT NULL UNIQUE,
-    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    id VARCHAR(36) PRIMARY KEY NOT NULL,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- People table
 CREATE TABLE IF NOT EXISTS people (
-    id TEXT PRIMARY KEY NOT NULL,
-    name TEXT NOT NULL UNIQUE,
-    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    id VARCHAR(36) PRIMARY KEY NOT NULL,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Video-Tag relationship table
 CREATE TABLE IF NOT EXISTS video_tags (
-    video_id TEXT NOT NULL,
-    tag_id TEXT NOT NULL,
-    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    video_id VARCHAR(36) NOT NULL,
+    tag_id VARCHAR(36) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (video_id, tag_id),
     FOREIGN KEY (video_id) REFERENCES videos (id) ON DELETE CASCADE,
     FOREIGN KEY (tag_id) REFERENCES tags (id) ON DELETE CASCADE
@@ -143,9 +107,9 @@ CREATE TABLE IF NOT EXISTS video_tags (
 
 -- Video-People relationship table
 CREATE TABLE IF NOT EXISTS video_people (
-    video_id TEXT NOT NULL,
-    person_id TEXT NOT NULL,
-    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    video_id VARCHAR(36) NOT NULL,
+    person_id VARCHAR(36) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (video_id, person_id),
     FOREIGN KEY (video_id) REFERENCES videos (id) ON DELETE CASCADE,
     FOREIGN KEY (person_id) REFERENCES people (id) ON DELETE CASCADE

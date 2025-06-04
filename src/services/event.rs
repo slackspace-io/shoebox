@@ -1,15 +1,15 @@
-use sqlx::{Pool, Sqlite, Row};
+use sqlx::{Pool, Postgres, Row};
 use tracing::info;
 use uuid::Uuid;
 
 use crate::error::{AppError, Result};
 
 pub struct EventService {
-    db: Pool<Sqlite>,
+    db: Pool<Postgres>,
 }
 
 impl EventService {
-    pub fn new(db: Pool<Sqlite>) -> Self {
+    pub fn new(db: Pool<Postgres>) -> Self {
         Self { db }
     }
 
@@ -60,7 +60,7 @@ impl EventService {
     // Update event across multiple videos
     pub async fn update_event(&self, old_event: &str, new_event: &str) -> Result<usize> {
         let result = sqlx::query(
-            "UPDATE videos SET event = ? WHERE event = ?"
+            "UPDATE videos SET event = $1 WHERE event = $2"
         )
         .bind(new_event)
         .bind(old_event)
@@ -79,7 +79,7 @@ impl EventService {
     // Delete (set to NULL) event across multiple videos
     pub async fn delete_event(&self, event: &str) -> Result<usize> {
         let result = sqlx::query(
-            "UPDATE videos SET event = NULL WHERE event = ?"
+            "UPDATE videos SET event = NULL WHERE event = $1"
         )
         .bind(event)
         .execute(&self.db)

@@ -65,7 +65,7 @@ RUN mkdir -p /app/data /app/thumbnails /app/exports
 # Set environment variables
 ENV SERVER_HOST=0.0.0.0
 ENV SERVER_PORT=3000
-ENV DATABASE_URL=sqlite:/app/data/videos.db
+#ENV DATABASE_URL=sqlite:/app/data/videos.db
 ENV THUMBNAIL_PATH=/app/thumbnails
 ENV EXPORT_BASE_PATH=/app/exports
 ENV FRONTEND_PATH=/app/frontend/dist

@@ -19,8 +19,8 @@ pub struct Video {
     pub exif_data: Option<serde_json::Value>,
     pub location: Option<String>,
     pub event: Option<String>,
-    pub created_at: String,
-    pub updated_at: String,
+    pub created_at: chrono::NaiveDateTime,
+    pub updated_at: chrono::NaiveDateTime,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -96,7 +96,7 @@ pub struct ExportRequest {
 
 impl Video {
     pub fn new(file_path: String, file_name: String) -> Self {
-        let now = Utc::now().to_rfc3339();
+        let now = Utc::now().naive_utc();
         Self {
             id: Uuid::new_v4().to_string(),
             file_path,

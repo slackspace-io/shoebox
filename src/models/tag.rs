@@ -6,7 +6,7 @@ use uuid::Uuid;
 pub struct Tag {
     pub id: String,
     pub name: String,
-    pub created_at: String,
+    pub created_at: chrono::NaiveDateTime,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -26,7 +26,7 @@ impl Tag {
         Self {
             id: Uuid::new_v4().to_string(),
             name,
-            created_at: chrono::Utc::now().to_rfc3339(),
+            created_at: chrono::Utc::now().naive_utc(),
         }
     }
 }

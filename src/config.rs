@@ -94,7 +94,7 @@ impl Config {
                     .unwrap_or(3000),
             },
             database: DatabaseConfig {
-                url: env::var("DATABASE_URL").unwrap_or_else(|_| "sqlite:data.db".to_string()),
+                url: env::var("DATABASE_URL").unwrap_or_else(|_| "not_set".to_string()),
                 max_connections: env::var("DATABASE_MAX_CONNECTIONS")
                     .unwrap_or_else(|_| "5".to_string())
                     .parse()

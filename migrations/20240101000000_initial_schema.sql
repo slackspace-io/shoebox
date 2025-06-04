@@ -3,38 +3,38 @@
 
 -- Videos table
 CREATE TABLE IF NOT EXISTS videos (
-    id TEXT PRIMARY KEY NOT NULL,
-    file_path TEXT NOT NULL,
-    file_name TEXT NOT NULL,
-    title TEXT,
+    id VARCHAR(36) PRIMARY KEY NOT NULL,
+    file_path VARCHAR(255) NOT NULL,
+    file_name VARCHAR(255) NOT NULL,
+    title VARCHAR(255),
     description TEXT,
-    created_date TEXT,
-    file_size INTEGER,
-    thumbnail_path TEXT,
+    created_date VARCHAR(50),
+    file_size BIGINT,
+    thumbnail_path VARCHAR(255),
     rating INTEGER CHECK (rating BETWEEN 1 AND 5 OR rating IS NULL),
-    created_at TEXT NOT NULL DEFAULT (datetime('now')),
-    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Tags table
 CREATE TABLE IF NOT EXISTS tags (
-    id TEXT PRIMARY KEY NOT NULL,
-    name TEXT NOT NULL UNIQUE,
-    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    id VARCHAR(36) PRIMARY KEY NOT NULL,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- People table
 CREATE TABLE IF NOT EXISTS people (
-    id TEXT PRIMARY KEY NOT NULL,
-    name TEXT NOT NULL UNIQUE,
-    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    id VARCHAR(36) PRIMARY KEY NOT NULL,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Video-Tag relationship table
 CREATE TABLE IF NOT EXISTS video_tags (
-    video_id TEXT NOT NULL,
-    tag_id TEXT NOT NULL,
-    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    video_id VARCHAR(36) NOT NULL,
+    tag_id VARCHAR(36) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (video_id, tag_id),
     FOREIGN KEY (video_id) REFERENCES videos (id) ON DELETE CASCADE,
     FOREIGN KEY (tag_id) REFERENCES tags (id) ON DELETE CASCADE
@@ -42,9 +42,9 @@ CREATE TABLE IF NOT EXISTS video_tags (
 
 -- Video-People relationship table
 CREATE TABLE IF NOT EXISTS video_people (
-    video_id TEXT NOT NULL,
-    person_id TEXT NOT NULL,
-    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    video_id VARCHAR(36) NOT NULL,
+    person_id VARCHAR(36) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (video_id, person_id),
     FOREIGN KEY (video_id) REFERENCES videos (id) ON DELETE CASCADE,
     FOREIGN KEY (person_id) REFERENCES people (id) ON DELETE CASCADE
