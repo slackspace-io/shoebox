@@ -19,9 +19,10 @@ concurrency:
 jobs:
   lint-test:
     runs-on: ubuntu-latest
+    container: debian:bookwork-slim
     services:
       postgres:
-        image: postgres:14
+        image: postgres
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
