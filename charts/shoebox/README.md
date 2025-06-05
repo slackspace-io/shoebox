@@ -131,7 +131,7 @@ helm install shoebox . \
   --set config.useMockDatabase=true
 ```
 
-> **Important**: When disabling persistence, you must also disable PostgreSQL to avoid database connection errors. Additionally, you should enable the mock database option (`config.useMockDatabase=true`) to provide a placeholder database URL for testing. The application requires a valid database URL to start up, even in test mode.
+> **Important**: When disabling persistence, you must also disable PostgreSQL to avoid database connection errors. The application will automatically use a mock database URL when PostgreSQL is disabled, but you can also explicitly set `config.useMockDatabase=true` for clarity. The application requires a valid database URL to start up, even in test mode.
 
 ## Upgrading
 
