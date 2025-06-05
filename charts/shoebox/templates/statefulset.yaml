@@ -120,7 +120,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       volumes:
-        {{- if and .Values.persistence.data.enabled (not .Values.postgresql.enabled) }}
+        {{- if .Values.persistence.data.enabled }}
         - name: data
           persistentVolumeClaim:
             {{- if .Values.persistence.data.existingClaim }}
