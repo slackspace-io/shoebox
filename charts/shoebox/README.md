@@ -64,6 +64,7 @@ The following table lists the configurable parameters of the Shoebox chart and t
 | `config.serverHost` | Host to bind the server | `0.0.0.0` |
 | `config.serverPort` | Port to bind the server | `3000` |
 | `config.databaseUrl` | Database URL (SQLite) | `sqlite:/app/data/videos.db` |
+| `config.useMockDatabase` | Use a mock database URL for testing | `false` |
 | `config.mediaSourcePaths.enabled` | Enable media source paths | `true` |
 | `config.mediaSourcePaths.sources` | List of media source paths to scan for videos | See values.yaml |
 | `config.thumbnailPath` | Path to store thumbnails | `/app/thumbnails` |
@@ -126,10 +127,11 @@ helm install shoebox . \
   --set persistence.thumbnails.enabled=false \
   --set persistence.exports.enabled=false \
   --set config.mediaSourcePaths.enabled=false \
-  --set postgresql.enabled=false
+  --set postgresql.enabled=false \
+  --set config.useMockDatabase=true
 ```
 
-> **Important**: When disabling persistence, you must also disable PostgreSQL to avoid database connection errors. The application requires a writable filesystem when PostgreSQL is enabled.
+> **Important**: When disabling persistence, you must also disable PostgreSQL to avoid database connection errors. Additionally, you should enable the mock database option (`config.useMockDatabase=true`) to provide a placeholder database URL for testing. The application requires a valid database URL to start up, even in test mode.
 
 ## Upgrading
 

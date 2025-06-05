@@ -95,6 +95,8 @@ config:
   # Example for SQLite: "sqlite:/app/data/videos.db"
   # Example for PostgreSQL: "postgres://username:password@hostname:5432/dbname"
   # databaseUrl: "sqlite:/app/data/videos.db"
+  # Set to true to use a mock database URL for testing (when postgresql.enabled is false)
+  useMockDatabase: false
   # Media source paths configuration
   # You can configure multiple media sources with different settings
   mediaSourcePaths:
