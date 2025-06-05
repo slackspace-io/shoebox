@@ -70,7 +70,7 @@ jobs:
           kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=postgresql --timeout=120s
 
       - name: Run chart-testing (install)
-        run: ct install --target-branch ${{ github.event.repository.default_branch }} --charts charts/shoebox --helm-extra-set-args "--set persistence.data.enabled=false --set persistence.thumbnails.enabled=false --set persistence.exports.enabled=false --set config.mediaSourcePaths.enabled=false --set config.databaseUrl=postgres://postgres:postgres@postgres-postgresql:5432/videos"
+        run: ct install --target-branch ${{ github.event.repository.default_branch }} --charts charts/shoebox --helm-extra-set-args "--set persistence.data.enabled=false --set persistence.thumbnails.enabled=false --set persistence.exports.enabled=false --set config.mediaSourcePaths.enabled=false --set config.databaseUrl=postgres://postgres:postgres@postgres-postgresql.default.svc.cluster.local:5432/videos"
 
   release:
     needs: lint-test
