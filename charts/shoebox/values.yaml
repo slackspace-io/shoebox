@@ -9,7 +9,7 @@ image:
   # Overrides the image tag whose default is the chart appVersion.
   # For production, use a specific version tag (e.g., v1.0.0)
   # For development, you can use main, latest, or a specific commit SHA
-  tag: "preview"
+  tag: "latest"
 
 imagePullSecrets: []
 # If the image is in a private repository, you need to create a secret with your registry credentials
@@ -97,6 +97,7 @@ config:
   # databaseUrl: "sqlite:/app/data/videos.db"
   # Media source paths configuration
   # You can configure multiple media sources with different settings
+  databaseUrl: "postgres://postgres:postgres@postgres:5432/videos"
   mediaSourcePaths:
     # Set to false to disable all media source paths
     enabled: true
@@ -155,7 +156,7 @@ persistence:
 
 # Optional PostgreSQL dependency
 postgresql:
-  enabled: true
+  enabled: false
   # If enabled and no databaseUrl is provided, the application will auto-service databaseurl
   postgresqlUsername: postgres
   postgresqlPassword: postgres
