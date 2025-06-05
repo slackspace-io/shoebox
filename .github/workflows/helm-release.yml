@@ -18,7 +18,7 @@ concurrency:
 jobs:
   lint-test:
     runs-on: ubuntu-latest
-    container: debian:bookwork-slim
+    container: debian:bookworm-slim
     services:
       postgres:
         image: postgres
