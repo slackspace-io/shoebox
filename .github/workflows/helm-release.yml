@@ -18,21 +18,20 @@ concurrency:
 jobs:
   lint-test:
     runs-on: ubuntu-latest
-    container: quay.io/helmpack/chart-testing
-    services:
-      postgres:
-        image: postgres
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: videos
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+    #services:
+    #  postgres:
+    #    image: postgres
+    #    env:
+    #      POSTGRES_USER: postgres
+    #      POSTGRES_PASSWORD: postgres
+    #      POSTGRES_DB: videos
+    #    ports:
+    #      - 5432:5432
+    #    options: >-
+    #      --health-cmd pg_isready
+    #      --health-interval 10s
+    #      --health-timeout 5s
+    #      --health-retries 5
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -55,6 +54,11 @@ jobs:
       #  run: |
       #    helm repo add bitnami https://charts.bitnami.com/bitnami
       #    helm repo update
+
+      - name: Create kind cluster
+        uses: helm/kind-action@v1.5.0
+        with:
+          wait: 120s
 
       - name: Run chart-testing (install)
         run: ct install --target-branch ${{ github.event.repository.default_branch }} --charts charts/shoebox --helm-extra-set-args "--set persistence.data.enabled=false --set persistence.thumbnails.enabled=false --set persistence.exports.enabled=false --set config.mediaSourcePaths.enabled=false --set config.databaseUrl=postgres://postgres:postgres@localhost:5432/videos"
