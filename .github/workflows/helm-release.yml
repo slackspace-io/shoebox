@@ -39,6 +39,11 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Install unzip
+        run: |
+          apt-get update
+          apt-get install -y unzip
+
       - name: Set up Helm
         uses: azure/setup-helm@v3
         with:
