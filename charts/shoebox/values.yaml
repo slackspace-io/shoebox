@@ -92,9 +92,7 @@ config:
   serverHost: "0.0.0.0"
   serverPort: 3000
   # Database connection URL. If provided, this takes precedence over PostgreSQL settings.
-  # Example for SQLite: "sqlite:/app/data/videos.db"
   # Example for PostgreSQL: "postgres://username:password@hostname:5432/dbname"
-  # databaseUrl: "sqlite:/app/data/videos.db"
   # Media source paths configuration
   # You can configure multiple media sources with different settings
   databaseUrl: "postgres://postgres:postgres@postgres:5432/videos"
