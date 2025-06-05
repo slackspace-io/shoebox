@@ -68,7 +68,7 @@ spec:
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
-            {{- if and .Values.persistence.data.enabled (not .Values.postgresql.enabled) }}
+            {{- if .Values.persistence.data.enabled }}
             - name: data
               mountPath: /app/data
               {{- if .Values.persistence.data.readOnly }}
