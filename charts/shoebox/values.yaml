@@ -153,12 +153,12 @@ persistence:
     readOnly: false
 
 # Optional PostgreSQL dependency
-postgresql:
-  enabled: false
-  # If enabled and no databaseUrl is provided, the application will auto-service databaseurl
-  postgresqlUsername: postgres
-  postgresqlPassword: postgres
-  postgresqlDatabase: videos
-  persistence:
-    enabled: true
-    size: 8Gi
+# postgresql:
+#  enabled: false
+#  # If enabled and no databaseUrl is provided, the application will auto-service databaseurl
+#  postgresqlUsername: postgres
+#  postgresqlPassword: postgres
+#  postgresqlDatabase: videos
+#  persistence:
+#    enabled: true
+#    size: 8Gi

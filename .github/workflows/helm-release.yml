@@ -66,10 +66,10 @@ jobs:
       - name: Run chart-testing (lint)
         run: ct lint --target-branch ${{ github.event.repository.default_branch }} --charts charts/shoebox --validate-maintainers=false
 
-      - name: Add Helm repositories
-        run: |
-          helm repo add bitnami https://charts.bitnami.com/bitnami
-          helm repo update
+      #- name: Add Helm repositories
+      #  run: |
+      #    helm repo add bitnami https://charts.bitnami.com/bitnami
+      #    helm repo update
 
       - name: Create kind cluster
         uses: helm/kind-action@v1.5.0
