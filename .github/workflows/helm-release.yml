@@ -57,8 +57,8 @@ jobs:
       #- name: Add Bitnami repository
       #  run: helm repo add bitnami https://charts.bitnami.com/bitnami
 
-      - name: Update Helm repositories
-        run: helm repo update
+      #- name: Update Helm repositories
+      #  run: helm repo update
 
       - name: Set up chart-testing
         uses: helm/chart-testing-action@v2.3.1
