@@ -125,8 +125,11 @@ helm install shoebox . \
   --set persistence.data.enabled=false \
   --set persistence.thumbnails.enabled=false \
   --set persistence.exports.enabled=false \
-  --set config.mediaSourcePaths.enabled=false
+  --set config.mediaSourcePaths.enabled=false \
+  --set postgresql.enabled=false
 ```
+
+> **Important**: When disabling persistence, you must also disable PostgreSQL to avoid database connection errors. The application requires a writable filesystem when PostgreSQL is enabled.
 
 ## Upgrading
 

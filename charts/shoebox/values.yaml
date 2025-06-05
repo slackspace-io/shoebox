@@ -155,6 +155,8 @@ persistence:
 
 # Optional PostgreSQL dependency
 postgresql:
+  # PostgreSQL is enabled by default, but should be disabled when persistence.data.enabled is false
+  # Use --set postgresql.enabled=false when disabling persistence
   enabled: true
   # If enabled and no databaseUrl is provided, the application will auto-service databaseurl
   postgresqlUsername: postgres
