@@ -19,8 +19,6 @@ pub struct ServerConfig {
 pub struct DatabaseConfig {
     pub url: String,
     pub max_connections: u32,
-    #[serde(rename = "useMockDatabase")]
-    pub use_mock_database: bool,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -101,10 +99,6 @@ impl Config {
                     .unwrap_or_else(|_| "5".to_string())
                     .parse()
                     .unwrap_or(5),
-                use_mock_database: env::var("USE_MOCK_DATABASE")
-                    .unwrap_or_else(|_| "false".to_string())
-                    .parse()
-                    .unwrap_or(false),
             },
             media: MediaConfig {
                 media_source_paths_config: MediaSourcePathsConfig {
