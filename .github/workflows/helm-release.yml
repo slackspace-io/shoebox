@@ -5,11 +5,11 @@ on:
     branches: [ main ]
     paths:
       - 'charts/**'
-      - '.github/workflows/helm-release.yml'
   pull_request:
     branches: [ main ]
     paths:
       - 'charts/**'
+  workflow_call:
 
 concurrency:
   group: "shoebox-helm"
