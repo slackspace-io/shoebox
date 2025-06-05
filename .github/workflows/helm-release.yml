@@ -18,7 +18,7 @@ concurrency:
 jobs:
   lint-test:
     runs-on: ubuntu-latest
-    container: debian:bookworm-slim
+    container: quay.io/helmpack/chart-testing
     services:
       postgres:
         image: postgres
