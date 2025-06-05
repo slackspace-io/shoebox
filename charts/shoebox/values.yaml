@@ -96,7 +96,7 @@ config:
   # Example for PostgreSQL: "postgres://username:password@hostname:5432/dbname"
   # databaseUrl: "sqlite:/app/data/videos.db"
   # Set to true to use a mock database URL for testing (when postgresql.enabled is false)
-  useMockDatabase: false
+  useMockDatabase: true
   # Media source paths configuration
   # You can configure multiple media sources with different settings
   mediaSourcePaths:
@@ -157,9 +157,9 @@ persistence:
 
 # Optional PostgreSQL dependency
 postgresql:
-  # PostgreSQL is enabled by default, but should be disabled when persistence.data.enabled is false
-  # Use --set postgresql.enabled=false when disabling persistence
-  enabled: true
+  # PostgreSQL is disabled by default to allow running without a database
+  # Use --set postgresql.enabled=true when you want to use a real PostgreSQL database
+  enabled: false
   # If enabled and no databaseUrl is provided, the application will auto-service databaseurl
   postgresqlUsername: postgres
   postgresqlPassword: postgres
