@@ -7,24 +7,18 @@ use crate::config::Config;
 use crate::error::{AppError, Result};
 
 pub async fn init_db(config: &Config) -> Result<Pool<Postgres>> {
-    // Check if mock database is enabled
-    if config.database.use_mock_database {
-        info!("Using mock database");
-        init_mock_db().await
-    } else {
-        let db_url = &config.database.url;
-        info!("Database URL: {}", db_url);
+    let db_url = &config.database.url;
+    info!("Database URL: {}", db_url);
 
-        // Check if this is a PostgreSQL URL
-        if db_url.starts_with("postgres:") || db_url.starts_with("postgresql:") {
-            // Initialize PostgreSQL
-            init_postgres(db_url).await
-        } else {
-            // If not a PostgreSQL URL, return an error
-            Err(AppError::ConfigError(
-                "Only PostgreSQL is supported. Please provide a valid PostgreSQL connection URL.".to_string()
-            ))
-        }
+    // Check if this is a PostgreSQL URL
+    if db_url.starts_with("postgres:") || db_url.starts_with("postgresql:") {
+        // Initialize PostgreSQL
+        init_postgres(db_url).await
+    } else {
+        // If not a PostgreSQL URL, return an error
+        Err(AppError::ConfigError(
+            "Only PostgreSQL is supported. Please provide a valid PostgreSQL connection URL.".to_string()
+        ))
     }
 }
 
@@ -46,24 +40,6 @@ async fn init_postgres(db_url: &str) -> Result<Pool<Postgres>> {
         .map_err(|e| AppError::Database(sqlx::Error::Migrate(Box::new(e))))?;
 
     info!("Database initialized successfully");
-    Ok(pool)
-}
-
-async fn init_mock_db() -> Result<Pool<Postgres>> {
-    // Create a mock database URL using SQLite in-memory
-    let mock_db_url = "postgres://postgres:postgres@localhost:5432/mock_db";
-
-    // Create a mock pool that will be used for testing
-    // This doesn't actually connect to a database
-    info!("Creating mock database pool");
-
-    // Use sqlx::postgres::PgPoolOptions to create a mock pool
-    let pool = sqlx::postgres::PgPoolOptions::new()
-        .max_connections(1)
-        .connect_lazy(mock_db_url)
-        .map_err(AppError::Database)?;
-
-    info!("Mock database initialized successfully");
     Ok(pool)
 }
 
