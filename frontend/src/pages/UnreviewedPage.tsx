@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Box,
@@ -18,13 +18,15 @@ import {
   ModalBody,
   ModalCloseButton,
   Code,
-  useDisclosure
+  useDisclosure,
+  SimpleGrid
 } from '@chakra-ui/react';
-import { FaSave, FaArrowLeft, FaArrowRight, FaBug } from 'react-icons/fa';
+import { FaSave, FaArrowLeft, FaBug, FaChevronDown, FaChevronUp, FaArrowRight, FaCalendarAlt } from 'react-icons/fa';
 import ReactPlayer from 'react-player';
 import { videoApi, VideoWithMetadata, UpdateVideoDto, VideoSearchParams } from '../api/client';
 import SearchFilters from '../components/SearchFilters';
 import VideoForm from '../components/VideoForm';
+import config from '../config';
 
 interface SelectOption {
   value: string;
@@ -38,10 +40,8 @@ const UnreviewedPage: React.FC = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   const [videos, setVideos] = useState<VideoWithMetadata[]>([]);
-  const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [loadingNextVideo, setLoadingNextVideo] = useState(false);
+  const [saving, setSaving] = useState<Record<string, boolean>>({});
   const [rawDatabaseValues, setRawDatabaseValues] = useState<string>('');
   const [searchParams, setSearchParams] = useState<VideoSearchParams>({
     unreviewed: true,
@@ -51,14 +51,23 @@ const UnreviewedPage: React.FC = () => {
     sort_order: 'ASC'
   });
 
-  // Form state
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [rating, setRating] = useState<number | undefined>(undefined);
-  const [videoLocation, setVideoLocation] = useState('');
-  const [event, setEvent] = useState('');
-  const [selectedTags, setSelectedTags] = useState<SelectOption[]>([]);
-  const [selectedPeople, setSelectedPeople] = useState<SelectOption[]>([]);
+  // State to track all available dates with videos
+  const [allDates, setAllDates] = useState<string[]>([]);
+
+  // State for video display
+  const [visibleVideosCount, setVisibleVideosCount] = useState(config.unreviewed.defaultVideosToShow);
+  const [expanded, setExpanded] = useState(false);
+
+  // Form state for multiple videos
+  const [formData, setFormData] = useState<Record<string, {
+    title: string;
+    description: string;
+    rating?: number;
+    location: string;
+    event: string;
+    selectedTags: SelectOption[];
+    selectedPeople: SelectOption[];
+  }>>({});
 
   const borderColor = useColorModeValue('gray.200', 'gray.700');
 
@@ -90,6 +99,47 @@ const UnreviewedPage: React.FC = () => {
     }));
   }, [routerLocation]);
 
+  // Fetch all dates with unreviewed videos
+  useEffect(() => {
+    const fetchAllDates = async () => {
+      try {
+        // Create a search params object without date filters
+        const allDatesParams: VideoSearchParams = {
+          unreviewed: true,
+          limit: 1000, // Use a large limit to get all videos
+          offset: 0,
+          sort_by: 'created_date',
+          sort_order: 'ASC'
+        };
+
+        const allVideos = await videoApi.searchVideos(allDatesParams);
+
+        // Extract unique dates from all videos
+        const dates = new Set<string>();
+        allVideos.forEach(video => {
+          if (video.created_date) {
+            const date = new Date(video.created_date).toISOString().split('T')[0];
+            dates.add(date);
+          }
+        });
+
+        // Convert Set to sorted array
+        const sortedDates = Array.from(dates).sort();
+        setAllDates(sortedDates);
+      } catch (error) {
+        console.error('Error fetching all dates:', error);
+        toast({
+          title: 'Error fetching date information',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    };
+
+    fetchAllDates();
+  }, [toast]); // Only run once when component mounts, include toast in dependencies
+
   // Load unreviewed videos
   useEffect(() => {
     const fetchUnreviewedVideos = async () => {
@@ -99,8 +149,12 @@ const UnreviewedPage: React.FC = () => {
         setVideos(results);
 
         if (results.length > 0) {
-          // Initialize form with the first video
-          initializeForm(results[0]);
+          // Initialize form data for all videos
+          const newFormData: Record<string, any> = {};
+          results.forEach(video => {
+            newFormData[video.id] = initializeFormData(video);
+          });
+          setFormData(newFormData);
         }
       } catch (error) {
         console.error('Error fetching unreviewed videos:', error);
@@ -118,36 +172,37 @@ const UnreviewedPage: React.FC = () => {
     fetchUnreviewedVideos();
   }, [searchParams, toast]);
 
-
-  // Initialize form with video data
-  const initializeForm = (video: VideoWithMetadata) => {
-    setTitle(video.title || '');
-    setDescription(video.description || '');
-    setRating(video.rating);
-    setVideoLocation(video.location || '');
-    setEvent(video.event || '');
-    setSelectedTags(video.tags.map(tag => ({ value: tag, label: tag })));
-    setSelectedPeople(video.people.map(person => ({ value: person, label: person })));
+  // Initialize form data for a video
+  const initializeFormData = (video: VideoWithMetadata) => {
+    return {
+      title: video.title || '',
+      description: video.description || '',
+      rating: video.rating,
+      location: video.location || '',
+      event: video.event || '',
+      selectedTags: video.tags.map(tag => ({ value: tag, label: tag })),
+      selectedPeople: video.people.map(person => ({ value: person, label: person }))
+    };
   };
 
-  // Handle save and move to next video
-  const handleSaveAndNext = async () => {
-    if (videos.length === 0 || currentVideoIndex >= videos.length) return;
+  // Handle save for a specific video
+  const handleSave = async (videoId: string) => {
+    if (!formData[videoId]) return;
 
-    const currentVideo = videos[currentVideoIndex];
-    setSaving(true);
+    setSaving(prev => ({ ...prev, [videoId]: true }));
     try {
+      const videoFormData = formData[videoId];
       const updateData: UpdateVideoDto = {
-        title: title || undefined,
-        description: description || undefined,
-        rating,
-        location: videoLocation || undefined,
-        event: event || undefined,
-        tags: selectedTags.map(tag => tag.value),
-        people: selectedPeople.map(person => person.value),
+        title: videoFormData.title || undefined,
+        description: videoFormData.description || undefined,
+        rating: videoFormData.rating,
+        location: videoFormData.location || undefined,
+        event: videoFormData.event || undefined,
+        tags: videoFormData.selectedTags.map(tag => tag.value),
+        people: videoFormData.selectedPeople.map(person => person.value),
       };
 
-      await videoApi.updateVideo(currentVideo.id, updateData);
+      await videoApi.updateVideo(videoId, updateData);
 
       toast({
         title: 'Video updated',
@@ -156,39 +211,29 @@ const UnreviewedPage: React.FC = () => {
         isClosable: true,
       });
 
-      // Move to next video if available
-      if (currentVideoIndex < videos.length - 1) {
-        setLoadingNextVideo(true);
-        setCurrentVideoIndex(currentVideoIndex + 1);
-        initializeForm(videos[currentVideoIndex + 1]);
-        setLoadingNextVideo(false);
-      } else {
-        // If this was the last video, refresh the list to get more unreviewed videos
-        setLoadingNextVideo(true);
-        // Keep the current search parameters but reset offset
-        const nextSearchParams = {
-          ...searchParams,
-          offset: 0
-        };
-        const results = await videoApi.searchVideos(nextSearchParams);
+      // Remove the saved video from the videos array
+      setVideos(prev => {
+        // Create a new array without the saved video
+        const newVideos = prev.filter(v => v.id !== videoId);
 
-        if (results.length > 0) {
-          setVideos(results);
-          setCurrentVideoIndex(0);
-          initializeForm(results[0]);
-        } else {
-          // No more unreviewed videos
-          toast({
-            title: 'All videos reviewed',
-            description: 'There are no more unreviewed videos.',
-            status: 'info',
-            duration: 3000,
-            isClosable: true,
-          });
-          navigate('/');
+        // If we need to fetch more videos to maintain the same number of visible videos,
+        // we can do that here in a separate effect
+        if (newVideos.length < prev.length &&
+            visibleVideosCount >= newVideos.length &&
+            newVideos.length > 0) {
+          // We'll trigger a fetch for more videos if needed
+          fetchMoreVideosIfNeeded(newVideos.length);
         }
-        setLoadingNextVideo(false);
-      }
+
+        return newVideos;
+      });
+
+      // Remove the form data for the saved video
+      setFormData(prev => {
+        const newFormData = { ...prev };
+        delete newFormData[videoId];
+        return newFormData;
+      });
     } catch (error) {
       console.error('Error updating video:', error);
       toast({
@@ -198,18 +243,15 @@ const UnreviewedPage: React.FC = () => {
         isClosable: true,
       });
     } finally {
-      setSaving(false);
+      setSaving(prev => ({ ...prev, [videoId]: false }));
     }
   };
 
-  // Handle showing debug information
-  const handleShowDebug = async () => {
-    if (videos.length === 0 || currentVideoIndex >= videos.length) return;
-
-    const currentVideo = videos[currentVideoIndex];
+  // Handle showing debug information for a specific video
+  const handleShowDebug = async (videoId: string) => {
     try {
       // Fetch the latest data from the server
-      const videoData = await videoApi.getVideo(currentVideo.id);
+      const videoData = await videoApi.getVideo(videoId);
       setRawDatabaseValues(JSON.stringify(videoData, null, 2));
       onOpen();
     } catch (error) {
@@ -221,6 +263,125 @@ const UnreviewedPage: React.FC = () => {
         isClosable: true,
       });
     }
+  };
+
+  // Fetch more videos if needed to maintain the same number of visible videos
+  const fetchMoreVideosIfNeeded = async (currentCount: number) => {
+    // Calculate how many more videos we need
+    const neededCount = visibleVideosCount - currentCount;
+
+    if (neededCount <= 0) return; // No need to fetch more
+
+    try {
+      // Create a new search params object with an offset to get videos beyond the ones we already have
+      const moreVideosParams: VideoSearchParams = {
+        ...searchParams,
+        offset: currentCount,
+        limit: neededCount
+      };
+
+      const additionalVideos = await videoApi.searchVideos(moreVideosParams);
+
+      if (additionalVideos.length > 0) {
+        // Add the new videos to our state
+        setVideos(prev => [...prev, ...additionalVideos]);
+
+        // Initialize form data for the new videos
+        const newFormData: Record<string, any> = {};
+        additionalVideos.forEach(video => {
+          newFormData[video.id] = initializeFormData(video);
+        });
+
+        // Update form data state
+        setFormData(prev => ({
+          ...prev,
+          ...newFormData
+        }));
+      }
+    } catch (error) {
+      console.error('Error fetching additional videos:', error);
+      toast({
+        title: 'Error fetching additional videos',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  // Toggle expand/collapse for showing more/fewer videos
+  const toggleExpand = () => {
+    if (expanded) {
+      setVisibleVideosCount(config.unreviewed.defaultVideosToShow);
+      setExpanded(false);
+    } else {
+      setVisibleVideosCount(Math.min(videos.length, config.unreviewed.maxVideosToShow));
+      setExpanded(true);
+    }
+  };
+
+
+
+  // Get context information about videos from the same day, previous day, and next day
+  const dateContext = useMemo(() => {
+    if (videos.length === 0 || allDates.length === 0) return null;
+
+    // Get the date of the first visible video
+    const firstVisibleVideo = videos[0];
+    if (!firstVisibleVideo.created_date) return null;
+
+    const firstDate = new Date(firstVisibleVideo.created_date).toISOString().split('T')[0];
+    const firstDateIndex = allDates.indexOf(firstDate);
+
+    if (firstDateIndex === -1) return null;
+
+    // Count videos for the current date
+    const currentDateCount = videos.filter(video => {
+      if (!video.created_date) return false;
+      const videoDate = new Date(video.created_date).toISOString().split('T')[0];
+      return videoDate === firstDate;
+    }).length;
+
+    const result = {
+      currentDate: firstDate,
+      currentDateCount,
+      nextDate: null as string | null,
+      nextDateCount: 0,
+      previousDate: null as string | null,
+      previousDateCount: 0
+    };
+
+    // Find the next date with videos
+    if (firstDateIndex < allDates.length - 1) {
+      result.nextDate = allDates[firstDateIndex + 1];
+      // We don't know the exact count without fetching, but we know there's at least one
+      result.nextDateCount = 1;
+    }
+
+    // Find the previous date with videos
+    if (firstDateIndex > 0) {
+      result.previousDate = allDates[firstDateIndex - 1];
+      // We don't know the exact count without fetching, but we know there's at least one
+      result.previousDateCount = 1;
+    }
+
+    return result;
+  }, [videos, allDates]);
+
+  // Handle jumping to next or previous day
+  const handleJumpToDay = (targetDate: string | null) => {
+    if (!targetDate) return;
+
+    // Create a new filter with the target date as both start and end date
+    const newFilters: Partial<VideoSearchParams> = {
+      ...searchParams,
+      start_date: targetDate,
+      end_date: targetDate,
+      offset: 0 // Reset pagination
+    };
+
+    // Apply the new filters
+    handleFilterChange(newFilters);
   };
 
   // Handle filter changes
@@ -271,7 +432,8 @@ const UnreviewedPage: React.FC = () => {
     );
   }
 
-  const currentVideo = videos[currentVideoIndex];
+  // Get visible videos
+  const visibleVideos = videos.slice(0, visibleVideosCount);
 
   return (
     <Box>
@@ -280,100 +442,188 @@ const UnreviewedPage: React.FC = () => {
           Back to Videos
         </Button>
         <Text>
-          Reviewing {currentVideoIndex + 1} of {videos.length}
+          Showing {visibleVideos.length} of {videos.length} unreviewed videos
         </Text>
       </Flex>
 
+      {/* Date context information */}
+      {dateContext && (
+        <Box mb={4} p={4} borderWidth="1px" borderRadius="md" borderColor={borderColor}>
+          <Heading size="md" mb={2}>Video Context</Heading>
+          <Flex direction={{ base: 'column', md: 'row' }} gap={4} justify="space-between">
+            {/* Previous Day */}
+            <Box>
+              <Flex align="center" mb={1}>
+                <Text fontWeight="bold" mr={2}>
+                  Previous Day: {dateContext.previousDate
+                    ? new Date(dateContext.previousDate).toLocaleDateString()
+                    : 'None'}
+                </Text>
+                <Button
+                  size="sm"
+                  leftIcon={<FaArrowLeft />}
+                  isDisabled={!dateContext.previousDate}
+                  onClick={() => handleJumpToDay(dateContext.previousDate)}
+                  colorScheme="blue"
+                  variant="outline"
+                >
+                  Jump
+                </Button>
+              </Flex>
+              <Text>
+                {dateContext.previousDate
+                  ? `${dateContext.previousDateCount} videos from this day`
+                  : 'No videos on any previous day'}
+              </Text>
+            </Box>
+
+            {/* Current Day */}
+            <Box>
+              <Flex align="center" mb={1}>
+                <Text fontWeight="bold" mr={2}>
+                  Current Day: {new Date(dateContext.currentDate).toLocaleDateString()}
+                </Text>
+                <Button
+                  size="sm"
+                  leftIcon={<FaCalendarAlt />}
+                  colorScheme="teal"
+                  variant="outline"
+                  isDisabled
+                >
+                  Current
+                </Button>
+              </Flex>
+              <Text>
+                {dateContext.currentDateCount} videos from this day
+              </Text>
+            </Box>
+
+            {/* Next Day */}
+            <Box>
+              <Flex align="center" mb={1}>
+                <Text fontWeight="bold" mr={2}>
+                  Next Day: {dateContext.nextDate
+                    ? new Date(dateContext.nextDate).toLocaleDateString()
+                    : 'None'}
+                </Text>
+                <Button
+                  size="sm"
+                  rightIcon={<FaArrowRight />}
+                  isDisabled={!dateContext.nextDate}
+                  onClick={() => handleJumpToDay(dateContext.nextDate)}
+                  colorScheme="blue"
+                  variant="outline"
+                >
+                  Jump
+                </Button>
+              </Flex>
+              <Text>
+                {dateContext.nextDate
+                  ? `${dateContext.nextDateCount} videos from this day`
+                  : 'No videos on any future day'}
+              </Text>
+            </Box>
+          </Flex>
+        </Box>
+      )}
+
       <SearchFilters onFilterChange={handleFilterChange} initialFilters={searchParams} />
 
-      <Flex direction={{ base: 'column', lg: 'row' }} gap={8}>
-        <Box flex="1" maxW={{ lg: '60%' }}>
+      {/* Expand/Collapse button */}
+      <Button
+        onClick={toggleExpand}
+        leftIcon={expanded ? <FaChevronUp /> : <FaChevronDown />}
+        mb={4}
+        mt={2}
+      >
+        {expanded ? 'Show Fewer Videos' : 'Show More Videos'}
+      </Button>
+
+      {/* Multiple videos grid */}
+      <SimpleGrid columns={{ base: 1, xl: 2 }} spacing={8}>
+        {visibleVideos.map(video => (
           <Box
-            borderRadius="md"
-            overflow="hidden"
+            key={video.id}
+            p={4}
             borderWidth="1px"
+            borderRadius="md"
             borderColor={borderColor}
+            mb={6}
           >
-            {loadingNextVideo ? (
-              <Flex justify="center" align="center" h="300px">
-                <Spinner size="xl" />
-              </Flex>
-            ) : (
-              <ReactPlayer
-                url={`/api/videos/${currentVideo.id}/stream`}
-                controls
-                width="100%"
-                height="auto"
-                style={{ aspectRatio: '16/9' }}
-              />
-            )}
+            <Flex direction={{ base: 'column', lg: 'row' }} gap={6}>
+              <Box flex="1" maxW={{ lg: '50%' }}>
+                <Box
+                  borderRadius="md"
+                  overflow="hidden"
+                  borderWidth="1px"
+                  borderColor={borderColor}
+                  mb={4}
+                >
+                  <ReactPlayer
+                    url={`/api/videos/${video.id}/stream`}
+                    controls
+                    width="100%"
+                    height="auto"
+                    style={{ aspectRatio: '16/9' }}
+                  />
+                </Box>
+
+                <Box>
+                  <Text fontSize="sm" color="gray.500">
+                    File: {video.file_path}
+                  </Text>
+                  <Text fontSize="sm" color="gray.500">
+                    Size: {video.file_size ? `${(video.file_size / (1024 * 1024)).toFixed(2)} MB` : 'Unknown'}
+                  </Text>
+                  {video.created_date && (
+                    <Text fontSize="sm" color="gray.500">
+                      Created: {new Date(video.created_date).toLocaleDateString()}
+                    </Text>
+                  )}
+                  <Button
+                    leftIcon={<FaBug />}
+                    size="sm"
+                    mt={2}
+                    colorScheme="gray"
+                    variant="outline"
+                    onClick={() => handleShowDebug(video.id)}
+                  >
+                    Debug
+                  </Button>
+                </Box>
+              </Box>
+
+              <VStack align="stretch" flex="1" spacing={4}>
+                {formData[video.id] && (
+                  <VideoForm
+                    video={video}
+                    formData={formData[video.id]}
+                    onChange={(updatedData) => {
+                      setFormData(prev => ({
+                        ...prev,
+                        [video.id]: {
+                          ...prev[video.id],
+                          ...updatedData
+                        }
+                      }));
+                    }}
+                  />
+                )}
+
+                <Button
+                  leftIcon={<FaSave />}
+                  colorScheme="green"
+                  onClick={() => handleSave(video.id)}
+                  isLoading={saving[video.id]}
+                  mt={4}
+                >
+                  Save
+                </Button>
+              </VStack>
+            </Flex>
           </Box>
-
-          <Box mt={4}>
-            <Text fontSize="sm" color="gray.500">
-              File: {currentVideo.file_path}
-            </Text>
-            <Text fontSize="sm" color="gray.500">
-              Size: {currentVideo.file_size ? `${(currentVideo.file_size / (1024 * 1024)).toFixed(2)} MB` : 'Unknown'}
-            </Text>
-            {currentVideo.created_date && (
-              <Text fontSize="sm" color="gray.500">
-                Created: {new Date(currentVideo.created_date).toLocaleDateString()}
-              </Text>
-            )}
-            <Button
-              leftIcon={<FaBug />}
-              size="sm"
-              mt={2}
-              colorScheme="gray"
-              variant="outline"
-              onClick={handleShowDebug}
-            >
-              Debug
-            </Button>
-          </Box>
-        </Box>
-
-        <VStack align="stretch" flex="1" spacing={4}>
-          <VideoForm
-            video={currentVideo}
-            formData={{
-              title,
-              description,
-              rating,
-              location: videoLocation,
-              event,
-              selectedTags,
-              selectedPeople
-            }}
-            onChange={(formData) => {
-              if (formData.title !== undefined) setTitle(formData.title);
-              if (formData.description !== undefined) setDescription(formData.description);
-              if (formData.rating !== undefined) setRating(formData.rating);
-              if (formData.location !== undefined) setVideoLocation(formData.location);
-              if (formData.event !== undefined) setEvent(formData.event);
-              if (formData.tags !== undefined) {
-                setSelectedTags(formData.tags.map(tag => ({ value: tag, label: tag })));
-              }
-              if (formData.people !== undefined) {
-                setSelectedPeople(formData.people.map(person => ({ value: person, label: person })));
-              }
-            }}
-          />
-
-          <Button
-            leftIcon={<FaSave />}
-            rightIcon={<FaArrowRight />}
-            colorScheme="green"
-            onClick={handleSaveAndNext}
-            isLoading={saving || loadingNextVideo}
-            mt={4}
-            size="lg"
-          >
-            Save & Next
-          </Button>
-        </VStack>
-      </Flex>
+        ))}
+      </SimpleGrid>
 
       {/* Debug Modal */}
       <Modal isOpen={isOpen} onClose={onClose} size="xl">
