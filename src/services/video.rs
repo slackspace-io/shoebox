@@ -7,12 +7,14 @@ use crate::models::{Video, CreateVideoDto, UpdateVideoDto, VideoWithMetadata, Vi
 use crate::services::tag::TagService;
 use crate::services::person::PersonService;
 use crate::services::thumbnail::ThumbnailService;
+use crate::services::shoebox::ShoeboxService;
 
 pub struct VideoService {
     db: Pool<Postgres>,
     tag_service: TagService,
     person_service: PersonService,
     thumbnail_service: ThumbnailService,
+    shoebox_service: ShoeboxService,
 }
 
 impl VideoService {
@@ -21,12 +23,14 @@ impl VideoService {
         tag_service: TagService,
         person_service: PersonService,
         thumbnail_service: ThumbnailService,
+        shoebox_service: ShoeboxService,
     ) -> Self {
         Self {
             db,
             tag_service,
             person_service,
             thumbnail_service,
+            shoebox_service,
         }
     }
 
@@ -119,12 +123,24 @@ impl VideoService {
         .await
         .map_err(AppError::Database)?;
 
+        // Get shoeboxes for this video
+        let shoeboxes = sqlx::query_scalar::<_, String>(
+            "SELECT s.name FROM shoeboxes s
+             JOIN video_shoeboxes vs ON s.id = vs.shoebox_id
+             WHERE vs.video_id = $1"
+        )
+        .bind(id)
+        .fetch_all(&self.db)
+        .await
+        .map_err(AppError::Database)?;
+
         // Note: find_by_id already transforms the thumbnail path
 
         Ok(VideoWithMetadata {
             video,
             tags,
             people,
+            shoeboxes,
         })
     }
 
@@ -178,6 +194,19 @@ impl VideoService {
             sqlx::query("INSERT INTO video_people (video_id, person_id, created_at) VALUES ($1, $2, $3::timestamp)")
                 .bind(&id)
                 .bind(&person_id)
+                .bind(&now)
+                .execute(&mut *tx)
+                .await
+                .map_err(AppError::Database)?;
+        }
+
+        // Add shoeboxes
+        for shoebox_name in &dto.shoeboxes {
+            let shoebox_id = self.shoebox_service.find_or_create_by_name(shoebox_name, None, &mut tx).await?;
+
+            sqlx::query("INSERT INTO video_shoeboxes (video_id, shoebox_id, created_at) VALUES ($1, $2, $3::timestamp)")
+                .bind(&id)
+                .bind(&shoebox_id)
                 .bind(&now)
                 .execute(&mut *tx)
                 .await
@@ -285,6 +314,29 @@ impl VideoService {
                 sqlx::query("INSERT INTO video_people (video_id, person_id, created_at) VALUES ($1, $2, $3::timestamp)")
                     .bind(id)
                     .bind(&person_id)
+                    .bind(&now)
+                    .execute(&mut *tx)
+                    .await
+                    .map_err(AppError::Database)?;
+            }
+        }
+
+        // Update shoeboxes if provided
+        if let Some(shoeboxes) = &dto.shoeboxes {
+            // Remove existing shoeboxes
+            sqlx::query("DELETE FROM video_shoeboxes WHERE video_id = $1")
+                .bind(id)
+                .execute(&mut *tx)
+                .await
+                .map_err(AppError::Database)?;
+
+            // Add new shoeboxes
+            for shoebox_name in shoeboxes {
+                let shoebox_id = self.shoebox_service.find_or_create_by_name(shoebox_name, None, &mut tx).await?;
+
+                sqlx::query("INSERT INTO video_shoeboxes (video_id, shoebox_id, created_at) VALUES ($1, $2, $3::timestamp)")
+                    .bind(id)
+                    .bind(&shoebox_id)
                     .bind(&now)
                     .execute(&mut *tx)
                     .await
@@ -415,12 +467,15 @@ impl VideoService {
         let mut query = "
             SELECT v.*,
                    string_agg(DISTINCT t.name, ',') as tags,
-                   string_agg(DISTINCT p.name, ',') as people
+                   string_agg(DISTINCT p.name, ',') as people,
+                   string_agg(DISTINCT s.name, ',') as shoeboxes
             FROM videos v
             LEFT JOIN video_tags vt ON v.id = vt.video_id
             LEFT JOIN tags t ON vt.tag_id = t.id
             LEFT JOIN video_people vp ON v.id = vp.video_id
             LEFT JOIN people p ON vp.person_id = p.id
+            LEFT JOIN video_shoeboxes vs ON v.id = vs.video_id
+            LEFT JOIN shoeboxes s ON vs.shoebox_id = s.id
         ".to_string();
 
         // Add search conditions
@@ -470,6 +525,22 @@ impl VideoService {
                     )", param_count);
                     conditions.push(condition);
                     query_params.push(person.clone());
+                }
+            }
+        }
+
+        if let Some(shoeboxes) = &params.shoeboxes {
+            if !shoeboxes.is_empty() {
+                // For each shoebox, we need a separate subquery to ensure ALL shoeboxes are present
+                for shoebox in shoeboxes {
+                    param_count += 1;
+                    let condition = format!("v.id IN (
+                        SELECT video_id FROM video_shoeboxes
+                        JOIN shoeboxes ON video_shoeboxes.shoebox_id = shoeboxes.id
+                        WHERE shoeboxes.name = ${}
+                    )", param_count);
+                    conditions.push(condition);
+                    query_params.push(shoebox.clone());
                 }
             }
         }
@@ -611,10 +682,16 @@ impl VideoService {
                 .map(|s| s.split(',').map(|p| p.to_string()).collect())
                 .unwrap_or_default();
 
+            let shoeboxes_str: Option<String> = row.get("shoeboxes");
+            let shoeboxes = shoeboxes_str
+                .map(|s| s.split(',').map(|sb| sb.to_string()).collect())
+                .unwrap_or_default();
+
             results.push(VideoWithMetadata {
                 video,
                 tags,
                 people,
+                shoeboxes,
             });
         }
 

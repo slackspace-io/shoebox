@@ -6,6 +6,7 @@ mod export;
 mod system;
 mod location;
 mod event;
+mod shoebox;
 pub mod media;
 
 use axum::Router;
@@ -24,6 +25,8 @@ pub fn api_router(app_state: AppState) -> Router {
         .nest("/locations", location::router(app_state.clone()))
         // Event routes
         .nest("/events", event::router(app_state.clone()))
+        // Shoebox routes
+        .nest("/shoeboxes", shoebox::router(app_state.clone()))
         // Scan routes
         .nest("/scan", scan::router(app_state.clone()))
         // Export routes

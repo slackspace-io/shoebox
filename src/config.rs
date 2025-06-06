@@ -27,6 +27,7 @@ pub struct MediaPathConfig {
     pub path: String,
     pub original_path: Option<String>,
     pub original_extension: Option<String>,
+    pub default_shoebox: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -37,6 +38,8 @@ pub struct MediaSourceConfig {
     pub original_path: Option<String>,
     #[serde(rename = "originalExtension")]
     pub original_extension: Option<String>,
+    #[serde(rename = "defaultShoebox")]
+    pub default_shoebox: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -70,6 +73,7 @@ impl MediaConfig {
                     path: source.path.clone(),
                     original_path: source.original_path.clone(),
                     original_extension: source.original_extension.clone(),
+                    default_shoebox: source.default_shoebox.clone(),
                 }
             }).collect();
         } else if let Some(legacy_string) = &self.media_source_paths_config.legacy_string {
@@ -144,6 +148,7 @@ fn parse_comma_separated_paths_from_string(paths_str: &str) -> Vec<MediaPathConf
                         path: "./media".to_string(),
                         original_path: None,
                         original_extension: None,
+                        default_shoebox: None,
                     };
                 }
 
@@ -175,6 +180,7 @@ fn parse_comma_separated_paths_from_string(paths_str: &str) -> Vec<MediaPathConf
                     path,
                     original_path,
                     original_extension,
+                    default_shoebox: None,
                 }
             }
             // Backward compatibility: Check if the path contains configuration options without a name
@@ -208,6 +214,7 @@ fn parse_comma_separated_paths_from_string(paths_str: &str) -> Vec<MediaPathConf
                     path,
                     original_path,
                     original_extension,
+                    default_shoebox: None,
                 }
             } else {
                 // Simple path without additional configuration
@@ -216,6 +223,7 @@ fn parse_comma_separated_paths_from_string(paths_str: &str) -> Vec<MediaPathConf
                     path: path_config,
                     original_path: None,
                     original_extension: None,
+                    default_shoebox: None,
                 }
             }
         })
@@ -243,6 +251,7 @@ fn parse_comma_separated_paths(env_var: &str) -> Vec<MediaPathConfig> {
                         path: "./media".to_string(),
                         original_path: None,
                         original_extension: None,
+                        default_shoebox: None,
                     };
                 }
 
@@ -274,6 +283,7 @@ fn parse_comma_separated_paths(env_var: &str) -> Vec<MediaPathConfig> {
                     path,
                     original_path,
                     original_extension,
+                    default_shoebox: None,
                 }
             }
             // Backward compatibility: Check if the path contains configuration options without a name
@@ -307,6 +317,7 @@ fn parse_comma_separated_paths(env_var: &str) -> Vec<MediaPathConfig> {
                     path,
                     original_path,
                     original_extension,
+                    default_shoebox: None,
                 }
             } else {
                 // Simple path without additional configuration
@@ -315,6 +326,7 @@ fn parse_comma_separated_paths(env_var: &str) -> Vec<MediaPathConfig> {
                     path: path_config,
                     original_path: None,
                     original_extension: None,
+                    default_shoebox: None,
                 }
             }
         })

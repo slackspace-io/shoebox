@@ -6,6 +6,7 @@ mod person;
 mod export;
 mod location;
 mod event;
+mod shoebox;
 
 pub use scanner::*;
 pub use thumbnail::*;
@@ -15,6 +16,7 @@ pub use person::*;
 pub use export::*;
 pub use location::*;
 pub use event::*;
+pub use shoebox::*;
 
 use sqlx::{Pool, Postgres};
 use crate::config::Config;

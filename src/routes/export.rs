@@ -27,6 +27,7 @@ async fn export_videos(
         TagService::new(state.db.clone()),
         PersonService::new(state.db.clone()),
         ThumbnailService::new(&state.config),
+        crate::services::ShoeboxService::new(state.db.clone()),
     );
 
     let export_service = ExportService::new(

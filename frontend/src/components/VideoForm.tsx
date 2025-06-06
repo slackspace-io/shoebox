@@ -11,7 +11,7 @@ import {
 } from '@chakra-ui/react';
 import { FaStar, FaRegStar } from 'react-icons/fa';
 import CreatableSelect from 'react-select/creatable';
-import { tagApi, personApi, locationApi, eventApi, VideoWithMetadata, UpdateVideoDto } from '../api/client';
+import { tagApi, personApi, locationApi, eventApi, shoeboxApi, VideoWithMetadata, UpdateVideoDto } from '../api/client';
 
 interface SelectOption {
   value: string;
@@ -29,6 +29,7 @@ interface VideoFormProps {
     event: string;
     selectedTags: SelectOption[];
     selectedPeople: SelectOption[];
+    selectedShoeboxes: SelectOption[];
   };
   readOnly?: boolean;
 }
@@ -46,11 +47,12 @@ const VideoForm: React.FC<VideoFormProps> = ({
   const [peopleOptions, setPeopleOptions] = useState<SelectOption[]>([]);
   const [locationOptions, setLocationOptions] = useState<SelectOption[]>([]);
   const [eventOptions, setEventOptions] = useState<SelectOption[]>([]);
+  const [shoeboxOptions, setShoeboxOptions] = useState<SelectOption[]>([]);
 
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
 
-  // Load tags, people, locations, and events options
+  // Load tags, people, locations, events, and shoeboxes options
   useEffect(() => {
     const fetchOptions = async () => {
       try {
@@ -69,6 +71,10 @@ const VideoForm: React.FC<VideoFormProps> = ({
         // Fetch events
         const events = await eventApi.getEvents();
         setEventOptions(events.map(event => ({ value: event, label: event })));
+
+        // Fetch shoeboxes
+        const shoeboxes = await shoeboxApi.getShoeboxes();
+        setShoeboxOptions(shoeboxes.map(shoebox => ({ value: shoebox.name, label: shoebox.name })));
       } catch (error) {
         console.error('Error fetching options:', error);
       }
@@ -331,6 +337,53 @@ const VideoForm: React.FC<VideoFormProps> = ({
               console.error('Error creating person:', error);
               toast({
                 title: 'Error creating person',
+                status: 'error',
+                duration: 3000,
+                isClosable: true,
+              });
+            }
+          }}
+        />
+      </FormControl>
+
+      <FormControl>
+        <FormLabel>Shoeboxes</FormLabel>
+        <CreatableSelect
+          isMulti
+          options={shoeboxOptions}
+          value={formData.selectedShoeboxes}
+          onChange={(selected: any) => onChange({
+            shoeboxes: selected ? selected.map((shoebox: SelectOption) => shoebox.value) : []
+          })}
+          placeholder="Select or create shoeboxes..."
+          styles={selectStyles}
+          isClearable
+          isDisabled={readOnly}
+          formatCreateLabel={(inputValue) => `Create shoebox "${inputValue}"`}
+          onCreateOption={async (inputValue) => {
+            if (readOnly) return;
+
+            try {
+              const newShoebox = await shoeboxApi.createShoebox(inputValue);
+              const newOption = { value: newShoebox.name, label: newShoebox.name };
+              setShoeboxOptions([...shoeboxOptions, newOption]);
+
+              // Update the selected shoeboxes
+              const updatedShoeboxes = [...formData.selectedShoeboxes, newOption];
+              onChange({
+                shoeboxes: updatedShoeboxes.map(shoebox => shoebox.value)
+              });
+
+              toast({
+                title: 'Shoebox created',
+                status: 'success',
+                duration: 2000,
+                isClosable: true,
+              });
+            } catch (error) {
+              console.error('Error creating shoebox:', error);
+              toast({
+                title: 'Error creating shoebox',
                 status: 'error',
                 duration: 3000,
                 isClosable: true,

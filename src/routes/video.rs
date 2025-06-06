@@ -45,6 +45,7 @@ async fn list_videos(
         crate::services::TagService::new(state.db.clone()),
         crate::services::PersonService::new(state.db.clone()),
         crate::services::ThumbnailService::new(&state.config),
+        crate::services::ShoeboxService::new(state.db.clone()),
     );
 
     let limit = params.limit.unwrap_or(100);
@@ -63,6 +64,7 @@ async fn get_video(
         crate::services::TagService::new(state.db.clone()),
         crate::services::PersonService::new(state.db.clone()),
         crate::services::ThumbnailService::new(&state.config),
+        crate::services::ShoeboxService::new(state.db.clone()),
     );
 
     let video = video_service.find_with_metadata(&id).await?;
@@ -78,6 +80,7 @@ async fn create_video(
         crate::services::TagService::new(state.db.clone()),
         crate::services::PersonService::new(state.db.clone()),
         crate::services::ThumbnailService::new(&state.config),
+        crate::services::ShoeboxService::new(state.db.clone()),
     );
 
     let video = video_service.create(create_dto).await?;
@@ -94,6 +97,7 @@ async fn update_video(
         crate::services::TagService::new(state.db.clone()),
         crate::services::PersonService::new(state.db.clone()),
         crate::services::ThumbnailService::new(&state.config),
+        crate::services::ShoeboxService::new(state.db.clone()),
     );
 
     let video = video_service.update(&id, update_dto).await?;
@@ -109,6 +113,7 @@ async fn delete_video(
         crate::services::TagService::new(state.db.clone()),
         crate::services::PersonService::new(state.db.clone()),
         crate::services::ThumbnailService::new(&state.config),
+        crate::services::ShoeboxService::new(state.db.clone()),
     );
 
     video_service.delete(&id).await?;
@@ -124,6 +129,7 @@ async fn search_videos(
         crate::services::TagService::new(state.db.clone()),
         crate::services::PersonService::new(state.db.clone()),
         crate::services::ThumbnailService::new(&state.config),
+        crate::services::ShoeboxService::new(state.db.clone()),
     );
 
     let videos = video_service.search(search_params).await?;
@@ -139,6 +145,7 @@ async fn bulk_update_videos(
         crate::services::TagService::new(state.db.clone()),
         crate::services::PersonService::new(state.db.clone()),
         crate::services::ThumbnailService::new(&state.config),
+        crate::services::ShoeboxService::new(state.db.clone()),
     );
 
     let videos = video_service.bulk_update(bulk_update_dto.video_ids, bulk_update_dto.update).await?;
@@ -155,6 +162,7 @@ async fn stream_video(
         crate::services::TagService::new(state.db.clone()),
         crate::services::PersonService::new(state.db.clone()),
         crate::services::ThumbnailService::new(&state.config),
+        crate::services::ShoeboxService::new(state.db.clone()),
     );
 
     // Get the video to find its file path

@@ -56,6 +56,7 @@ const VideoDetailPage: React.FC = () => {
   const [event, setEvent] = useState('');
   const [selectedTags, setSelectedTags] = useState<SelectOption[]>([]);
   const [selectedPeople, setSelectedPeople] = useState<SelectOption[]>([]);
+  const [selectedShoeboxes, setSelectedShoeboxes] = useState<SelectOption[]>([]);
 
 
   const borderColor = useColorModeValue('gray.200', 'gray.700');
@@ -78,6 +79,7 @@ const VideoDetailPage: React.FC = () => {
         setEvent(videoData.event || '');
         setSelectedTags(videoData.tags.map(tag => ({ value: tag, label: tag })));
         setSelectedPeople(videoData.people.map(person => ({ value: person, label: person })));
+        setSelectedShoeboxes(videoData.shoeboxes.map(shoebox => ({ value: shoebox, label: shoebox })));
       } catch (error) {
         console.error('Error fetching video:', error);
         toast({
@@ -110,6 +112,7 @@ const VideoDetailPage: React.FC = () => {
         event: event || undefined,
         tags: selectedTags.map(tag => tag.value),
         people: selectedPeople.map(person => person.value),
+        shoeboxes: selectedShoeboxes.map(shoebox => shoebox.value),
       };
 
       const updatedVideo = await videoApi.updateVideo(id, updateData);
@@ -176,6 +179,7 @@ const VideoDetailPage: React.FC = () => {
         setEvent(video.event || '');
         setSelectedTags(video.tags.map(tag => ({ value: tag, label: tag })));
         setSelectedPeople(video.people.map(person => ({ value: person, label: person })));
+        setSelectedShoeboxes(video.shoeboxes.map(shoebox => ({ value: shoebox, label: shoebox })));
       }
     }
     setIsEditing(!isEditing);
@@ -305,7 +309,8 @@ const VideoDetailPage: React.FC = () => {
                 location: location,
                 event,
                 selectedTags,
-                selectedPeople
+                selectedPeople,
+                selectedShoeboxes
               }}
               onChange={(formData) => {
                 if (formData.title !== undefined) setTitle(formData.title);
@@ -318,6 +323,9 @@ const VideoDetailPage: React.FC = () => {
                 }
                 if (formData.people !== undefined) {
                   setSelectedPeople(formData.people.map(person => ({ value: person, label: person })));
+                }
+                if (formData.shoeboxes !== undefined) {
+                  setSelectedShoeboxes(formData.shoeboxes.map(shoebox => ({ value: shoebox, label: shoebox })));
                 }
               }}
             />
@@ -377,6 +385,21 @@ const VideoDetailPage: React.FC = () => {
                     ))
                   ) : (
                     <Text color="gray.500">No people</Text>
+                  )}
+                </Flex>
+              </FormControl>
+
+              <FormControl>
+                <FormLabel>Shoeboxes</FormLabel>
+                <Flex wrap="wrap" gap={2}>
+                  {video.shoeboxes.length > 0 ? (
+                    video.shoeboxes.map((shoebox) => (
+                      <Badge key={shoebox} colorScheme="purple" color="white">
+                        {shoebox}
+                      </Badge>
+                    ))
+                  ) : (
+                    <Text color="gray.500">No shoeboxes</Text>
                   )}
                 </Flex>
               </FormControl>

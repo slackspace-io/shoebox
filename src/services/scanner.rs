@@ -625,6 +625,12 @@ impl ScannerService {
                 // Create video record
                 let file_name_clone = file_name.clone();
 
+                // Initialize shoeboxes with default_shoebox if it exists
+                let mut shoeboxes = Vec::new();
+                if let Some(default_shoebox) = &path_config.default_shoebox {
+                    shoeboxes.push(default_shoebox.clone());
+                }
+
                 let create_dto = CreateVideoDto {
                     file_path,
                     file_name,
@@ -637,6 +643,7 @@ impl ScannerService {
                     duration,
                     tags: Vec::new(),
                     people: Vec::new(),
+                    shoeboxes,
                     original_file_path,
                     exif_data,
                     location: None,

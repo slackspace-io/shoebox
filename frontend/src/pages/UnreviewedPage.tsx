@@ -67,6 +67,7 @@ const UnreviewedPage: React.FC = () => {
     event: string;
     selectedTags: SelectOption[];
     selectedPeople: SelectOption[];
+    selectedShoeboxes: SelectOption[];
   }>>({});
 
   const borderColor = useColorModeValue('gray.200', 'gray.700');
@@ -181,7 +182,8 @@ const UnreviewedPage: React.FC = () => {
       location: video.location || '',
       event: video.event || '',
       selectedTags: video.tags.map(tag => ({ value: tag, label: tag })),
-      selectedPeople: video.people.map(person => ({ value: person, label: person }))
+      selectedPeople: video.people.map(person => ({ value: person, label: person })),
+      selectedShoeboxes: video.shoeboxes.map(shoebox => ({ value: shoebox, label: shoebox }))
     };
   };
 
@@ -200,6 +202,7 @@ const UnreviewedPage: React.FC = () => {
         event: videoFormData.event || undefined,
         tags: videoFormData.selectedTags.map(tag => tag.value),
         people: videoFormData.selectedPeople.map(person => person.value),
+        shoeboxes: videoFormData.selectedShoeboxes.map(shoebox => shoebox.value),
       };
 
       await videoApi.updateVideo(videoId, updateData);

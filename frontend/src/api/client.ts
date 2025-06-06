@@ -32,6 +32,7 @@ export interface Video {
 export interface VideoWithMetadata extends Video {
   tags: string[];
   people: string[];
+  shoeboxes: string[];
 }
 
 export interface CreateVideoDto {
@@ -57,6 +58,7 @@ export interface UpdateVideoDto {
   event?: string;
   tags?: string[];
   people?: string[];
+  shoeboxes?: string[];
 }
 
 export interface BulkUpdateVideoDto {
@@ -113,6 +115,21 @@ export interface LocationUsage {
 
 export interface EventUsage {
   name: string;
+  video_count: number;
+}
+
+export interface Shoebox {
+  id: string;
+  name: string;
+  description?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ShoeboxUsage {
+  id: string;
+  name: string;
+  description?: string;
   video_count: number;
 }
 
@@ -300,6 +317,65 @@ export const exportApi = {
   // Export videos
   exportVideos: async (data: ExportRequest): Promise<ExportResponse> => {
     const response = await apiClient.post('/export', data);
+    return response.data;
+  },
+};
+
+export const shoeboxApi = {
+  // Get all shoeboxes
+  getShoeboxes: async (): Promise<Shoebox[]> => {
+    const response = await apiClient.get('/shoeboxes');
+    return response.data;
+  },
+
+  // Get shoebox usage statistics
+  getShoeboxUsage: async (): Promise<ShoeboxUsage[]> => {
+    const response = await apiClient.get('/shoeboxes/usage');
+    return response.data;
+  },
+
+  // Create a new shoebox
+  createShoebox: async (name: string, description?: string): Promise<Shoebox> => {
+    const response = await apiClient.post('/shoeboxes', { name, description });
+    return response.data;
+  },
+
+  // Get a shoebox by ID
+  getShoebox: async (id: string): Promise<Shoebox> => {
+    const response = await apiClient.get(`/shoeboxes/${id}`);
+    return response.data;
+  },
+
+  // Update a shoebox
+  updateShoebox: async (id: string, name: string, description?: string): Promise<Shoebox> => {
+    const response = await apiClient.put(`/shoeboxes/${id}`, { name, description });
+    return response.data;
+  },
+
+  // Delete a shoebox
+  deleteShoebox: async (id: string): Promise<void> => {
+    await apiClient.delete(`/shoeboxes/${id}`);
+  },
+
+  // Add a video to a shoebox
+  addVideoToShoebox: async (shoeboxId: string, videoId: string): Promise<void> => {
+    await apiClient.put(`/shoeboxes/${shoeboxId}/videos/${videoId}`);
+  },
+
+  // Remove a video from a shoebox
+  removeVideoFromShoebox: async (shoeboxId: string, videoId: string): Promise<void> => {
+    await apiClient.delete(`/shoeboxes/${shoeboxId}/videos/${videoId}`);
+  },
+
+  // Get videos in a shoebox
+  getVideosInShoebox: async (shoeboxId: string): Promise<string[]> => {
+    const response = await apiClient.get(`/shoeboxes/${shoeboxId}/videos`);
+    return response.data;
+  },
+
+  // Cleanup unused shoeboxes
+  cleanupUnusedShoeboxes: async (): Promise<{ count: number }> => {
+    const response = await apiClient.post('/shoeboxes/cleanup');
     return response.data;
   },
 };

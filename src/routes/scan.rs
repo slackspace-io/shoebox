@@ -60,6 +60,7 @@ async fn start_scan(State(state): State<AppState>) -> Result<Json<ScanResponse>>
             TagService::new(db.clone()),
             PersonService::new(db.clone()),
             ThumbnailService::new(&config),
+            crate::services::ShoeboxService::new(db.clone()),
         );
 
         let thumbnail_service = ThumbnailService::new(&config);

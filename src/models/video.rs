@@ -29,6 +29,7 @@ pub struct VideoWithMetadata {
     pub video: Video,
     pub tags: Vec<String>,
     pub people: Vec<String>,
+    pub shoeboxes: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -48,6 +49,7 @@ pub struct CreateVideoDto {
     pub event: Option<String>,
     pub tags: Vec<String>,
     pub people: Vec<String>,
+    pub shoeboxes: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -59,6 +61,7 @@ pub struct UpdateVideoDto {
     pub event: Option<String>,
     pub tags: Option<Vec<String>>,
     pub people: Option<Vec<String>>,
+    pub shoeboxes: Option<Vec<String>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -72,6 +75,7 @@ pub struct VideoSearchParams {
     pub query: Option<String>,
     pub tags: Option<Vec<String>>,
     pub people: Option<Vec<String>>,
+    pub shoeboxes: Option<Vec<String>>,
     pub location: Option<String>,
     pub event: Option<String>,
     pub rating: Option<i32>,
