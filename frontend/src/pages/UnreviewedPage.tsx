@@ -602,13 +602,31 @@ const UnreviewedPage: React.FC = () => {
                     video={video}
                     formData={formData[video.id]}
                     onChange={(updatedData) => {
-                      setFormData(prev => ({
-                        ...prev,
-                        [video.id]: {
-                          ...prev[video.id],
-                          ...updatedData
+                      setFormData(prev => {
+                        const newFormData = { ...prev };
+                        const videoFormData = { ...newFormData[video.id] };
+
+                        // Map the properties from updatedData to the corresponding properties in the form data
+                        if (updatedData.tags !== undefined) {
+                          videoFormData.selectedTags = updatedData.tags.map(tag => ({ value: tag, label: tag }));
                         }
-                      }));
+                        if (updatedData.people !== undefined) {
+                          videoFormData.selectedPeople = updatedData.people.map(person => ({ value: person, label: person }));
+                        }
+                        if (updatedData.shoeboxes !== undefined) {
+                          videoFormData.selectedShoeboxes = updatedData.shoeboxes.map(shoebox => ({ value: shoebox, label: shoebox }));
+                        }
+
+                        // Update other properties directly
+                        if (updatedData.title !== undefined) videoFormData.title = updatedData.title;
+                        if (updatedData.description !== undefined) videoFormData.description = updatedData.description;
+                        if (updatedData.rating !== undefined) videoFormData.rating = updatedData.rating;
+                        if (updatedData.location !== undefined) videoFormData.location = updatedData.location;
+                        if (updatedData.event !== undefined) videoFormData.event = updatedData.event;
+
+                        newFormData[video.id] = videoFormData;
+                        return newFormData;
+                      });
                     }}
                   />
                 )}
