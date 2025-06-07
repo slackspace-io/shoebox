@@ -164,6 +164,11 @@ fn parse_comma_separated_paths_from_string(paths_str: &str) -> Vec<MediaPathConf
                     .filter(|&e| !e.is_empty())
                     .map(|e| e.to_string());
 
+                // Parse default_shoebox if provided
+                let default_shoebox = parts.get(3)
+                    .filter(|&s| !s.is_empty())
+                    .map(|s| s.to_string());
+
                 // If original_path is provided without extension, use the same extension as path
                 let original_extension = if original_path.is_some() && original_extension.is_none() {
                     // Extract extension from path
@@ -180,7 +185,7 @@ fn parse_comma_separated_paths_from_string(paths_str: &str) -> Vec<MediaPathConf
                     path,
                     original_path,
                     original_extension,
-                    default_shoebox: None,
+                    default_shoebox,
                 }
             }
             // Backward compatibility: Check if the path contains configuration options without a name
@@ -198,6 +203,11 @@ fn parse_comma_separated_paths_from_string(paths_str: &str) -> Vec<MediaPathConf
                     .filter(|&e| !e.is_empty())
                     .map(|e| e.to_string());
 
+                // Parse default_shoebox if provided
+                let default_shoebox = parts.get(3)
+                    .filter(|&s| !s.is_empty())
+                    .map(|s| s.to_string());
+
                 // If original_path is provided without extension, use the same extension as path
                 let original_extension = if original_path.is_some() && original_extension.is_none() {
                     // Extract extension from path
@@ -214,7 +224,7 @@ fn parse_comma_separated_paths_from_string(paths_str: &str) -> Vec<MediaPathConf
                     path,
                     original_path,
                     original_extension,
-                    default_shoebox: None,
+                    default_shoebox,
                 }
             } else {
                 // Simple path without additional configuration
@@ -267,6 +277,11 @@ fn parse_comma_separated_paths(env_var: &str) -> Vec<MediaPathConfig> {
                     .filter(|&e| !e.is_empty())
                     .map(|e| e.to_string());
 
+                // Parse default_shoebox if provided
+                let default_shoebox = parts.get(3)
+                    .filter(|&s| !s.is_empty())
+                    .map(|s| s.to_string());
+
                 // If original_path is provided without extension, use the same extension as path
                 let original_extension = if original_path.is_some() && original_extension.is_none() {
                     // Extract extension from path
@@ -283,7 +298,7 @@ fn parse_comma_separated_paths(env_var: &str) -> Vec<MediaPathConfig> {
                     path,
                     original_path,
                     original_extension,
-                    default_shoebox: None,
+                    default_shoebox,
                 }
             }
             // Backward compatibility: Check if the path contains configuration options without a name
@@ -301,6 +316,11 @@ fn parse_comma_separated_paths(env_var: &str) -> Vec<MediaPathConfig> {
                     .filter(|&e| !e.is_empty())
                     .map(|e| e.to_string());
 
+                // Parse default_shoebox if provided
+                let default_shoebox = parts.get(3)
+                    .filter(|&s| !s.is_empty())
+                    .map(|s| s.to_string());
+
                 // If original_path is provided without extension, use the same extension as path
                 let original_extension = if original_path.is_some() && original_extension.is_none() {
                     // Extract extension from path
@@ -317,7 +337,7 @@ fn parse_comma_separated_paths(env_var: &str) -> Vec<MediaPathConfig> {
                     path,
                     original_path,
                     original_extension,
-                    default_shoebox: None,
+                    default_shoebox,
                 }
             } else {
                 // Simple path without additional configuration

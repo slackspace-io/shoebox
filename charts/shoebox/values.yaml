@@ -108,6 +108,8 @@ config:
         # readOnly: true
         originalPath: /home/user/videos
         originalExtension: mp4
+        # Optional: specify a default shoebox for this source
+        # defaultShoebox: "my-shoebox"
         # Optional: specify an existing claim for this source's originalPath
         # originalExistingClaim: "existing-claim-name"
       - name: gopro
@@ -117,6 +119,8 @@ config:
         # Optional: specify if this path should be mounted as read-only
         # readOnly: true
         originalPath: /media/external/videos
+        # Optional: specify a default shoebox for this source
+        # defaultShoebox: "gopro-shoebox"
         # Optional: specify an existing claim for this source's originalPath
         # originalExistingClaim: "existing-claim-name"
   thumbnailPath: "/app/thumbnails"

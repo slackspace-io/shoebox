@@ -75,6 +75,9 @@ Convert structured mediaSourcePaths to string format
       {{- $path = printf "%s;%s" $path .originalExtension -}}
     {{- end -}}
   {{- end -}}
+  {{- if .defaultShoebox -}}
+    {{- $path = printf "%s;%s" $path .defaultShoebox -}}
+  {{- end -}}
   {{- $paths = append $paths $path -}}
 {{- end -}}
 {{- join "," $paths -}}
