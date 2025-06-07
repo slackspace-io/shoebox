@@ -606,6 +606,18 @@ impl ScannerService {
                             exif_data
                         ).await {
                             Ok(updated_video) => {
+                                // Check if there's a default shoebox for this path config
+                                if let Some(default_shoebox) = &path_config.default_shoebox {
+                                    info!("Adding video to default shoebox: {}", default_shoebox);
+
+                                    // Add the video to the default shoebox using the new method
+                                    if let Err(e) = video_service.add_to_default_shoebox(&updated_video.id, default_shoebox).await {
+                                        error!("Error adding video to default shoebox: {}", e);
+                                    } else {
+                                        info!("Added video to default shoebox: {}", default_shoebox);
+                                    }
+                                }
+
                                 let mut updated_videos_guard = updated_videos.lock().await;
                                 updated_videos_guard.push(updated_video);
                             },

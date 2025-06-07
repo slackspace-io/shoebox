@@ -420,6 +420,25 @@ impl VideoService {
         self.find_by_id(id).await
     }
 
+    pub async fn add_to_default_shoebox(&self, video_id: &str, default_shoebox: &str) -> Result<()> {
+        info!("Adding video {} to default shoebox: {}", video_id, default_shoebox);
+
+        // Start a transaction
+        let mut tx = self.db.begin().await.map_err(AppError::Database)?;
+
+        // Find or create the shoebox
+        let shoebox_id = self.shoebox_service.find_or_create_by_name(default_shoebox, None, &mut tx).await?;
+
+        // Commit the transaction
+        tx.commit().await.map_err(AppError::Database)?;
+
+        // Add the video to the shoebox
+        self.shoebox_service.add_video_to_shoebox(video_id, &shoebox_id).await?;
+
+        info!("Successfully added video {} to default shoebox: {}", video_id, default_shoebox);
+        Ok(())
+    }
+
     pub async fn delete(&self, id: &str) -> Result<()> {
         let video = self.find_by_id(id).await?;
 
