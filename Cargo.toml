@@ -10,14 +10,14 @@ authors = ["Developer"]
 axum = "0.8.4"
 
 # Async runtime
-tokio = { version = "1.45.0", features = ["full"] }
+tokio = { version = "1.47.1", features = ["full"] }
 
 # Database
 sqlx = { version = "0.8.6", features = ["runtime-tokio-rustls", "sqlite", "postgres", "macros", "time", "json", "chrono"] }
 
 # Serialization/Deserialization
 serde = { version = "1.0.219", features = ["derive"] }
-serde_json = "1.0.140"
+serde_json = "1.0.142"
 
 # Error handling
 anyhow = "1.0.98"
@@ -36,11 +36,11 @@ dotenv = "0.15.0"
 
 # File operations
 walkdir = "2.5.0"
-tokio-util = { version = "0.7.15", features = ["io"] }
+tokio-util = { version = "0.7.16", features = ["io"] }
 bytes = "1.10.1"
 mime_guess = "2.0.5"
 chrono = { version = "0.4.41", features = ["serde"] }
-uuid = { version = "1.16.0", features = ["v4", "serde"] }
+uuid = { version = "1.17.0", features = ["v4", "serde"] }
 
 # Static file serving
-tower-http = { version = "0.6.4", features = ["fs"] }
+tower-http = { version = "0.6.6", features = ["fs"] }
